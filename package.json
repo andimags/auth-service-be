@@ -1,0 +1,33 @@
+{
+    "name": "auth-service-be",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node dist/server.js",
+        "dev": "nodemon --exec ts-node src/server.ts",
+        "build": "tsc",
+        "test": "jest",
+        "lint": "eslint . --ext .ts",
+        "lint:fix": "eslint . --ext .ts --fix",
+        "migrate:up": "ts-node src/database/migrations/runner.ts up",
+        "migrate:down": "ts-node src/database/migrations/runner.ts down",
+        "format": "prettier --write \"src/**/*.ts\""
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/express": "^5.0.1",
+        "@types/node": "^22.14.1",
+        "dotenv": "^16.5.0",
+        "eslint": "^9.25.1",
+        "express": "^5.1.0",
+        "install": "^0.13.0",
+        "nodemon": "^3.1.10",
+        "npm": "^11.3.0",
+        "prettier": "^3.5.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.8.3"
+    }
+}
