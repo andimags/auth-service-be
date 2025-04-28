@@ -4,12 +4,19 @@ import {
     Column,
     CreatedAt,
     DataType,
+    DefaultScope,
     DeletedAt,
     Model,
     PrimaryKey,
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
+
+@DefaultScope(() => ({
+    attributes: {
+        exclude: ['admin_password']
+    }
+}))
 
 @Table
 export default class Channel extends Model {
@@ -24,6 +31,18 @@ export default class Channel extends Model {
 
     @Column(DataType.STRING)
     description: string;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    admin_username: string;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    admin_password: string;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    admin_email: string;
 
     @CreatedAt
     created_at: Date;
