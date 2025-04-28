@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
-import 'dotenv/config';
+import channelRoutes from './routes/channelRoutes';
 import roleRoutes from './routes/roleRoutes';
 
 const app = express();
@@ -16,6 +17,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/roles', roleRoutes);
+app.use('/api/channels', channelRoutes);
 
 app.use(errorHandler);
 

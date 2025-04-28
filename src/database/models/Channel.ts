@@ -12,7 +12,7 @@ import {
 } from 'sequelize-typescript';
 
 @Table
-export default class Role extends Model {
+export default class Channel extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
@@ -24,9 +24,6 @@ export default class Role extends Model {
 
     @Column(DataType.STRING)
     description: string;
-
-    @Column(DataType.STRING)
-    ref_name: string;
 
     @CreatedAt
     created_at: Date;
