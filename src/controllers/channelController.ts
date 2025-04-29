@@ -76,7 +76,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const channel = await Channel.findByPk(req.params.id);
+        const shouldForce = req.query.force === 'true';
+        const channel = await Channel.findByPk(req.params.id, { paranoid: false });
 
         if (!channel) {
             res.status(404).json({
@@ -85,10 +86,11 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
-        await channel?.destroy();
+        await channel?.destroy({force: shouldForce});
 
         res.json({
-            status: 1
+            status: 1,
+            message: shouldForce ? 'Channel successfully deleted permanently.' : 'Channel successfully soft-deleted'
         });
     } catch (error: unknown) {
         next(error);
