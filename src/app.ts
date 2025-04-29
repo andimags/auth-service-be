@@ -1,8 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
+
+// Routes
 import channelRoutes from './routes/channelRoutes';
 import roleRoutes from './routes/roleRoutes';
+import permissionRoutes from './routes/permissionRoutes';
 
 const app = express();
 
@@ -18,6 +21,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);
+app.use('/api/permissions', permissionRoutes);
 
 app.use(errorHandler);
 
