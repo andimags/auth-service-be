@@ -8,7 +8,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { channels }
+            data: channels
         });
     } catch (error: unknown) {
         next(error);
@@ -28,7 +28,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { channel }
+            data: channel
         });
     } catch (error: unknown) {
         next(error);
@@ -45,7 +45,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { channel }
+            data: channel
         });
     } catch (error: unknown) {
         next(error);
@@ -67,7 +67,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { channel }
+            data: channel
         });
     } catch (error: unknown) {
         next(error);

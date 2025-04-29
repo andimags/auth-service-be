@@ -7,7 +7,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { roles }
+            data: roles
         });
     } catch (error: unknown) {
         next(error);
@@ -27,7 +27,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { role }
+            data: role 
         });
     } catch (error: unknown) {
         next(error);
@@ -40,7 +40,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { role }
+            data: role
         });
     } catch (error: unknown) {
         next(error);
@@ -62,7 +62,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: { role }
+            data: role
         });
     } catch (error: unknown) {
         next(error);
