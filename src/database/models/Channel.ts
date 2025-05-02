@@ -44,6 +44,10 @@ export default class Channel extends Model {
     @Column(DataType.STRING)
     admin_email: string;
 
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    api_key: string;
+
     @CreatedAt
     created_at: Date;
 
