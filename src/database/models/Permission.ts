@@ -9,8 +9,12 @@ import {
     Model,
     PrimaryKey,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    ForeignKey,
+    BelongsTo,
+    Scopes
 } from 'sequelize-typescript';
+import Channel from './Channel';
 
 enum scopeType {
     read = 'read',
@@ -21,6 +25,17 @@ enum scopeType {
 @DefaultScope(() => ({
     attributes: {
         exclude: ['admin_password']
+    }
+}))
+
+@Scopes(() => ({
+    withChannel: {
+        include: [{
+            model: Channel,
+            attributes: {
+                exclude: ['created_at', 'updated_at', 'deleted_at']
+            }
+        }]
     }
 }))
 
@@ -54,6 +69,10 @@ export default class Permission extends Model {
     @Column(DataType.INTEGER)
     sequence: number;
 
+    @ForeignKey(() => Channel)
+    @Column
+    channel_id: number;
+
     @CreatedAt
     created_at: Date;
 
@@ -62,4 +81,13 @@ export default class Permission extends Model {
 
     @DeletedAt
     deleted_at: Date;
+
+    // Associations
+    @BelongsTo(() => Channel, {
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+        // set hooks to true if you have model-level hooks (like beforeDestroy, afterUpdate, etc.)
+        // hooks: true 
+    })
+    channel: Channel;
 }

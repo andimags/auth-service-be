@@ -3,7 +3,7 @@ import Permission from '../database/models/Permission';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const permissions = await Permission.findAll();
+        const permissions = await Permission.scope('withChannel').findAll();
 
         res.json({
             status: 1,
@@ -16,7 +16,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await Permission.scope('withChannel').findByPk(req.params.id);
 
         if (!permission) {
             res.status(404).json({
@@ -38,9 +38,11 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const permission = await Permission.create(req.body);
 
+        const permissionWithChannel = await Permission.scope('withChannel').findByPk(permission.id);
+
         res.json({
             status: 1,
-            data: permission
+            data: permissionWithChannel
         });
     } catch (error: unknown) {
         next(error);
@@ -49,7 +51,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await Permission.scope('withChannel').findByPk(req.params.id);
 
         if (!permission) {
             res.status(404).json({

@@ -1,6 +1,7 @@
 import {
     AllowNull,
     AutoIncrement,
+    BeforeDestroy,
     Column,
     CreatedAt,
     DataType,
@@ -11,6 +12,7 @@ import {
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
+import Permission from './Permission';
 
 @DefaultScope(() => ({
     attributes: {
@@ -56,4 +58,19 @@ export default class Channel extends Model {
 
     @DeletedAt
     deleted_at: Date;
+
+    // Hooks
+    @BeforeDestroy
+    static async softDeletePermissions(channel: Channel) {
+        await Permission.update(
+            {
+                deleted_at: new Date()
+            },
+            {
+                where: {
+                    id: channel.id
+                }
+            }
+        )
+    }
 }
