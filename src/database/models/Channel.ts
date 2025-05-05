@@ -36,18 +36,6 @@ export default class Channel extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    admin_username: string;
-
-    @AllowNull(false)
-    @Column(DataType.STRING)
-    admin_password: string;
-
-    @AllowNull(false)
-    @Column(DataType.STRING)
-    admin_email: string;
-
-    @AllowNull(false)
-    @Column(DataType.STRING)
     api_key: string;
 
     @CreatedAt

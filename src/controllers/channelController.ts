@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import generateApiKey from 'generate-api-key';
@@ -38,9 +37,6 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const hash = bcrypt.hashSync(req.body.admin_password, 10);
-        
-        req.body.admin_password = hash;
         req.body.api_key = generateApiKey();
 
         const channel = await Channel.create(req.body);
