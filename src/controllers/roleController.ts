@@ -3,7 +3,7 @@ import Role from '../database/models/Role';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const roles = await Role.findAll();
+        const roles = await Role.scope('withChannel').findAll();
 
         res.json({
             status: 1,
@@ -16,7 +16,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const role = await Role.findByPk(req.params.id);
+        const role = await Role.scope('withChannel').findByPk(req.params.id);
 
         if (!role) {
             res.status(404).json({
@@ -38,9 +38,11 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const role = await Role.create(req.body);
 
+        const roleWithChannel = await Role.scope('withChannel').findByPk(role.id);
+
         res.json({
             status: 1,
-            data: role
+            data: roleWithChannel
         });
     } catch (error: unknown) {
         next(error);
@@ -49,7 +51,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const role = await Role.findByPk(req.params.id);
+        const role = await Role.scope('withChannel').findByPk(req.params.id);
 
         if (!role) {
             res.status(404).json({

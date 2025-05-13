@@ -39,7 +39,9 @@ enum scopeType {
     }
 }))
 
-@Table
+@Table({
+    tableName: 'permissions'
+})
 export default class Permission extends Model {
     @PrimaryKey
     @AutoIncrement
@@ -65,13 +67,8 @@ export default class Permission extends Model {
     @Column(DataType.ENUM(...Object.values(scopeType)))
     scope: string;
 
-    @AllowNull(false)
     @Column(DataType.INTEGER)
     sequence: number;
-
-    @ForeignKey(() => Channel)
-    @Column
-    channel_id: number;
 
     @CreatedAt
     created_at: Date;
@@ -81,13 +78,4 @@ export default class Permission extends Model {
 
     @DeletedAt
     deleted_at: Date;
-
-    // Associations
-    @BelongsTo(() => Channel, {
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-        // set hooks to true if you have model-level hooks (like beforeDestroy, afterUpdate, etc.)
-        // hooks: true 
-    })
-    channel: Channel;
 }

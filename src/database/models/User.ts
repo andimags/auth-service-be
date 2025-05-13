@@ -4,12 +4,12 @@ import {
     Column,
     CreatedAt,
     DataType,
+    Default,
     DeletedAt,
     Model,
     PrimaryKey,
     Table,
-    UpdatedAt,
-    Default
+    UpdatedAt
 } from 'sequelize-typescript';
 
 enum statusType {
@@ -17,7 +17,9 @@ enum statusType {
     inactive = 'inactive'
 }
 
-@Table
+@Table({
+    tableName: 'users'
+})
 export default class User extends Model {
     @PrimaryKey
     @AutoIncrement

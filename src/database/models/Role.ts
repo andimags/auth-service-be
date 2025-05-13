@@ -8,10 +8,16 @@ import {
     Model,
     PrimaryKey,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    ForeignKey,
+    BelongsTo
 } from 'sequelize-typescript';
 
-@Table
+import Channel from './Channel';
+
+@Table({
+    tableName: 'roles'
+})
 export default class Role extends Model {
     @PrimaryKey
     @AutoIncrement
@@ -28,6 +34,13 @@ export default class Role extends Model {
     @Column(DataType.STRING)
     ref_name: string;
 
+    @Column(DataType.INTEGER)
+    level: number;
+
+    @ForeignKey(() => Channel)
+    @Column
+    channel_id: number;
+
     @CreatedAt
     created_at: Date;
 
@@ -36,4 +49,13 @@ export default class Role extends Model {
 
     @DeletedAt
     deleted_at: Date;
+
+        // Associations
+    @BelongsTo(() => Channel, {
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+        // set hooks to true if you have model-level hooks (like beforeDestroy, afterUpdate, etc.)
+        // hooks: true 
+    })
+    channel: Channel;
 }

@@ -20,7 +20,9 @@ import Permission from './Permission';
     }
 }))
 
-@Table
+@Table({
+    tableName: 'channels'
+})
 export default class Channel extends Model {
     @PrimaryKey
     @AutoIncrement
