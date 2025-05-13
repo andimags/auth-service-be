@@ -56,7 +56,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = await User.findByPk(req.params.id);
 
-        if(req.body.password){
+        if (req.body.password) {
             const hash = bcrypt.hashSync(req.body.password, 10);
             req.body.password = hash;
         }
@@ -91,11 +91,13 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
-        await user?.destroy({force: shouldForce});
+        await user?.destroy({ force: shouldForce });
 
         res.json({
             status: 1,
-            message: shouldForce ? 'User successfully deleted permanently.' : 'User successfully soft-deleted'
+            message: shouldForce
+                ? 'User successfully deleted permanently.'
+                : 'User successfully soft-deleted'
         });
     } catch (error: unknown) {
         next(error);

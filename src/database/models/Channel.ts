@@ -19,7 +19,6 @@ import Permission from './Permission';
         exclude: ['admin_password']
     }
 }))
-
 @Table({
     tableName: 'channels'
 })
@@ -61,6 +60,6 @@ export default class Channel extends Model {
                     id: channel.id
                 }
             }
-        )
+        );
     }
 }

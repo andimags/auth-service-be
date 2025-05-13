@@ -7,7 +7,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: permissions 
+            data: permissions
         });
     } catch (error: unknown) {
         next(error);
@@ -81,11 +81,13 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
-        await permission?.destroy({force: shouldForce});
+        await permission?.destroy({ force: shouldForce });
 
         res.json({
             status: 1,
-            message: shouldForce ? 'Permission successfully deleted permanently.' : 'Permission successfully soft-deleted'
+            message: shouldForce
+                ? 'Permission successfully deleted permanently.'
+                : 'Permission successfully soft-deleted'
         });
     } catch (error: unknown) {
         next(error);

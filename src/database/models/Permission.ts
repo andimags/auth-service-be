@@ -27,18 +27,18 @@ enum scopeType {
         exclude: ['admin_password']
     }
 }))
-
 @Scopes(() => ({
     withChannel: {
-        include: [{
-            model: Channel,
-            attributes: {
-                exclude: ['created_at', 'updated_at', 'deleted_at']
+        include: [
+            {
+                model: Channel,
+                attributes: {
+                    exclude: ['created_at', 'updated_at', 'deleted_at']
+                }
             }
-        }]
+        ]
     }
 }))
-
 @Table({
     tableName: 'permissions'
 })

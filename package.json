@@ -10,8 +10,8 @@
         "test": "jest",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix",
-        "migrate:up": "ts-node src/database/migrations/runner.ts up",
-        "migrate:down": "ts-node src/database/migrations/runner.ts down",
+        "seed": "npx sequelize-cli db:seed:all --env $NODE_ENV",
+        "migrate": "npx sequelize-cli db:migrate --env $NODE_ENV",
         "format": "prettier --write \"src/**/*.ts\""
     },
     "keywords": [],

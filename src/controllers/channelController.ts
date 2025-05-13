@@ -84,11 +84,13 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
-        await channel?.destroy({force: shouldForce});
+        await channel?.destroy({ force: shouldForce });
 
         res.json({
             status: 1,
-            message: shouldForce ? 'Channel successfully deleted permanently.' : 'Channel successfully soft-deleted'
+            message: shouldForce
+                ? 'Channel successfully deleted permanently.'
+                : 'Channel successfully soft-deleted'
         });
     } catch (error: unknown) {
         next(error);

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
 
@@ -11,6 +11,8 @@ import userRoutes from './routes/userRoutes';
 const app = express();
 
 app.use(express.json());
+
+dotenv.config();
 
 app.get('/', (req, res) => {
     res.send('Welcome to Auth BE');

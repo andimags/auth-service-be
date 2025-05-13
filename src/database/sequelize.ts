@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
 import { Sequelize } from 'sequelize-typescript';
 import Channel from './models/Channel';
 import Permission from './models/Permission';
 import Role from './models/Role';
 import User from './models/User';
+
+dotenv.config();
 
 const sequelize = new Sequelize({
     host: process.env.DB_HOST,
@@ -10,8 +13,8 @@ const sequelize = new Sequelize({
     dialect: 'postgres',
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    storage: ':memory:',
-    models: [Role, Channel, Permission, User]
+    models: [Role, Channel, Permission, User],
+    logging: false
 });
 
 export default sequelize;

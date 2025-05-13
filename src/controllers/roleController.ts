@@ -27,7 +27,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         res.json({
             status: 1,
-            data: role 
+            data: role
         });
     } catch (error: unknown) {
         next(error);

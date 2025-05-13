@@ -50,12 +50,12 @@ export default class Role extends Model {
     @DeletedAt
     deleted_at: Date;
 
-        // Associations
+    // Associations
     @BelongsTo(() => Channel, {
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
         // set hooks to true if you have model-level hooks (like beforeDestroy, afterUpdate, etc.)
-        // hooks: true 
+        // hooks: true
     })
     channel: Channel;
 }
