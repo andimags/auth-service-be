@@ -1,11 +1,10 @@
-import dotenv from 'dotenv';
 import { Sequelize } from 'sequelize-typescript';
 import Channel from './models/Channel';
 import Permission from './models/Permission';
 import Role from './models/Role';
 import User from './models/User';
 
-dotenv.config();
+console.log(process.env.NODE_ENV);
 
 const sequelize = new Sequelize({
     host: process.env.DB_HOST,
