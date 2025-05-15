@@ -10,7 +10,8 @@
         "test": "jest",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix",
-        "seed": "npx sequelize-cli db:seed:all --env $NODE_ENV",
+        "seed": "npx sequelize-cli db:seed:all",
+        "seed:undo": "npx sequelize-cli db:seed:undo",
         "migrate": "npx sequelize-cli db:migrate --env $NODE_ENV",
         "format": "prettier --write \"src/**/*.ts\""
     },

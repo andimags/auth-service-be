@@ -1,6 +1,8 @@
+import { BelongsToGetAssociationMixin, BelongsToSetAssociationMixin, HasManyAddAssociationsMixin } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
+    BelongsToMany,
     Column,
     CreatedAt,
     DataType,
@@ -11,6 +13,8 @@ import {
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
+import Role from './Role';
+import UserRole from './UserRole';
 
 enum statusType {
     active = 'active',
@@ -59,4 +63,11 @@ export default class User extends Model {
 
     @DeletedAt
     deleted_at: Date;
+
+    @BelongsToMany(() => Role, () => UserRole)
+    roles: Role[];
+
+    declare getRoles: BelongsToGetAssociationMixin<Role>;
+    declare setRoles: BelongsToSetAssociationMixin<Role, number>;
+    declare addRoles: HasManyAddAssociationsMixin<Role, number>;
 }

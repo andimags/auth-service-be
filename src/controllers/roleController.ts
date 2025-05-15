@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import Role from '../database/models/Role';
+import Channel from '../database/models/Channel';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const roles = await Role.scope('withChannel').findAll();
+        const roles = await Role.findAll({ include: Channel });
 
         res.json({
             status: 1,
@@ -38,7 +39,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const role = await Role.create(req.body);
 
-        const roleWithChannel = await Role.scope('withChannel').findByPk(role.id);
+        const roleWithChannel = await Role.findByPk(role.id, { include: Channel });
 
         res.json({
             status: 1,

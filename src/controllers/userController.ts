@@ -1,11 +1,12 @@
 import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
+import Role from '../database/models/Role';
 import User from '../database/models/User';
-import generateApiKey from 'generate-api-key';
+import { throwError } from '../middlewares/errorHandler';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const users = await User.findAll();
+        const users = await User.findAll({ include: Role });
 
         res.json({
             status: 1,
@@ -18,7 +19,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const user = await User.findByPk(req.params.id, { include: [Role] })
 
         if (!user) {
             res.status(404).json({
@@ -41,7 +42,19 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
         const hash = bcrypt.hashSync(req.body.password, 10);
         req.body.password = hash;
 
-        const user = await User.create(req.body);
+        let user = await User.create(req.body);
+
+        if (!user) {
+            return throwError('User not found', 404, next);
+        }
+
+        if(req.body.role_ids){
+            await user.setRoles(req.body.role_ids);
+
+            user = await user.reload({
+                include: [Role]
+            });
+        }
 
         res.json({
             status: 1,
@@ -54,7 +67,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        let user = await User.findByPk(req.params.id, { include: Role });
 
         if (req.body.password) {
             const hash = bcrypt.hashSync(req.body.password, 10);
@@ -62,9 +75,14 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         if (!user) {
-            res.status(404).json({
-                status: 0,
-                message: 'User not found.'
+            return throwError('User not found', 404, next);
+        }
+
+        if(req.body.role_ids){
+            await user.setRoles(req.body.role_ids);
+
+            user = await user.reload({
+                include: [Role]
             });
         }
 

@@ -3,6 +3,8 @@ import Channel from './models/Channel';
 import Permission from './models/Permission';
 import Role from './models/Role';
 import User from './models/User';
+import UserRole from './models/UserRole';
+import RolePermission from './models/RolePermission';
 
 console.log(process.env.NODE_ENV);
 
@@ -12,7 +14,7 @@ const sequelize = new Sequelize({
     dialect: 'postgres',
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    models: [Role, Channel, Permission, User],
+    models: [Role, Channel, Permission, User, UserRole, RolePermission],
     logging: false
 });
 

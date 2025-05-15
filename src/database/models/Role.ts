@@ -1,19 +1,24 @@
 import {
     AllowNull,
     AutoIncrement,
+    BelongsTo,
+    BelongsToMany,
     Column,
     CreatedAt,
     DataType,
     DeletedAt,
+    ForeignKey,
     Model,
     PrimaryKey,
     Table,
-    UpdatedAt,
-    ForeignKey,
-    BelongsTo
+    UpdatedAt
 } from 'sequelize-typescript';
 
 import Channel from './Channel';
+import Permission from './Permission';
+import RolePermission from './RolePermission';
+import User from './User';
+import UserRole from './UserRole';
 
 @Table({
     tableName: 'roles'
@@ -58,4 +63,10 @@ export default class Role extends Model {
         // hooks: true
     })
     channel: Channel;
+
+    @BelongsToMany(() => User, () => UserRole)
+    users: User[];
+
+    @BelongsToMany(() => Permission, () => RolePermission)
+    permissions: Permission[];
 }
