@@ -22,10 +22,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const user = await User.findByPk(req.params.id, { include: [Role] })
 
         if (!user) {
-            res.status(404).json({
-                status: 0,
-                message: 'User not found.'
-            });
+            return throwError('User not found', 404, next);
         }
 
         res.json({
