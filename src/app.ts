@@ -8,6 +8,7 @@ import permissionRoutes from './routes/permissionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import userRoutes from './routes/userRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
+import rolePermissionRoutes from './routes/rolePermissionRoutes';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/channels', channelRoutes);
 app.use('/api/permissions', permissionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/user-role', userRoleRoutes);
+app.use('/api/role-permission', rolePermissionRoutes);
 
 app.use(errorHandler);
 

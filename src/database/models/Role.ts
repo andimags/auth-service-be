@@ -14,6 +14,7 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 
+import { BelongsToGetAssociationMixin, BelongsToSetAssociationMixin, HasManyAddAssociationsMixin } from 'sequelize';
 import Channel from './Channel';
 import Permission from './Permission';
 import RolePermission from './RolePermission';
@@ -69,4 +70,8 @@ export default class Role extends Model {
 
     @BelongsToMany(() => Permission, () => RolePermission)
     permissions: Permission[];
+
+    declare getPermissions: BelongsToGetAssociationMixin<Permission>;
+    declare setPermissions: BelongsToSetAssociationMixin<Permission, number>;
+    declare addPermissions: HasManyAddAssociationsMixin<Permission, number>;
 }
