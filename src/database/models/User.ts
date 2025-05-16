@@ -1,4 +1,8 @@
-import { BelongsToGetAssociationMixin, BelongsToSetAssociationMixin, HasManyAddAssociationsMixin } from 'sequelize';
+import {
+    BelongsToGetAssociationMixin,
+    BelongsToSetAssociationMixin,
+    HasManyAddAssociationsMixin
+} from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,

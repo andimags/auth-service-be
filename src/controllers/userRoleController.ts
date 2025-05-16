@@ -11,7 +11,7 @@ const getUserRoles = async (req: Request, res: Response, next: NextFunction) => 
         if (!user) {
             return throwError('User not found', 404, next);
         }
-        
+
         const roles = await user.getRoles();
 
         res.json({
@@ -73,13 +73,13 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
         await UserRole.destroy({
             where: {
                 user_id: req.params.user_id,
-                role_id: req.params.role_id,
+                role_id: req.params.role_id
             }
-        })
+        });
 
         res.json({
             status: 1,
-            message: "User role successfully deleted"
+            message: 'User role successfully deleted'
         });
     } catch (error: unknown) {
         next(error);

@@ -19,7 +19,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findByPk(req.params.id, { include: [Role] })
+        const user = await User.findByPk(req.params.id, { include: [Role] });
 
         if (!user) {
             return throwError('User not found', 404, next);
@@ -45,7 +45,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
             return throwError('User not found', 404, next);
         }
 
-        if(req.body.role_ids){
+        if (req.body.role_ids) {
             await user.setRoles(req.body.role_ids);
 
             user = await user.reload({
@@ -75,7 +75,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             return throwError('User not found', 404, next);
         }
 
-        if(req.body.role_ids){
+        if (req.body.role_ids) {
             await user.setRoles(req.body.role_ids);
 
             user = await user.reload({

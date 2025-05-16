@@ -78,6 +78,4 @@ export default class Permission extends Model {
 
     @DeletedAt
     deleted_at: Date;
-
-    
 }
