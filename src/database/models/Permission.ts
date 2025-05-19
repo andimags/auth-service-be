@@ -8,11 +8,9 @@ import {
     DeletedAt,
     Model,
     PrimaryKey,
+    Scopes,
     Table,
-    UpdatedAt,
-    ForeignKey,
-    BelongsTo,
-    Scopes
+    UpdatedAt
 } from 'sequelize-typescript';
 import Channel from './Channel';
 

@@ -1,0 +1,159 @@
+[
+    {
+        "name": "Manage Users",
+        "description": "Full access to users module",
+        "ref_name": "admin:user",
+        "module": "users",
+        "scope": "admin"
+    },
+    {
+        "name": "View Users",
+        "description": "Ability to view users",
+        "ref_name": "view:user",
+        "module": "users",
+        "scope": "read"
+    },
+    {
+        "name": "Add Users",
+        "description": "Ability to add users",
+        "ref_name": "add:user",
+        "module": "users",
+        "scope": "write"
+    },
+    {
+        "name": "Update Users",
+        "description": "Ability to update users",
+        "ref_name": "update:user",
+        "module": "users",
+        "scope": "write"
+    },
+    {
+        "name": "Delete Users",
+        "description": "Ability to delete users",
+        "ref_name": "delete:user",
+        "module": "users",
+        "scope": "write"
+    },
+
+    {
+        "name": "Manage Channels",
+        "description": "Full access to channels module",
+        "ref_name": "admin:channel",
+        "module": "channels",
+        "scope": "admin"
+    },
+    {
+        "name": "View Channels",
+        "description": "Ability to view channels",
+        "ref_name": "view:channel",
+        "module": "channels",
+        "scope": "read"
+    },
+    {
+        "name": "Add Channels",
+        "description": "Ability to add channels",
+        "ref_name": "add:channel",
+        "module": "channels",
+        "scope": "write"
+    },
+    {
+        "name": "Update Channels",
+        "description": "Ability to update channels",
+        "ref_name": "update:channel",
+        "module": "channels",
+        "scope": "write"
+    },
+    {
+        "name": "Delete Channels",
+        "description": "Ability to delete channels",
+        "ref_name": "delete:channel",
+        "module": "channels",
+        "scope": "write"
+    },
+
+    {
+        "name": "Manage Roles",
+        "description": "Full access to roles module",
+        "ref_name": "admin:role",
+        "module": "roles",
+        "scope": "admin"
+    },
+    {
+        "name": "View Roles",
+        "description": "Ability to view roles",
+        "ref_name": "view:role",
+        "module": "roles",
+        "scope": "read"
+    },
+    {
+        "name": "Add Roles",
+        "description": "Ability to add roles",
+        "ref_name": "add:role",
+        "module": "roles",
+        "scope": "write"
+    },
+    {
+        "name": "Update Roles",
+        "description": "Ability to update roles",
+        "ref_name": "update:role",
+        "module": "roles",
+        "scope": "write"
+    },
+    {
+        "name": "Delete Roles",
+        "description": "Ability to delete roles",
+        "ref_name": "delete:role",
+        "module": "roles",
+        "scope": "write"
+    },
+    {
+        "name": "Assign Roles",
+        "description": "Ability to assign roles to users",
+        "ref_name": "assign:role",
+        "module": "roles",
+        "scope": "write"
+    },
+
+    {
+        "name": "Manage Permissions",
+        "description": "Full access to permissions module",
+        "ref_name": "admin:permission",
+        "module": "permissions",
+        "scope": "admin"
+    },
+    {
+        "name": "View Permissions",
+        "description": "Ability to view permissions",
+        "ref_name": "view:permission",
+        "module": "permissions",
+        "scope": "read"
+    },
+    {
+        "name": "Add Permissions",
+        "description": "Ability to add permissions",
+        "ref_name": "add:permission",
+        "module": "permissions",
+        "scope": "write"
+    },
+    {
+        "name": "Update Permissions",
+        "description": "Ability to update permissions",
+        "ref_name": "update:permission",
+        "module": "permissions",
+        "scope": "write"
+    },
+    {
+        "name": "Delete Permissions",
+        "description": "Ability to delete permissions",
+        "ref_name": "delete:permission",
+        "module": "permissions",
+        "scope": "write"
+    },
+    {
+        "name": "Assign Permissions",
+        "description": "Ability to assign permissions to roles",
+        "ref_name": "assign:permission",
+        "module": "permissions",
+        "scope": "write"
+    }
+]
