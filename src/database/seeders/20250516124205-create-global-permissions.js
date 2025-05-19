@@ -17,7 +17,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        console.log(permissionsJson.map(p => p.ref_name));
         await queryInterface.bulkDelete('permissions', {
             ref_name: {
                 [Sequelize.Op.in]: permissionsJson.map(p => p.ref_name)
