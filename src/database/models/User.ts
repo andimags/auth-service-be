@@ -1,5 +1,5 @@
 import {
-    BelongsToGetAssociationMixin,
+    BelongsToManyGetAssociationsMixin,
     BelongsToSetAssociationMixin,
     HasManyAddAssociationsMixin
 } from 'sequelize';
@@ -71,7 +71,7 @@ export default class User extends Model {
     @BelongsToMany(() => Role, () => UserRole)
     roles: Role[];
 
-    declare getRoles: BelongsToGetAssociationMixin<Role>;
+    declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
     declare setRoles: BelongsToSetAssociationMixin<Role, number>;
     declare addRoles: HasManyAddAssociationsMixin<Role, number>;
 }

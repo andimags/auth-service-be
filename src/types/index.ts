@@ -1,3 +1,9 @@
+import { Request } from 'express';
+
+export interface IAuthenticatedRequest extends Request {
+    user: IUser;
+}
+
 export interface IRole {
     id: number;
     name: string;
