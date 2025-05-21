@@ -11,10 +11,15 @@ export const blockIfGlobalPermission = async (req: Request, res: Response, next:
 
         const belongsToGlobalRole = await isPermissionOnGlobalRole(permission.ref_name);
 
-        if(!belongsToGlobalRole) next();
+        if(!belongsToGlobalRole){
+            next();
+        }
+        else{
+            throw new AppError('Permission attached to a global role cannot be modified', 404);
+        }
     } catch (error: any) {
-        console.error('Token verification failed:', error.message ?? error);
+        console.error('Something went wrong:', error.message ?? error);
 
-        throw new AppError('Invalid or expired token', 403);
+        throw new AppError(error.message ?? error, 403);
     }
 };

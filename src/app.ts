@@ -25,6 +25,12 @@ app.get('/health', (req, res) => {
     res.send('Healthy');
 });
 
+app.get('/ping', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.send('Server is fresh');
+});
+
+
 app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/permissions', permissionRoutes);
