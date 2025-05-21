@@ -16,4 +16,3 @@ export const throwError = (message: string, status: number = 500) => {
     error.status = status;
     throw error;
 };
-

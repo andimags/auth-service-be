@@ -1,7 +1,7 @@
-import Permission from "../database/models/Permission";
-import { throwError } from "../middlewares/errorHandler";
+import Permission from '../database/models/Permission';
+import { throwError } from '../middlewares/errorHandler';
 
-export async function isPermissionOnGlobalRole(permissionRefName:string): Promise<any> {
+export async function isPermissionOnGlobalRole(permissionRefName: string): Promise<any> {
     let isGlobal = false;
 
     const permission = await Permission.findOne({

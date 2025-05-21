@@ -13,9 +13,7 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 import Channel from './Channel';
-import {
-    BelongsToManyGetAssociationsMixin
-} from 'sequelize';
+import { BelongsToManyGetAssociationsMixin } from 'sequelize';
 import Role from './Role';
 
 enum scopeType {

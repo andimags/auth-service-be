@@ -5,7 +5,7 @@ import User from './User';
 
 @Table({
     tableName: 'user_role',
-        updatedAt: false
+    updatedAt: false
 })
 export default class UserRole extends Model {
     @ForeignKey(() => User)

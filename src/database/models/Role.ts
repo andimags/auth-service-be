@@ -14,7 +14,11 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 
-import { BelongsToManyGetAssociationsMixin, BelongsToSetAssociationMixin, HasManyAddAssociationsMixin } from 'sequelize';
+import {
+    BelongsToManyGetAssociationsMixin,
+    BelongsToSetAssociationMixin,
+    HasManyAddAssociationsMixin
+} from 'sequelize';
 import Channel from './Channel';
 import Permission from './Permission';
 import RolePermission from './RolePermission';

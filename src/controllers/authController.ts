@@ -1,10 +1,10 @@
-import bcrypt from "bcrypt";
+import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import Channel from "../database/models/Channel";
+import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { throwError } from '../middlewares/errorHandler';
-import { IAuthenticatedRequest } from "../types";
+import { IAuthenticatedRequest } from '../types';
 
 const generateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -12,7 +12,7 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
             where: {
                 email: req.body.email
             }
-        })
+        });
 
         if (!user) return throwError('User not found', 404);
 
@@ -24,15 +24,15 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
 
         res.cookie('refresh_token', token, {
             httpOnly: true,
-            secure: true,          // Only send over HTTPS
-            sameSite: 'strict',    // Protect from CSRF
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            secure: true, // Only send over HTTPS
+            sameSite: 'strict', // Protect from CSRF
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.json({
             status: 1,
             token: token
-        })
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -41,13 +41,13 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
 const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies['refresh_token'];
-        
+
         if (!token) return throwError('Token not found', 404);
 
         res.json({
             status: 1,
             token: token
-        })
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -64,7 +64,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction): Pro
         res.json({
             status: 1,
             decoded: decoded
-        })
+        });
     } catch (error: unknown) {
         next(error);
     }
@@ -83,18 +83,17 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
 
         if (!user) return throwError('User not found', 404);
 
-        if(apiKey == 'GLOBAL'){
+        if (apiKey == 'GLOBAL') {
             // Global roles to check
             roles = await user.getRoles({
                 where: {
                     channel_id: null
                 }
             });
-        }
-        else{
+        } else {
             const channel = await Channel.findOne({
                 where: {
-                    'api_key': apiKey
+                    api_key: apiKey
                 }
             });
 
@@ -120,7 +119,7 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
             if (isAuthorized) break;
         }
 
-        return isAuthorized ? res.json({status: 1}) : throwError('Unauthorized', 401);
+        return isAuthorized ? res.json({ status: 1 }) : throwError('Unauthorized', 401);
     } catch (error: unknown) {
         next(error);
     }
