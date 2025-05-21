@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
+import checkPermission from '../middlewares/checkPermission';
 
 const userRoutes = Router();
 

@@ -6,13 +6,14 @@ export interface AppError extends Error {
 
 export const errorHandler = (err: AppError, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
-    res.status(err.status || 500).json({
+    res.status(err.status ?? 500).json({
         message: err.message || 'Internal Server Error'
     });
 };
 
-export const throwError = (message: string, status: number = 500, next: NextFunction) => {
+export const throwError = (message: string, status: number = 500) => {
     const error: AppError = new Error(message) as AppError;
     error.status = status;
-    return next(error);
+    throw error;
 };
+

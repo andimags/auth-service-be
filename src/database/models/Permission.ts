@@ -13,6 +13,10 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 import Channel from './Channel';
+import {
+    BelongsToManyGetAssociationsMixin
+} from 'sequelize';
+import Role from './Role';
 
 enum scopeType {
     read = 'read',
@@ -76,4 +80,6 @@ export default class Permission extends Model {
 
     @DeletedAt
     deleted_at: Date;
+
+    declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
 }
