@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import Channel from '../database/models/Channel';
 import User from '../database/models/User';
-import { throwError } from '../middlewares/errorHandler';
+import { AppError } from '../middlewares/errorHandler';
 import { IAuthenticatedRequest } from '../types';
 
 const generateToken = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,11 +14,11 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
             }
         });
 
-        if (!user) return throwError('User not found', 404);
+        if (!user) throw new AppError('User not found', 404);
 
         const match = await bcrypt.compare(req.body.password, user.password);
 
-        if (!match) return throwError('Invalid email or password', 404);
+        if (!match) throw new AppError('Invalid email or password', 404);
 
         const token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.API_KEY!);
 
@@ -42,7 +42,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const token = req.cookies['refresh_token'];
 
-        if (!token) return throwError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', 404);
 
         res.json({
             status: 1,
@@ -57,7 +57,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction): Pro
     try {
         const token = req.header('Authorization')?.split(' ')[1];
 
-        if (!token) return throwError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', 404);
 
         const decoded = jwt.verify(token, process.env.API_KEY!);
 
@@ -81,7 +81,7 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
         let isAuthorized = false;
         let roles = null;
 
-        if (!user) return throwError('User not found', 404);
+        if (!user) throw new AppError('User not found', 404);
 
         if (apiKey == 'GLOBAL') {
             // Global roles to check
@@ -97,7 +97,7 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
                 }
             });
 
-            if (!channel) return throwError('Channel not found', 404);
+            if (!channel) throw new AppError('Channel not found', 404);
 
             roles = await user.getRoles({
                 where: {
@@ -119,7 +119,11 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
             if (isAuthorized) break;
         }
 
-        return isAuthorized ? res.json({ status: 1 }) : throwError('Unauthorized', 401);
+        if (isAuthorized) {
+            return res.json({ status: 1 });
+        } else {
+            throw new AppError('Unauthorized', 401);
+        }
     } catch (error: unknown) {
         next(error);
     }

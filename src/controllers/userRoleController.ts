@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import UserRole from '../database/models/UserRole';
-import { throwError } from '../middlewares/errorHandler';
+import { AppError } from '../middlewares/errorHandler';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (req: Request, res: Response, next: NextFunction) => {
@@ -9,7 +9,7 @@ const getUserRoles = async (req: Request, res: Response, next: NextFunction) => 
         const user = await User.findByPk(req.params.user_id);
 
         if (!user) {
-            return throwError('User not found', 404);
+            throw new AppError('User not found', 404);
         }
 
         const roles = await user.getRoles();
@@ -29,7 +29,7 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
         const user = await User.findByPk(req.params.user_id);
 
         if (!user) {
-            return throwError('User not found', 404);
+            throw new AppError('User not found', 404);
         }
 
         await user.addRoles(req.body.role_ids);
@@ -51,7 +51,7 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
         const user = await User.findByPk(req.params.user_id);
 
         if (!user) {
-            return throwError('User not found', 404);
+            throw new AppError('User not found', 404);
         }
 
         await user.setRoles(req.body.role_ids);

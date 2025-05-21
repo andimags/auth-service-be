@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { IAuthenticatedRequest } from '../types';
-import { throwError } from './errorHandler';
+import { AppError } from './errorHandler';
 
 export default function checkPermission(permissionRefName: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -13,14 +13,14 @@ export default function checkPermission(permissionRefName: string) {
             // 3, If Channel based, loop through user's roles that have the appropriate channel id of channel_id, check each if the specific permission is attached to it.
             const apiKey = req.header('x-api-key');
 
-            if (!apiKey) return throwError('API key not found', 403);
+            if (!apiKey) throw new AppError('API key not found', 403);
 
             const decoded = (req as IAuthenticatedRequest).user;
             const user = await User.findByPk(decoded.id);
             let isAuthorized = false;
             let roles = null;
 
-            if (!user) return throwError('User not found', 404);
+            if (!user) throw new AppError('User not found', 404);
 
             if (apiKey == 'GLOBAL') {
                 // Global roles to check
@@ -36,7 +36,7 @@ export default function checkPermission(permissionRefName: string) {
                     }
                 });
 
-                if (!channel) return throwError('Channel not found', 404);
+                if (!channel) throw new AppError('Channel not found', 404);
 
                 roles = await user.getRoles({
                     where: {
@@ -58,7 +58,11 @@ export default function checkPermission(permissionRefName: string) {
                 if (isAuthorized) break;
             }
 
-            return isAuthorized ? res.json({ status: 1 }) : throwError('Forbidden', 403);
+            if (isAuthorized) {
+                return res.json({ status: 1 });
+            } else {
+                throw new AppError('Unauthorized', 401);
+            }
         } catch (error: unknown) {
             next(error);
         }

@@ -1,7 +1,7 @@
 import Permission from '../database/models/Permission';
-import { throwError } from '../middlewares/errorHandler';
+import { AppError } from '../middlewares/errorHandler';
 
-export async function isPermissionOnGlobalRole(permissionRefName: string): Promise<any> {
+export async function isPermissionOnGlobalRole(permissionRefName: string): Promise<boolean> {
     let isGlobal = false;
 
     const permission = await Permission.findOne({
@@ -12,7 +12,7 @@ export async function isPermissionOnGlobalRole(permissionRefName: string): Promi
 
     const roles = await permission?.getRoles();
 
-    if (!roles) return throwError('Permission is not attached to any role', 404);
+    if (!roles) throw new AppError('Permission is not attached to any role', 404);
 
     for (const role of roles) {
         if (role.channel_id == null) {
