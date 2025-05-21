@@ -7,7 +7,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     try {
         const token = req.header('Authorization')?.split(' ')[1];
 
-        if (!token) return throwError('Unauthorized', 401, next);
+        if (!token) return throwError('Unauthorized', 401);
 
         const decoded = jwt.verify(token, process.env.API_KEY!) as IUser;
         (req as IAuthenticatedRequest).user = decoded;
@@ -16,6 +16,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     } catch (error: any) {
         console.error('Token verification failed:', error.message || error);
 
-        return throwError('Invalid or expired token', 403, next);
+        return throwError('Invalid or expired token', 403);
     }
 };

@@ -9,7 +9,7 @@ const getRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const role = await Role.findByPk(req.params.role_id);
 
         if (!role) {
-            return throwError('Role not found', 404, next);
+            return throwError('Role not found', 404);
         }
 
         const permissions = await role.getPermissions();
@@ -29,7 +29,7 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const role = await Role.findByPk(req.params.role_id);
 
         if (!role) {
-            return throwError('Role not found', 404, next);
+            return throwError('Role not found', 404);
         }
 
         await role.addPermissions(req.body.permission_ids);
@@ -51,7 +51,7 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         const role = await Role.findByPk(req.params.role_id);
 
         if (!role) {
-            return throwError('Role not found', 404, next);
+            return throwError('Role not found', 404);
         }
 
         await role.setPermissions(req.body.permission_ids);

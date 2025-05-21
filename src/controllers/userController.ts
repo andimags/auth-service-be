@@ -22,7 +22,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const user = await User.findByPk(req.params.id, { include: [Role] });
 
         if (!user) {
-            return throwError('User not found', 404, next);
+            return throwError('User not found', 404);
         }
 
         res.json({
@@ -42,7 +42,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
         let user = await User.create(req.body);
 
         if (!user) {
-            return throwError('User not found', 404, next);
+            return throwError('User not found', 404);
         }
 
         if (req.body.role_ids) {
@@ -72,7 +72,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         if (!user) {
-            return throwError('User not found', 404, next);
+            return throwError('User not found', 404);
         }
 
         if (req.body.role_ids) {
