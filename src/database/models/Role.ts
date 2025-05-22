@@ -1,4 +1,5 @@
 import {
+    AfterCreate,
     AllowNull,
     AutoIncrement,
     BelongsTo,
@@ -75,7 +76,16 @@ export default class Role extends Model {
     @BelongsToMany(() => Permission, () => RolePermission)
     permissions: Permission[];
 
+    // Mixins
     declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
     declare setPermissions: BelongsToSetAssociationMixin<Permission, number>;
     declare addPermissions: HasManyAddAssociationsMixin<Permission, number>;
+
+    // Hooks
+    @AfterCreate
+    static async assignToSuperadminUser(role: Role) {
+        const user = await User.findOne({where: {username: 'superadmin'}});
+
+        await user?.addRoles([role]);
+    }
 }
