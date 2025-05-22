@@ -6,6 +6,7 @@ import { AppError } from '../middlewares/errorHandler';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        res.send("test");
         const users = await User.findAll({ include: Role });
 
         res.json({

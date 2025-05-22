@@ -1,68 +1,56 @@
 // middleware/authorize.ts
 import { NextFunction, Request, Response } from 'express';
+import { Op } from 'sequelize';
 import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { IAuthenticatedRequest } from '../types';
 import { AppError } from './errorHandler';
 
-export default function checkPermission(permissionRefName: string) {
-    return async (req: Request, res: Response, next: NextFunction) => {
+export default function checkPermission(permissionRefName: string, channelRefName: string) {
+    return async (req: Request, res: Response, next: NextFunction): Promise<any> => {
         try {
-            // 1. Check if x-api-key is GLOBAL or channel-based
-            // 2. If GLOBAL, loop through user's roles that have null channel_id, check each if the specific permission is attached to it.
-            // 3, If Channel based, loop through user's roles that have the appropriate channel id of channel_id, check each if the specific permission is attached to it.
+            // 1. Check if x-api-key is match to the channel with ref_name from channelRefName variable
+            // 2. If x-api-key is GLOBAL, check user's roles with channel_id as NULL
+            // 3. If x-api-key has value, check user's roles with channel_id that has value
+            // 4. Loop through the roles and check if it has permission with ref_name from permissionRefName variable
             const apiKey = req.header('x-api-key');
-
-            if (!apiKey) throw new AppError('API key not found', 403);
-
             const decoded = (req as IAuthenticatedRequest).user;
             const user = await User.findByPk(decoded.id);
-            let isAuthorized = false;
+
             let roles = null;
+            let isAuthorized = false;
 
-            if (!user) throw new AppError('User not found', 404);
+            if (!apiKey) throw new AppError('API Key not found', 401);
 
-            if (apiKey == 'GLOBAL') {
-                // Global roles to check
-                roles = await user.getRoles({
-                    where: {
-                        channel_id: null
-                    }
-                });
-            } else {
-                const channel = await Channel.findOne({
-                    where: {
-                        api_key: apiKey
-                    }
-                });
-
-                if (!channel) throw new AppError('Channel not found', 404);
-
-                roles = await user.getRoles({
-                    where: {
-                        channel_id: channel.id
-                    }
-                });
+            if(channelRefName == 'GLOBAL' && apiKey == 'GLOBAL'){
+                roles = await user?.getRoles({where: { channel_id: {[Op.is]: null}}});
+                if (!roles) throw new AppError('User has no global roles assigned', 401);
+            }
+            else{
+                const channel = await Channel.findOne({where: {api_key: apiKey}});
+                if (!channel) throw new AppError('Invalid API Key', 401);
+                roles = await user?.getRoles({where: {channel_id: channel.id}});
+                if (!roles) throw new AppError(`User has no roles assigned for ${channel.name} channel`, 401);
             }
 
-            for (const role of roles) {
-                const permissions = await role.getPermissions();
+                    for (const role of roles) {
+            const permissions = await role.getPermissions();
 
-                for (const permission of permissions) {
-                    if (permission.ref_name === req.params.permission_ref_name) {
-                        isAuthorized = true;
-                        break;
-                    }
+            for (const permission of permissions) {
+                if (permission.ref_name === permissionRefName) {
+                    isAuthorized = true;
+                    break;
                 }
-
-                if (isAuthorized) break;
             }
 
-            if (isAuthorized) {
-                return res.json({ status: 1 });
-            } else {
-                throw new AppError('Unauthorized', 401);
-            }
+            if (isAuthorized) break;
+        }
+
+        if (isAuthorized) {
+            next();
+        } else {
+            throw new AppError('Unauthorized', 401);
+        }
         } catch (error: unknown) {
             next(error);
         }

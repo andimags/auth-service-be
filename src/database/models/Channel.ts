@@ -37,6 +37,10 @@ export default class Channel extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
+    ref_name: string;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
     api_key: string;
 
     @CreatedAt
