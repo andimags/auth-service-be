@@ -7,8 +7,7 @@ const authRoutes = Router();
 authRoutes.post('/generate-token', authController.generateToken);
 
 authRoutes.get(
-    '/refresh-token', 
-    authMiddleware,
+    '/refresh-token',
     authController.refreshToken
 );
 
