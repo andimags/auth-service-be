@@ -72,7 +72,6 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        res.send("passed middleware");
         const shouldForce = req.query.force === 'true';
         const permission = await Permission.findByPk(req.params.id, { paranoid: false });
 
