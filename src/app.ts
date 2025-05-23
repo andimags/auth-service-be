@@ -11,6 +11,7 @@ import rolePermissionRoutes from './routes/rolePermissionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import userRoutes from './routes/userRoutes';
+import { authMiddleware } from './middlewares/authMiddleware';
 
 const app = express();
 
@@ -31,13 +32,16 @@ app.get('/ping', (req, res) => {
 });
 
 
+app.use('/api/auth', authRoutes);
+
+app.use(authMiddleware);
+
 app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/permissions', permissionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/user-role', userRoleRoutes);
 app.use('/api/role-permission', rolePermissionRoutes);
-app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
