@@ -1,6 +1,6 @@
 'use strict';
 
-const permissionsJson = require('../../data/permissions.json');
+const globalPermissionsJson = require('../../data/globalPermissions.json');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
 
         const now = new Date();
         const rolePermissionData = await Promise.all(
-            permissionsJson.map(async (permission) => {
+            globalPermissionsJson.map(async (permission) => {
                 const [results] = await queryInterface.sequelize.query(
                     `SELECT id FROM permissions WHERE ref_name = :ref_name LIMIT 1`,
                     {

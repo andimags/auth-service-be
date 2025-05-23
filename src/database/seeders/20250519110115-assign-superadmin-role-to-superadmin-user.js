@@ -1,7 +1,5 @@
 'use strict';
 
-const permissionsJson = require('../../data/permissions.json');
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {

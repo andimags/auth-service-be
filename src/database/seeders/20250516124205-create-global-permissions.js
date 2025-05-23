@@ -1,13 +1,13 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const permissionsJson = require('../../data/permissions.json');
+const globalPermissions = require('../../data/globalPermissions.json');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
         const timestamp = new Date();
-        const permissionsWithTimestamps = permissionsJson.map(permission => ({
+        const permissionsWithTimestamps = globalPermissions.map(permission => ({
             ...permission,
             created_at: timestamp,
             updated_at: timestamp
