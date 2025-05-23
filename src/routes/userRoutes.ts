@@ -1,14 +1,35 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
-import { authMiddleware } from '../middlewares/authMiddleware';
 import checkPermission from '../middlewares/checkPermission';
 
 const userRoutes = Router();
 
-userRoutes.get('/', authMiddleware, checkPermission(['view:user', 'admin:user']) , userController.getAll);
-userRoutes.get('/:id', userController.find);
-userRoutes.post('/', userController.add);
-userRoutes.put('/:id', userController.update);
-userRoutes.delete('/:id', userController.destroy);
+userRoutes.get(
+    '/', 
+    checkPermission(['view:user', 'admin:user']),
+    userController.getAll
+);
+
+userRoutes.get(
+    '/:id', 
+    checkPermission(['view:user', 'admin:user']),
+    userController.find
+);
+userRoutes.post(
+    '/',
+    checkPermission(['add:user', 'admin:user']),
+    userController.add
+);
+userRoutes.put(
+    '/:id', 
+    checkPermission(['update:user', 'admin:user']),
+    userController.update
+);
+
+userRoutes.delete(
+    '/:id',
+    checkPermission(['delete:user', 'admin:user']),
+    userController.destroy
+);
 
 export default userRoutes;
