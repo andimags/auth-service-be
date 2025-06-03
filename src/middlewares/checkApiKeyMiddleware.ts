@@ -1,13 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
+import Channel from '../database/models/Channel';
 import { IRequestWithChannel } from '../types';
 import { AppError } from './errorHandler';
-import Channel from '../database/models/Channel';
 
 export const checkApiKeyMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const apiKey = req.header('x-api-key');
 
-        if (apiKey) next();
+        if (!apiKey) throw new AppError('API Key not found', 401);
+
+        if (apiKey == 'GLOBAL') next();
 
         const channel = await Channel.findOne({
             where: {

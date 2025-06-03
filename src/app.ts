@@ -12,6 +12,7 @@ import roleRoutes from './routes/roleRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import userRoutes from './routes/userRoutes';
 import { authMiddleware } from './middlewares/authMiddleware';
+import { checkApiKeyMiddleware } from './middlewares/checkApiKeyMiddleware';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.get('/ping', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 app.use(authMiddleware);
+app.use(checkApiKeyMiddleware);
 
 app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);
