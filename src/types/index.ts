@@ -4,6 +4,11 @@ export interface IAuthenticatedRequest extends Request {
     user: IUser;
 }
 
+export interface IRequestWithChannel extends Request {
+    channel: IChannel;
+}
+
+
 export interface IRole {
     id: number;
     name: string;
@@ -26,3 +31,15 @@ export interface IUser {
     updated_at: Date;
     deleted_at: Date | null;
 }
+
+export interface IChannel {
+    id: number;
+    name: string;
+    description: string;
+    ref_name: string;
+    api_key: string;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+}
+
