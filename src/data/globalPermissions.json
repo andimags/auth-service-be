@@ -4,35 +4,41 @@
         "description": "Full access to users module",
         "ref_name": "admin:user",
         "module": "user",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
+        
     },
     {
         "name": "View Users",
         "description": "Ability to view users",
         "ref_name": "view:user",
         "module": "user",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Add Users",
         "description": "Ability to add users",
         "ref_name": "add:user",
         "module": "user",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update Users",
         "description": "Ability to update users",
         "ref_name": "update:user",
         "module": "user",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Delete Users",
         "description": "Ability to delete users",
         "ref_name": "delete:user",
         "module": "user",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
 
     {
@@ -40,35 +46,40 @@
         "description": "Full access to channels module",
         "ref_name": "admin:channel",
         "module": "channel",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
     },
     {
         "name": "View Channels",
         "description": "Ability to view channels",
         "ref_name": "view:channel",
         "module": "channel",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Add Channels",
         "description": "Ability to add channels",
         "ref_name": "add:channel",
         "module": "channel",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update Channels",
         "description": "Ability to update channels",
         "ref_name": "update:channel",
         "module": "channel",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Delete Channels",
         "description": "Ability to delete channels",
         "ref_name": "delete:channel",
         "module": "channel",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
 
     {
@@ -76,35 +87,40 @@
         "description": "Full access to roles module",
         "ref_name": "admin:role",
         "module": "role",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
     },
     {
         "name": "View Roles",
         "description": "Ability to view roles",
         "ref_name": "view:role",
         "module": "role",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Add Roles",
         "description": "Ability to add roles",
         "ref_name": "add:role",
         "module": "role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update Roles",
         "description": "Ability to update roles",
         "ref_name": "update:role",
         "module": "role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Delete Roles",
         "description": "Ability to delete roles",
         "ref_name": "delete:role",
         "module": "role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
 
     {
@@ -112,35 +128,40 @@
         "description": "Full access to user role module",
         "ref_name": "admin:user_role",
         "module": "user_role",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
     },
     {
         "name": "View User Role",
         "description": "Ability to view users' roles",
         "ref_name": "view:user_role",
         "module": "user_role",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Assign User Role",
         "description": "Ability to assign roles to users",
         "ref_name": "assign:user_role",
         "module": "user_role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update User Role",
         "description": "Ability to update users' roles",
         "ref_name": "update:user_role",
         "module": "user_role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Remove User Role",
         "description": "Ability to remove users' roles",
         "ref_name": "remove:user_role",
         "module": "user_role",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
 
     {
@@ -148,35 +169,40 @@
         "description": "Full access to permissions module",
         "ref_name": "admin:permission",
         "module": "permission",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
     },
     {
         "name": "View Permissions",
         "description": "Ability to view permissions",
         "ref_name": "view:permission",
         "module": "permission",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Add Permissions",
         "description": "Ability to add permissions",
         "ref_name": "add:permission",
         "module": "permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update Permissions",
         "description": "Ability to update permissions",
         "ref_name": "update:permission",
         "module": "permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Delete Permissions",
         "description": "Ability to delete permissions",
         "ref_name": "delete:permission",
         "module": "permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
 
     {
@@ -184,34 +210,39 @@
         "description": "Full access to role permission module",
         "ref_name": "admin:role_permission",
         "module": "role_permission",
-        "scope": "admin"
+        "access_level": "admin",
+        "scope": "global"
     },
     {
         "name": "View Role Permission",
         "description": "Ability to view roles' permissions",
         "ref_name": "view:role_permission",
         "module": "role_permission",
-        "scope": "read"
+        "access_level": "read",
+        "scope": "global"
     },
     {
         "name": "Assign Role Permission",
         "description": "Ability to assign permissions to roles",
         "ref_name": "assign:role_permission",
         "module": "role_permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Update Role Permission",
         "description": "Ability to update roles' permissions",
         "ref_name": "update:role_permission",
         "module": "role_permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     },
     {
         "name": "Remove Role Permission",
         "description": "Ability to remove roles' permissions",
         "ref_name": "remove:role_permission",
         "module": "role_permission",
-        "scope": "write"
+        "access_level": "write",
+        "scope": "global"
     }
 ]

@@ -5,9 +5,10 @@ export interface IAuthenticatedRequest extends Request {
 }
 
 export interface IRequestWithChannel extends Request {
-    channel: IChannel;
+    channel?: IChannel;
 }
 
+export interface IRequestWithUserAndChannel extends IAuthenticatedRequest, IRequestWithChannel {}
 
 export interface IRole {
     id: number;

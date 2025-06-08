@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
 import checkPermission from '../middlewares/checkPermission';
-import { checkApiKeyMiddleware } from '../middlewares/checkApiKeyMiddleware';
 
 const userRoutes = Router();
 

@@ -19,6 +19,11 @@ import Role from './Role';
 import RolePermission from './RolePermission';
 
 enum scopeType {
+    global = 'global',
+    channel = 'channel'
+}
+
+enum accessLevelType {
     read = 'read',
     write = 'write',
     admin = 'admin'
@@ -68,6 +73,10 @@ export default class Permission extends Model {
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(scopeType)))
     scope: string;
+
+    @AllowNull(false)
+    @Column(DataType.ENUM(...Object.values(accessLevelType)))
+    access_level: string;
 
     @Column(DataType.INTEGER)
     sequence: number;
