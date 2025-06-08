@@ -1,6 +1,6 @@
 'use strict';
 
-const globalPermissionsJson = require('../../data/globalPermissions.json');
+const globalPermissionsJson = require('../../constants/globalPermissions.json');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

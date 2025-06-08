@@ -19,11 +19,7 @@ import {
 } from 'sequelize-typescript';
 import Role from './Role';
 import UserRole from './UserRole';
-
-enum statusType {
-    active = 'active',
-    inactive = 'inactive'
-}
+import { UserStatusType } from '../../constants/enums';
 
 @Table({
     tableName: 'users'
@@ -52,7 +48,7 @@ export default class User extends Model {
 
     @AllowNull(false)
     @Default('active')
-    @Column(DataType.ENUM(...Object.values(statusType)))
+    @Column(DataType.ENUM(...Object.values(UserStatusType)))
     status: string;
 
     @AllowNull(false)

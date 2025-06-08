@@ -1,7 +1,7 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const globalPermissions = require('../../data/globalPermissions.json');
+const globalPermissions = require('../../constants/globalPermissions.json');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

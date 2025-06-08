@@ -17,17 +17,7 @@ import Channel from './Channel';
 import { BelongsToManyGetAssociationsMixin } from 'sequelize';
 import Role from './Role';
 import RolePermission from './RolePermission';
-
-enum scopeType {
-    global = 'global',
-    channel = 'channel'
-}
-
-enum accessLevelType {
-    read = 'read',
-    write = 'write',
-    admin = 'admin'
-}
+import { PermissionAccessLevelType, PermissionScopeType } from '../../constants/enums';
 
 @DefaultScope(() => ({
     attributes: {
@@ -71,11 +61,11 @@ export default class Permission extends Model {
     module: string;
 
     @AllowNull(false)
-    @Column(DataType.ENUM(...Object.values(scopeType)))
+    @Column(DataType.ENUM(...Object.values(PermissionScopeType)))
     scope: string;
 
     @AllowNull(false)
-    @Column(DataType.ENUM(...Object.values(accessLevelType)))
+    @Column(DataType.ENUM(...Object.values(PermissionAccessLevelType)))
     access_level: string;
 
     @Column(DataType.INTEGER)
