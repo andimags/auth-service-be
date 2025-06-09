@@ -25,6 +25,7 @@ import Permission from './Permission';
 import RolePermission from './RolePermission';
 import User from './User';
 import UserRole from './UserRole';
+import { RoleScopeType } from '../../constants/enums';
 
 @Table({
     tableName: 'roles'
@@ -51,6 +52,10 @@ export default class Role extends Model {
     @ForeignKey(() => Channel)
     @Column
     channel_id: number;
+
+    @AllowNull(false)
+    @Column(DataType.ENUM(...Object.values(RoleScopeType)))
+    scope: string;
 
     @CreatedAt
     created_at: Date;

@@ -4,6 +4,8 @@ import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
 
 // Routes
+import { authMiddleware } from './middlewares/authMiddleware';
+import { checkApiKeyMiddleware } from './middlewares/checkApiKeyMiddleware';
 import authRoutes from './routes/authRoutes';
 import channelRoutes from './routes/channelRoutes';
 import permissionRoutes from './routes/permissionRoutes';
@@ -11,8 +13,6 @@ import rolePermissionRoutes from './routes/rolePermissionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import userRoutes from './routes/userRoutes';
-import { authMiddleware } from './middlewares/authMiddleware';
-import { checkApiKeyMiddleware } from './middlewares/checkApiKeyMiddleware';
 
 const app = express();
 

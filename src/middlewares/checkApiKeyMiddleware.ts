@@ -9,7 +9,7 @@ export const checkApiKeyMiddleware = async (req: Request, res: Response, next: N
 
         if (!apiKey) throw new AppError('API Key not found', 401);
 
-        if (apiKey == 'GLOBAL') next();
+        if (apiKey == 'GLOBAL') return next();
 
         const channel = await Channel.findOne({
             where: {
@@ -23,8 +23,8 @@ export const checkApiKeyMiddleware = async (req: Request, res: Response, next: N
 
         next();
     } catch (error: any) {
-        console.error('Token verification failed:', error.message ?? error);
+        console.error('API key verification failed:', error.message ?? error);
 
-        throw new AppError('Invalid or expired token', 403);
+        throw new AppError('Invalid API key', 403);
     }
 };

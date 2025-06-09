@@ -10,6 +10,7 @@ module.exports = {
             description: 'Full system access',
             ref_name: 'superadmin',
             level: 1,
+            scope: 'global',
             created_at: new Date(),
             updated_at: new Date()
         }], {});

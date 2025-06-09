@@ -3,11 +3,28 @@ import { NextFunction, Request, Response } from 'express';
 import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        res.send("test");
-        const users = await User.findAll({ include: Role });
+        const customReq = req as IRequestWithUserAndChannel;
+        const { isGlobalRole } = customReq;
+        let users = [];
+
+        if(isGlobalRole){
+            users = await User.findAll({ include: Role });
+        }
+        else{
+            users = await User.findAll({ 
+                include: [{
+                    model: Role,
+                    where: {
+                        channel_id: customReq?.channel?.id
+                    },
+                    required: true
+                }]
+            });
+        }
 
         res.json({
             status: 1,
@@ -20,7 +37,24 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findByPk(req.params.id, { include: [Role] });
+        const customReq = req as IRequestWithUserAndChannel;
+        const { isGlobalRole } = customReq;
+        let user = null;
+
+        if(isGlobalRole){
+            user = await User.findByPk(req.params.id, { include: [Role] });
+        }
+        else{
+            user = await User.findByPk(req.params.id, {                 
+                include: [{
+                    model: Role,
+                    where: {
+                        channel_id: customReq?.channel?.id
+                    },
+                    required: true
+                }] 
+            });
+        }
 
         if (!user) {
             throw new AppError('User not found', 404);

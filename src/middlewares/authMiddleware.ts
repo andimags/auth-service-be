@@ -3,19 +3,28 @@ import jwt from 'jsonwebtoken';
 import { IAuthenticatedRequest, IUser } from '../types';
 import { AppError } from './errorHandler';
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): any => {
+export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     try {
-        const token = req.header('Authorization')?.split(' ')[1];
+        const authHeader = req.header('Authorization');
+        const token = authHeader?.split(' ')[1];
 
-        if (!token) throw new AppError('Unauthorized', 401);
+        if (!token) {
+            return next(new AppError('Unauthorized: No token provided', 401));
+        }
 
-        const decoded = jwt.verify(token, process.env.API_KEY!) as IUser;
+        const secret = process.env.API_KEY;
+        if (!secret) {
+            console.error('JWT secret (API_KEY) is not set in environment variables');
+            return next(new AppError('Server configuration error', 500));
+        }
+
+        const decoded = jwt.verify(token, secret) as IUser;
+
         (req as IAuthenticatedRequest).user = decoded;
 
         next();
     } catch (error: any) {
         console.error('Token verification failed:', error.message ?? error);
-
-        throw new AppError('Invalid or expired token', 403);
+        next(new AppError('Invalid or expired token', 403));
     }
 };

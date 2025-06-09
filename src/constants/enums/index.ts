@@ -13,3 +13,8 @@ export enum PermissionAccessLevelType {
     write = 'write',
     admin = 'admin'
 }
+
+export enum RoleScopeType {
+    global = 'global',
+    channel = 'channel'
+}

@@ -28,7 +28,7 @@ userRoutes.put(
 
 userRoutes.delete(
     '/:id',
-    checkPermission(['delete:user', 'admin:user']),
+    checkPermission(['delete:user', 'admin:user'], 'global'),
     userController.destroy
 );
 
