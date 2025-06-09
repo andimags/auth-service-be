@@ -99,23 +99,21 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let user = await User.findByPk(req.params.id, { include: Role });
-
-        if (req.body.password) {
-            const hash = bcrypt.hashSync(req.body.password, 10);
-            req.body.password = hash;
-        }
+        let user = await User.findByPk(req.params.id);
 
         if (!user) {
             throw new AppError('User not found', 404);
         }
 
-        if (req.body.role_ids) {
-            await user.setRoles(req.body.role_ids);
+        // Prevent changing superadmin's username
+        if (user.username === 'superadmin') {
+            const { username, ...rest } = req.body;
+            req.body = rest;
+        }
 
-            user = await user.reload({
-                include: [Role]
-            });
+        if (req.body.password) {
+            const hash = bcrypt.hashSync(req.body.password, 10);
+            req.body.password = hash;
         }
 
         await user?.update(req.body);
@@ -140,6 +138,8 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
                 message: 'User not found.'
             });
         }
+
+        if (user?.username == 'superadmin') throw new AppError('Cannot delete superadmin user.');
 
         await user?.destroy({ force: shouldForce });
 
