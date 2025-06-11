@@ -1,9 +1,8 @@
-import { AppError } from '../middlewares/errorHandler';
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
-import UserRole from '../database/models/UserRole';
-import { IRequestWithUserAndChannel } from '../types';
+import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, isRoleAssignable } from '../services/roleService';
+import { IRequestWithUserAndChannel } from '../types';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (req: Request, res: Response, next: NextFunction) => {
@@ -61,7 +60,7 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
         );
 
         // If the request is made by a channel-based role, it ensures that they can only attach role ids within their channel
-        if(!_isRoleAssignable){
+        if(!customReq.isGlobalRole && !_isRoleAssignable){
             throw new AppError('You can only attach roles to this user within your channel.', 403);
         }
 
@@ -94,7 +93,7 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
 
         const missingRoles = await findMissingRoles(customReq.body.role_ids);
 
-        if ( missingRoles.length > 0) {
+        if (missingRoles.length > 0) {
             throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
         }
 
@@ -103,7 +102,7 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
             customReq.channel?.id ?? null
         );
 
-        if(!_isRoleAssignable){
+        if(!customReq.isGlobalRole && !_isRoleAssignable){
             throw new AppError('You can only attach roles to this user within your channel.', 403);
         }
 
@@ -136,7 +135,7 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
 
         const missingRoles = await findMissingRoles(customReq.body.role_ids);
 
-        if ( missingRoles.length > 0) {
+        if (missingRoles.length > 0) {
             throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
         }
 
@@ -146,7 +145,7 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
         );
 
         // If the request is made by a channel-based role, it ensures that they can only remove role ids within their channel
-        if(!_isRoleAssignable){
+        if(!customReq.isGlobalRole && !_isRoleAssignable){
             throw new AppError('You can only remove roles to this user within your channel.', 403);
         }
 
