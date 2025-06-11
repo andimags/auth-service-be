@@ -5,6 +5,7 @@ import { IAuthenticatedRequest, IRequestWithChannel } from '../types';
 import { AppError } from './errorHandler';
 
 // Checks permission on GLOBAL scope
+// If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
 export default function checkPermission(
     permissionRefName: string | string[],
     roleScope: 'channel' | 'global' = 'channel'
@@ -23,7 +24,7 @@ export default function checkPermission(
                 scope: 'global'
             }});
 
-            if(globalRoles?.length == 0) throw new AppError('No global roles attached to this user.', 403);
+            if(globalRoles?.length == 0 && apiKey == 'GLOBAL') throw new AppError('No global roles attached to this user.', 403);
             
             if(globalRoles){
                 for (const role of globalRoles) {

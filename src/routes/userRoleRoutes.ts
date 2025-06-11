@@ -22,7 +22,7 @@ userRoleRoutes.put(
     userRoleController.replaceUserRoles
 );
 userRoleRoutes.delete(
-    '/user/:user_id/role/:role_id', 
+    '/user/:user_id', 
     checkPermission(['remove:user_role', 'admin:user_role']),
     userRoleController.destroyUserRole
 );
