@@ -20,62 +20,67 @@ export default function checkPermission(
 
             // Check for global roles first
             let globalRoles = await user?.getRoles({
-                where: {channel_id: {[Op.is]: null},
-                scope: 'global'
-            }});
+                where: { channel_id: { [Op.is]: null }, scope: 'global' }
+            });
 
-            if(globalRoles?.length == 0 && apiKey == 'GLOBAL') throw new AppError('No global roles attached to this user.', 403);
-            
-            if(globalRoles){
+            if (globalRoles?.length == 0 && apiKey == 'GLOBAL')
+                throw new AppError('No global roles attached to this user.', 403);
+
+            if (globalRoles) {
                 for (const role of globalRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
-                    ? {
-                        ref_name: { [Op.in]: permissionRefName },
-                        scope: 'global'
-                        }
-                    : {
-                        ref_name: permissionRefName,
-                        scope: 'global'
-                        };
+                        ? {
+                              ref_name: { [Op.in]: permissionRefName },
+                              scope: 'global'
+                          }
+                        : {
+                              ref_name: permissionRefName,
+                              scope: 'global'
+                          };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,
-                        limit: 1,
+                        limit: 1
                     });
 
                     if (permission) {
-                        customReq.isGlobalRole = true
+                        customReq.isGlobalRole = true;
                         return next();
                     }
                 }
             }
 
-            if(roleScope == 'global'){
-                throw new AppError('Unauthorized. Only users with global role for this permission must be allowed.', 401);
+            if (roleScope == 'global') {
+                throw new AppError(
+                    'Unauthorized. Only users with global role for this permission must be allowed.',
+                    401
+                );
             }
 
             // Check for channel-based roles
-            let channelBasedRoles = await user?.getRoles({where: {channel_id: (req as IRequestWithChannel)?.channel?.id}});
+            let channelBasedRoles = await user?.getRoles({
+                where: { channel_id: (req as IRequestWithChannel)?.channel?.id }
+            });
 
-            if(channelBasedRoles){
+            if (channelBasedRoles) {
                 for (const role of channelBasedRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
-                    ? {
-                        ref_name: { [Op.in]: permissionRefName },
-                        scope: 'global',
-                        }
-                    : {
-                        ref_name: permissionRefName,
-                        scope: 'global',
-                        };
+                        ? {
+                              ref_name: { [Op.in]: permissionRefName },
+                              scope: 'global'
+                          }
+                        : {
+                              ref_name: permissionRefName,
+                              scope: 'global'
+                          };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,
-                        limit: 1,
+                        limit: 1
                     });
 
                     if (permission) {
-                        customReq.isGlobalRole = false
+                        customReq.isGlobalRole = false;
                         return next();
                     }
                 }

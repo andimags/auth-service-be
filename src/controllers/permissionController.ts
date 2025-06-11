@@ -49,7 +49,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        res.send("passed middleware");
+        res.send('passed middleware');
         const permission = await Permission.findByPk(req.params.id);
 
         if (!permission) {

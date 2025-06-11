@@ -3,7 +3,11 @@ import Channel from '../database/models/Channel';
 import { IRequestWithChannel } from '../types';
 import { AppError } from './errorHandler';
 
-export const checkApiKeyMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+export const checkApiKeyMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
     try {
         const apiKey = req.header('x-api-key');
 
@@ -15,7 +19,7 @@ export const checkApiKeyMiddleware = async (req: Request, res: Response, next: N
             where: {
                 api_key: apiKey
             }
-        })
+        });
 
         if (!channel) throw new AppError('Invalid API key', 401);
 

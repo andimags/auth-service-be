@@ -6,33 +6,33 @@ import checkPermission from '../middlewares/checkPermission';
 const permissionRoutes = Router();
 
 permissionRoutes.get(
-    '/', 
+    '/',
     checkPermission(['view:permission', 'admin:permission']),
     permissionController.getAll
 );
 
 permissionRoutes.get(
-    '/:id', 
+    '/:id',
     checkPermission(['view:permission', 'admin:permission']),
     permissionController.find
 );
 
 permissionRoutes.post(
-    '/', 
+    '/',
     checkPermission(['add:permission', 'admin:permission']),
     permissionController.add
 );
 
 permissionRoutes.put(
-    '/:id', 
+    '/:id',
     checkPermission(['update:permission', 'admin:permission']),
-    blockIfGlobalPermission, 
+    blockIfGlobalPermission,
     permissionController.update
 );
 permissionRoutes.delete(
-    '/:id', 
+    '/:id',
     checkPermission(['delete:permission', 'admin:permission']),
-    blockIfGlobalPermission, 
+    blockIfGlobalPermission,
     permissionController.destroy
 );
 

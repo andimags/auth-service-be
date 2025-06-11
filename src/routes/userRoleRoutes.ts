@@ -11,18 +11,18 @@ userRoleRoutes.get(
 );
 
 userRoleRoutes.post(
-    '/user/:user_id', 
+    '/user/:user_id',
     checkPermission(['assign:user_role', 'admin:user_role']),
     userRoleController.addUserRoles
 );
 
 userRoleRoutes.put(
-    '/user/:user_id', 
+    '/user/:user_id',
     checkPermission(['update:user_role', 'admin:user_role']),
     userRoleController.replaceUserRoles
 );
 userRoleRoutes.delete(
-    '/user/:user_id', 
+    '/user/:user_id',
     checkPermission(['remove:user_role', 'admin:user_role']),
     userRoleController.destroyUserRole
 );

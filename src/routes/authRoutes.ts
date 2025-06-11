@@ -6,16 +6,9 @@ const authRoutes = Router();
 
 authRoutes.post('/generate-token', authController.generateToken);
 
-authRoutes.get(
-    '/refresh-token',
-    authController.refreshToken
-);
+authRoutes.get('/refresh-token', authController.refreshToken);
 
-authRoutes.get(
-    '/verify-token', 
-    authMiddleware,
-    authController.verifyToken
-);
+authRoutes.get('/verify-token', authMiddleware, authController.verifyToken);
 
 authRoutes.get(
     '/check-permission/:permission_ref_name',

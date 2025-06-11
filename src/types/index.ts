@@ -16,7 +16,7 @@ export interface IRole {
     name: string;
     description: string;
     ref_name: string;
-    scope: string,
+    scope: string;
     created_at: Date;
     updated_at: Date;
     deleted_at: Date | null;
@@ -52,9 +52,9 @@ export interface IPermission {
     description: string;
     ref_name: string;
     module: string;
-    scope: string,
-    access_level: string,
-    sequence: number,
+    scope: string;
+    access_level: string;
+    sequence: number;
     created_at: Date;
     updated_at: Date;
     deleted_at: Date | null;

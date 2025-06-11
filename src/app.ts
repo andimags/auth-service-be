@@ -32,7 +32,6 @@ app.get('/ping', (req, res) => {
     res.send('Server is fresh');
 });
 
-
 app.use('/api/auth', authRoutes);
 
 app.use(authMiddleware);

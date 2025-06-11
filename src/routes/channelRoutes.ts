@@ -5,31 +5,27 @@ import checkPermission from '../middlewares/checkPermission';
 const channelRoutes = Router();
 
 channelRoutes.get(
-    '/', 
+    '/',
     checkPermission(['view:channel', 'admin:channel']),
     channelController.getAll
 );
 
 channelRoutes.get(
-    '/:id', 
+    '/:id',
     checkPermission(['view:channel', 'admin:channel']),
     channelController.find
 );
 
-channelRoutes.post(
-    '/', 
-    checkPermission(['add:channel', 'admin:channel']),
-    channelController.add
-);
+channelRoutes.post('/', checkPermission(['add:channel', 'admin:channel']), channelController.add);
 
 channelRoutes.put(
-    '/:id', 
+    '/:id',
     checkPermission(['update:channel', 'admin:channel']),
     channelController.update
 );
 
 channelRoutes.delete(
-    '/:id', 
+    '/:id',
     checkPermission(['delete:channel', 'admin:channel']),
     channelController.destroy
 );

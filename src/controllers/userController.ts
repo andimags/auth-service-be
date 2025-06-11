@@ -11,18 +11,19 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const { isGlobalRole } = customReq;
         let users = [];
 
-        if(isGlobalRole){
+        if (isGlobalRole) {
             users = await User.findAll({ include: Role });
-        }
-        else{
-            users = await User.findAll({ 
-                include: [{
-                    model: Role,
-                    where: {
-                        channel_id: customReq?.channel?.id
-                    },
-                    required: true
-                }]
+        } else {
+            users = await User.findAll({
+                include: [
+                    {
+                        model: Role,
+                        where: {
+                            channel_id: customReq?.channel?.id
+                        },
+                        required: true
+                    }
+                ]
             });
         }
 
@@ -41,18 +42,19 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const { isGlobalRole } = customReq;
         let user = null;
 
-        if(isGlobalRole){
+        if (isGlobalRole) {
             user = await User.findByPk(req.params.id, { include: [Role] });
-        }
-        else{
-            user = await User.findByPk(req.params.id, {                 
-                include: [{
-                    model: Role,
-                    where: {
-                        channel_id: customReq?.channel?.id
-                    },
-                    required: true
-                }] 
+        } else {
+            user = await User.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: Role,
+                        where: {
+                            channel_id: customReq?.channel?.id
+                        },
+                        required: true
+                    }
+                ]
             });
         }
 

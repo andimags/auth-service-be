@@ -17,17 +17,15 @@ const getUserRoles = async (req: Request, res: Response, next: NextFunction) => 
         let roles = null;
 
         // Only show user roles within their channel if the authenticated user's role is not global
-        if(customReq.isGlobalRole){
+        if (customReq.isGlobalRole) {
             roles = await user.getRoles();
-        }
-        else{
+        } else {
             roles = await user.getRoles({
                 where: {
                     channel_id: customReq?.channel?.id
                 }
             });
         }
-        
 
         res.json({
             status: 1,
@@ -50,17 +48,17 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
 
         const missingRoles = await findMissingRoles(customReq.body.role_ids);
 
-        if ( missingRoles.length > 0) {
+        if (missingRoles.length > 0) {
             throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
         }
 
         const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids, 
+            customReq.body.role_ids,
             customReq.channel?.id ?? null
         );
 
         // If the request is made by a channel-based role, it ensures that they can only attach role ids within their channel
-        if(!customReq.isGlobalRole && !_isRoleAssignable){
+        if (!customReq.isGlobalRole && !_isRoleAssignable) {
             throw new AppError('You can only attach roles to this user within your channel.', 403);
         }
 
@@ -87,7 +85,7 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
             throw new AppError('User not found', 404);
         }
 
-        if(user.username == 'superadmin'){
+        if (user.username == 'superadmin') {
             throw new AppError("Superadmin's roles cannot be updated.", 403);
         }
 
@@ -98,11 +96,11 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
         }
 
         const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids, 
+            customReq.body.role_ids,
             customReq.channel?.id ?? null
         );
 
-        if(!customReq.isGlobalRole && !_isRoleAssignable){
+        if (!customReq.isGlobalRole && !_isRoleAssignable) {
             throw new AppError('You can only attach roles to this user within your channel.', 403);
         }
 
@@ -129,7 +127,7 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
             throw new AppError('User not found', 404);
         }
 
-        if(user.username == 'superadmin'){
+        if (user.username == 'superadmin') {
             throw new AppError("Superadmin's roles cannot be updated.", 403);
         }
 
@@ -140,12 +138,12 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
         }
 
         const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids, 
+            customReq.body.role_ids,
             customReq.channel?.id ?? null
         );
 
         // If the request is made by a channel-based role, it ensures that they can only remove role ids within their channel
-        if(!customReq.isGlobalRole && !_isRoleAssignable){
+        if (!customReq.isGlobalRole && !_isRoleAssignable) {
             throw new AppError('You can only remove roles to this user within your channel.', 403);
         }
 
