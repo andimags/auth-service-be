@@ -14,11 +14,11 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
             }
         });
 
-        if (!user) throw new AppError('User not found', 404);
+        if (!user) throw new AppError('User not found', 401);
 
         const match = await bcrypt.compare(req.body.password, user.password);
 
-        if (!match) throw new AppError('Invalid email or password', 404);
+        if (!match) throw new AppError('Invalid email or password', 401);
 
         const token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.API_KEY!);
 

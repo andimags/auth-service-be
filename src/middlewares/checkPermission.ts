@@ -4,7 +4,7 @@ import User from '../database/models/User';
 import { IAuthenticatedRequest, IRequestWithChannel } from '../types';
 import { AppError } from './errorHandler';
 
-// Checks permission on GLOBAL scope
+// Checks permission on GLOBAL scope only
 // If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
 export default function checkPermission(
     permissionRefName: string | string[],
@@ -30,13 +30,13 @@ export default function checkPermission(
                 for (const role of globalRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
                         ? {
-                              ref_name: { [Op.in]: permissionRefName },
-                              scope: 'global'
-                          }
+                            ref_name: { [Op.in]: permissionRefName },
+                            scope: 'global'
+                        }
                         : {
-                              ref_name: permissionRefName,
-                              scope: 'global'
-                          };
+                            ref_name: permissionRefName,
+                            scope: 'global'
+                        };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,
@@ -66,13 +66,13 @@ export default function checkPermission(
                 for (const role of channelBasedRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
                         ? {
-                              ref_name: { [Op.in]: permissionRefName },
-                              scope: 'global'
-                          }
+                            ref_name: { [Op.in]: permissionRefName },
+                            scope: 'global'
+                        }
                         : {
-                              ref_name: permissionRefName,
-                              scope: 'global'
-                          };
+                            ref_name: permissionRefName,
+                            scope: 'global'
+                        };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,
