@@ -1,9 +1,7 @@
 import { Op } from "sequelize";
 import Permission from "../database/models/Permission";
-import Role from "../database/models/Role";
-import { AppError } from "../middlewares/errorHandler";
-import { IUser } from "../types";
 import User from "../database/models/User";
+import { AppError } from "../middlewares/errorHandler";
 
 // Channel based roles can only assign permissions in channel-based scope
 export async function isPermissionAssignable(
@@ -36,7 +34,6 @@ export async function isPermissionAssignable(
 }
 
 export async function findMissingPermissions(permissionIds: number | number[]): Promise<number[]> {
-    // Returns array of permission IDs that don't exist
     permissionIds = Array.isArray(permissionIds) ? permissionIds : [permissionIds];
     const existingPermissions = await Permission.findAll({ where: { id: permissionIds } });
     const existingIds = existingPermissions.map((permission) => permission.id);
@@ -56,15 +53,16 @@ export async function checkPermissionLevel(
         throw new AppError('Channel ID parameter is required if isGlobalRole is false.');
     }
 
-    const roles = await user.getRoles({
-        where: {
-            channel_id: isGlobalRole ? { [Op.eq]: null } : channelId
-        }
-    });
+    const roles = await user.getRoles();
 
     for (const role of roles) {
         const permissions = await role.getPermissions({
-            where: { ref_name: { [Op.in]: Array.isArray(permissionRefNames) ? permissionRefNames : [permissionRefNames]}}
+            where: { 
+                ref_name: { 
+                    [Op.in]: Array.isArray(permissionRefNames) ? permissionRefNames : [permissionRefNames]
+                },
+                scope: "global"
+            }
         });
 
         if (permissions.length > 0) {

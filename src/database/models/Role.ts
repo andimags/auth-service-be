@@ -11,6 +11,7 @@ import {
     ForeignKey,
     Model,
     PrimaryKey,
+    Scopes,
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
@@ -26,6 +27,13 @@ import RolePermission from './RolePermission';
 import User from './User';
 import UserRole from './UserRole';
 import { RoleScopeType } from '../../constants/enums';
+
+@Scopes(() => ({
+  // includes
+    withChannel: {
+        include: [Channel]
+    }
+}))
 
 @Table({
     tableName: 'roles'
@@ -46,6 +54,7 @@ export default class Role extends Model {
     @Column(DataType.STRING)
     ref_name: string;
 
+    @AllowNull(false)
     @Column(DataType.INTEGER)
     level: number;
 

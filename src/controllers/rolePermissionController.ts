@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import Role from '../database/models/Role';
 import RolePermission from '../database/models/RolePermission';
-import { AppError } from '../middlewares/errorHandler';
-import { IRequestWithUserAndChannel } from '../types';
-import { checkPermissionLevel, findMissingPermissions, isPermissionAssignable } from '../services/permissionService';
-import { findMissingRoles } from '../services/roleService';
 import User from '../database/models/User';
+import { AppError } from '../middlewares/errorHandler';
+import { checkPermissionLevel, findMissingPermissions } from '../services/permissionService';
+import { IRequestWithUserAndChannel } from '../types';
 
 // Fetch all permissions assigned to a role
 const getRolePermissions = async (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +39,8 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'], 
-            authorizedUser
+            authorizedUser,
+            true
         ))!;
 
         if (!role) {
@@ -55,7 +55,9 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
             throw new AppError("Unauthorized to add permissions to this role.", 403);
         }
 
-        const missingPermissions = await findMissingPermissions(customReq.body.role_ids);
+        const missingPermissions = await findMissingPermissions(customReq.body.permission_ids);
+
+        console.log(missingPermissions)
         
         if (missingPermissions.length > 0) {
             throw new AppError(`Permission IDs ${missingPermissions} do not exist.`, 403);
@@ -82,7 +84,8 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'], 
-            authorizedUser
+            authorizedUser,
+            true
         ))!;
 
         if (!role) {
@@ -124,7 +127,8 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'], 
-            authorizedUser
+            authorizedUser,
+            true
         ))!;
 
         if (!role) {
