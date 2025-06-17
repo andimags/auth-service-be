@@ -48,7 +48,7 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         }
 
         if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot replace permissions from a role with the same level as your permission's role.", 403);
+            throw new AppError("You cannot replace permissions from a role with the higher or same level as your permission's role.", 403);
         }
         
         if(!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id){
@@ -93,7 +93,7 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         }
 
         if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot replace permissions from a role with the same level as your permission's role.", 403);
+            throw new AppError("You cannot replace permissions from a role with the higher or same level as your permission's role.", 403);
         }
 
         if(!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id){
@@ -136,7 +136,7 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         }
 
         if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot delete a permission from a role with the same level as your permission's role.", 403);
+            throw new AppError("You cannot delete a permission from a role with the higher or same level as your permission's role.", 403);
         }
 
         await RolePermission.destroy({

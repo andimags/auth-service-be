@@ -53,7 +53,13 @@ export async function checkPermissionLevel(
         throw new AppError('Channel ID parameter is required if isGlobalRole is false.');
     }
 
-    const roles = await user.getRoles();
+    let roles = await user.getRoles();
+
+    console.log('roles.length', roles.length);
+
+    if(channelId){
+        roles = await user.getRoles({where: {channel_id: {[Op.in]: [channelId, null]}}});
+    }
 
     for (const role of roles) {
         const permissions = await role.getPermissions({
@@ -68,12 +74,39 @@ export async function checkPermissionLevel(
         if (permissions.length > 0) {
             const currentLevel = role.level;
 
-            if (highestLevel === null || currentLevel > highestLevel) {
+            if (highestLevel === null || currentLevel < highestLevel) {
                 highestLevel = currentLevel;
             }
         }
     }
 
     return highestLevel;
+}
+
+export async function getUserPermissions(userId: number, channelId?: number){
+    const user = await User.findByPk(userId);
+
+    if(!user) throw new AppError('User not found.', 404);
+
+    const roles = await user.getRoles({
+        where: {
+            channel_id: {
+            [Op.in]: channelId ? [null, channelId] : [null]
+            }        
+        }
+    });
+
+    const permissionsNested = await Promise.all(
+        roles.map(role => role.getPermissions())
+    );
+
+    const permissions = permissionsNested.flat();
+
+    // Remove duplicate permissions
+    const uniquePermissions = Array.from(
+        new Map(permissions.map(p => [p.id, p])).values()
+    );
+
+    return uniquePermissions;
 }
 

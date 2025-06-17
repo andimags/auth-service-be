@@ -1,9 +1,21 @@
 import { NextFunction, Request, Response } from 'express';
 import Permission from '../database/models/Permission';
+import { IRequestWithUserAndChannel } from '../types';
+import User from '../database/models/User';
+import { getUserPermissions } from '../services/permissionService';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const permissions = await Permission.findAll();
+        const customReq = req as IRequestWithUserAndChannel;
+        const authorizedUser = (await User.findByPk(customReq.user.id))!;
+        let permissions = null;
+
+        if(customReq.isGlobalRole){
+            permissions = await Permission.findAll();
+        }
+        else{
+            permissions = await getUserPermissions(customReq.user.id, (customReq.channel!.id));
+        }
 
         res.json({
             status: 1,

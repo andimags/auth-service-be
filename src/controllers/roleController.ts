@@ -31,7 +31,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.scope('withChannel').findByPk(req.params.id);
+        const role = await Role.scope('withChannel').findByPk(req.params.role_id);
 
         if (!role) {
             res.status(404).json({
@@ -68,6 +68,9 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError("You can only add roles within your channel.", 403);
         }
 
+        console.log('customReq.body.level', customReq.body.level);
+        console.log('authorizeUserRoleLevel', authorizeUserRoleLevel)
+
         // Level with value 1 is the highest
         if(customReq.body.level <= authorizeUserRoleLevel){
             throw new AppError("You can only add roles with a lower level than yours.", 403);
@@ -87,7 +90,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.create(req.body);
+        const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['add:role', 'admin:role'], 
@@ -100,15 +103,21 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 status: 0,
                 message: 'Role not found.'
             });
+
+            return;
         }
 
-        if(!customReq.isGlobalRole && customReq.channel?.id != customReq.body.channel_id){
+        if(!customReq.isGlobalRole && customReq.channel?.id != role.channel_id){
             throw new AppError("You can only update roles within your channel.", 403);
+        }
+
+        if(role.level <= authorizeUserRoleLevel){
+            throw new AppError("You can't update level field with a higher level than yours", 403);
         }
 
         // Level with value 1 is the highest
         if(customReq.body.level <= authorizeUserRoleLevel){
-            throw new AppError("You can only update roles with a lower level than yours.", 403);
+            throw new AppError("New value for level field must be lower level than yours.", 403);
         }
 
         await role?.update(req.body);
@@ -117,15 +126,18 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             status: 1,
             data: role
         });
+
+        return;
     } catch (error: unknown) {
         next(error);
+        return;
     }
 };
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.create(req.body);
+        const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['add:role', 'admin:role'], 
@@ -138,14 +150,16 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
                 status: 0,
                 message: 'Role not found.'
             });
+
+            return;
         }
 
-        if(!customReq.isGlobalRole && customReq.channel?.id != customReq.body.channel_id){
+        if(!customReq.isGlobalRole && customReq.channel?.id != role.channel_id){
             throw new AppError("You can only delete roles within your channel.", 403);
         }
 
         // Level with value 1 is the highest
-        if(customReq.body.level <= authorizeUserRoleLevel){
+        if(role.level <= authorizeUserRoleLevel){
             throw new AppError("You can only delete roles with a lower level than yours.", 403);
         }
 
@@ -154,6 +168,8 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         res.json({
             status: 1
         });
+
+        return;
     } catch (error: unknown) {
         next(error);
     }

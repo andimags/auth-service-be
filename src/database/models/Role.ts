@@ -13,7 +13,8 @@ import {
     PrimaryKey,
     Scopes,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    BeforeUpdate
 } from 'sequelize-typescript';
 
 import {
@@ -102,4 +103,12 @@ export default class Role extends Model {
 
         await user?.addRoles([role]);
     }
+
+    @BeforeUpdate
+    static preventChannelIdUpdate(instance: Role) {
+        if (instance.changed('channel_id')) {
+        throw new Error("channel_id cannot be modified once set.");
+        }
+    }
+
 }
