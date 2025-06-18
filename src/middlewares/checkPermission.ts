@@ -30,13 +30,13 @@ export default function checkPermission(
                 for (const role of globalRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
                         ? {
-                            ref_name: { [Op.in]: permissionRefName },
-                            scope: 'global'
-                        }
+                              ref_name: { [Op.in]: permissionRefName },
+                              scope: 'global'
+                          }
                         : {
-                            ref_name: permissionRefName,
-                            scope: 'global'
-                        };
+                              ref_name: permissionRefName,
+                              scope: 'global'
+                          };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,
@@ -66,13 +66,13 @@ export default function checkPermission(
                 for (const role of channelBasedRoles) {
                     const whereCondition = Array.isArray(permissionRefName)
                         ? {
-                            ref_name: { [Op.in]: permissionRefName },
-                            scope: 'global'
-                        }
+                              ref_name: { [Op.in]: permissionRefName },
+                              scope: 'global'
+                          }
                         : {
-                            ref_name: permissionRefName,
-                            scope: 'global'
-                        };
+                              ref_name: permissionRefName,
+                              scope: 'global'
+                          };
 
                     const [permission] = await role.getPermissions({
                         where: whereCondition,

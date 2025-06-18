@@ -17,8 +17,8 @@ channelRoutes.get(
 );
 
 channelRoutes.post(
-    '/', 
-    checkPermission(['add:channel', 'admin:channel'], 'global'), 
+    '/',
+    checkPermission(['add:channel', 'admin:channel'], 'global'),
     channelController.add
 );
 

@@ -7,13 +7,12 @@ import { getUserChannels, hasAccessToChannel } from '../services/channelService'
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel
+        const customReq = req as IRequestWithUserAndChannel;
         let channels = null;
 
-        if(customReq.isGlobalRole){
-            channels =  await Channel.findAll();
-        }
-        else{
+        if (customReq.isGlobalRole) {
+            channels = await Channel.findAll();
+        } else {
             channels = await getUserChannels(customReq.user.id);
         }
 
@@ -28,7 +27,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel
+        const customReq = req as IRequestWithUserAndChannel;
         const channel = await Channel.findByPk(req.params.id);
 
         if (!channel) {
@@ -42,7 +41,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         const _hasAccessToChannel = await hasAccessToChannel(customReq.user.id, channel.id);
 
-        if(!customReq.isGlobalRole && !_hasAccessToChannel){
+        if (!customReq.isGlobalRole && !_hasAccessToChannel) {
             throw new AppError('You can only view channels associated to your roles.', 403);
         }
 
@@ -61,8 +60,11 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
         req.body.api_key = generateApiKey();
 
-        if(!customReq.isGlobalRole){
-            throw new AppError('Only authorized users with global scope roles is permitted to add new channel.', 403);
+        if (!customReq.isGlobalRole) {
+            throw new AppError(
+                'Only authorized users with global scope roles is permitted to add new channel.',
+                403
+            );
         }
 
         const channel = await Channel.create(req.body);
@@ -92,7 +94,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const customReq = req as IRequestWithUserAndChannel;
         const _hasAccessToChannel = await hasAccessToChannel(customReq.user.id, channel.id);
 
-        if(!customReq.isGlobalRole && !_hasAccessToChannel){
+        if (!customReq.isGlobalRole && !_hasAccessToChannel) {
             throw new AppError("You can only update channels you're associated to.", 403);
         }
 
@@ -121,8 +123,8 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
 
         const customReq = req as IRequestWithUserAndChannel;
 
-        if(!customReq.isGlobalRole){
-            throw new AppError("Only authorized users with global role can delete a channel.", 403);
+        if (!customReq.isGlobalRole) {
+            throw new AppError('Only authorized users with global role can delete a channel.', 403);
         }
 
         await channel?.destroy({ force: shouldForce });

@@ -11,7 +11,7 @@ export interface IRequestWithChannel extends Request {
 
 export interface IRequestWithUserAndChannel extends IAuthenticatedRequest, IRequestWithChannel {}
 
-export interface ICustomRequest extends Request{
+export interface ICustomRequest extends Request {
     user: IUser;
 }
 

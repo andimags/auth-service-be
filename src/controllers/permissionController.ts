@@ -2,7 +2,11 @@ import { NextFunction, Request, Response } from 'express';
 import Permission from '../database/models/Permission';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { checkPermissionLevel, getUserPermissions, hasAccessToPermission } from '../services/permissionService';
+import {
+    checkPermissionLevel,
+    getUserPermissions,
+    hasAccessToPermission
+} from '../services/permissionService';
 import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
@@ -11,20 +15,20 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         let permissions = null;
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizedUserRoleLevel = (await checkPermissionLevel(
-            ['update:role', 'admin:role'], 
+            ['update:role', 'admin:role'],
             authorizedUser,
             true
         ))!;
 
-        if(customReq.isGlobalRole){
+        if (customReq.isGlobalRole) {
             permissions = await Permission.findAll();
-        }
-        else{
+        } else {
             // Get only the permissions assigned to the authenticated user for the specific channel
             permissions = await getUserPermissions(
-                customReq.user.id, 
+                customReq.user.id,
                 authorizedUserRoleLevel,
-                (customReq.channel!.id));
+                customReq.channel!.id
+            );
         }
 
         res.json({
@@ -56,8 +60,11 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             customReq.channel!.id
         );
 
-        if(!customReq.isGlobalRole && !_hasAccessToPermission){
-            throw new AppError('You are not authorized to view this permission, as it is not assigned to any of your roles.', 403);
+        if (!customReq.isGlobalRole && !_hasAccessToPermission) {
+            throw new AppError(
+                'You are not authorized to view this permission, as it is not assigned to any of your roles.',
+                403
+            );
         }
 
         res.json({
@@ -92,7 +99,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 status: 0,
                 message: 'Permission not found.'
             });
-            
+
             return;
         }
 
@@ -102,8 +109,11 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             customReq.channel!.id
         );
 
-        if(!customReq.isGlobalRole && !_hasAccessToPermission){
-            throw new AppError('You are not authorized to update this permission, as it is not assigned to any of your roles.', 403);
+        if (!customReq.isGlobalRole && !_hasAccessToPermission) {
+            throw new AppError(
+                'You are not authorized to update this permission, as it is not assigned to any of your roles.',
+                403
+            );
         }
 
         await permission?.update(req.body);
@@ -138,8 +148,11 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             customReq.channel!.id
         );
 
-        if(!customReq.isGlobalRole && !_hasAccessToPermission){
-            throw new AppError('You are not authorized to delete this permission, as it is not assigned to any of your roles.', 403);
+        if (!customReq.isGlobalRole && !_hasAccessToPermission) {
+            throw new AppError(
+                'You are not authorized to delete this permission, as it is not assigned to any of your roles.',
+                403
+            );
         }
 
         if (!permission) {

@@ -30,12 +30,11 @@ import UserRole from './UserRole';
 import { RoleScopeType } from '../../constants/enums';
 
 @Scopes(() => ({
-  // includes
+    // includes
     withChannel: {
         include: [Channel]
     }
 }))
-
 @Table({
     tableName: 'roles'
 })
@@ -107,8 +106,7 @@ export default class Role extends Model {
     @BeforeUpdate
     static preventChannelIdUpdate(instance: Role) {
         if (instance.changed('channel_id')) {
-        throw new Error("channel_id cannot be modified once set.");
+            throw new Error('channel_id cannot be modified once set.');
         }
     }
-
 }

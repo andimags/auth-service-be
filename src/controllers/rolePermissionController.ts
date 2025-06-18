@@ -12,9 +12,9 @@ const getRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const customReq = req as IRequestWithUserAndChannel;
         const role = await Role.findByPk(req.params.role_id);
 
-        if(!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id){
+        if (!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id) {
             throw new AppError("Unauthorized to view this role's permissions.", 403);
-        };
+        }
 
         if (!role) {
             throw new AppError('Role not found', 404);
@@ -38,7 +38,7 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'], 
+            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
             true
         ))!;
@@ -47,18 +47,21 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
             throw new AppError('Role not found', 404);
         }
 
-        if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot replace permissions from a role with the higher or same level as your permission's role.", 403);
+        if (role.level <= authorizeUserRoleLevel) {
+            throw new AppError(
+                "You cannot replace permissions from a role with the higher or same level as your permission's role.",
+                403
+            );
         }
-        
-        if(!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id){
-            throw new AppError("Unauthorized to add permissions to this role.", 403);
+
+        if (!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id) {
+            throw new AppError('Unauthorized to add permissions to this role.', 403);
         }
 
         const missingPermissions = await findMissingPermissions(customReq.body.permission_ids);
 
-        console.log(missingPermissions)
-        
+        console.log(missingPermissions);
+
         if (missingPermissions.length > 0) {
             throw new AppError(`Permission IDs ${missingPermissions} do not exist.`, 403);
         }
@@ -83,7 +86,7 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'], 
+            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
             true
         ))!;
@@ -92,16 +95,19 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
             throw new AppError('Role not found', 404);
         }
 
-        if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot replace permissions from a role with the higher or same level as your permission's role.", 403);
+        if (role.level <= authorizeUserRoleLevel) {
+            throw new AppError(
+                "You cannot replace permissions from a role with the higher or same level as your permission's role.",
+                403
+            );
         }
 
-        if(!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id){
-            throw new AppError("Unauthorized to replace permissions to this role.", 403);
+        if (!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id) {
+            throw new AppError('Unauthorized to replace permissions to this role.', 403);
         }
 
         const missingPermissions = await findMissingPermissions(customReq.body.role_ids);
-        
+
         if (missingPermissions.length > 0) {
             throw new AppError(`Permission IDs ${missingPermissions} do not exist.`, 403);
         }
@@ -126,7 +132,7 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         const role = await Role.findByPk(customReq.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'], 
+            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
             true
         ))!;
@@ -135,8 +141,11 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
             throw new AppError('Role not found', 404);
         }
 
-        if(role.level <= authorizeUserRoleLevel){
-            throw new AppError("You cannot delete a permission from a role with the higher or same level as your permission's role.", 403);
+        if (role.level <= authorizeUserRoleLevel) {
+            throw new AppError(
+                "You cannot delete a permission from a role with the higher or same level as your permission's role.",
+                403
+            );
         }
 
         await RolePermission.destroy({
