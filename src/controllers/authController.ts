@@ -24,7 +24,7 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
 
         res.cookie('refresh_token', token, {
             httpOnly: true,
-            secure: true, // Only send over HTTPS
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict', // Protect from CSRF
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
@@ -42,7 +42,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const token = req.cookies['refresh_token'];
 
-        if (!token) throw new AppError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', 403);
 
         res.json({
             status: 1,
