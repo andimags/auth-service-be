@@ -1,20 +1,30 @@
 import { NextFunction, Request, Response } from 'express';
 import Permission from '../database/models/Permission';
-import { IRequestWithUserAndChannel } from '../types';
 import User from '../database/models/User';
-import { getUserPermissions } from '../services/permissionService';
+import { AppError } from '../middlewares/errorHandler';
+import { checkPermissionLevel, getUserPermissions, hasAccessToPermission } from '../services/permissionService';
+import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customReq = req as IRequestWithUserAndChannel;
-        const authorizedUser = (await User.findByPk(customReq.user.id))!;
         let permissions = null;
+        const authorizedUser = (await User.findByPk(customReq.user.id))!;
+        const authorizedUserRoleLevel = (await checkPermissionLevel(
+            ['update:role', 'admin:role'], 
+            authorizedUser,
+            true
+        ))!;
 
         if(customReq.isGlobalRole){
             permissions = await Permission.findAll();
         }
         else{
-            permissions = await getUserPermissions(customReq.user.id, (customReq.channel!.id));
+            // Get only the permissions assigned to the authenticated user for the specific channel
+            permissions = await getUserPermissions(
+                customReq.user.id, 
+                authorizedUserRoleLevel,
+                (customReq.channel!.id));
         }
 
         res.json({
@@ -28,6 +38,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const customReq = req as IRequestWithUserAndChannel;
         const permission = await Permission.findByPk(req.params.id);
 
         if (!permission) {
@@ -35,6 +46,18 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                 status: 0,
                 message: 'Permission not found.'
             });
+
+            return;
+        }
+
+        const _hasAccessToPermission = await hasAccessToPermission(
+            customReq.user.id,
+            permission.id,
+            customReq.channel!.id
+        );
+
+        if(!customReq.isGlobalRole && !_hasAccessToPermission){
+            throw new AppError('You are not authorized to view this permission, as it is not assigned to any of your roles.', 403);
         }
 
         res.json({
@@ -61,7 +84,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        res.send('passed middleware');
+        const customReq = req as IRequestWithUserAndChannel;
         const permission = await Permission.findByPk(req.params.id);
 
         if (!permission) {
@@ -69,6 +92,18 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 status: 0,
                 message: 'Permission not found.'
             });
+            
+            return;
+        }
+
+        const _hasAccessToPermission = await hasAccessToPermission(
+            customReq.user.id,
+            permission.id,
+            customReq.channel!.id
+        );
+
+        if(!customReq.isGlobalRole && !_hasAccessToPermission){
+            throw new AppError('You are not authorized to update this permission, as it is not assigned to any of your roles.', 403);
         }
 
         await permission?.update(req.body);
@@ -86,6 +121,26 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
         const permission = await Permission.findByPk(req.params.id, { paranoid: false });
+        const customReq = req as IRequestWithUserAndChannel;
+
+        if (!permission) {
+            res.status(404).json({
+                status: 0,
+                message: 'Permission not found.'
+            });
+
+            return;
+        }
+
+        const _hasAccessToPermission = await hasAccessToPermission(
+            customReq.user.id,
+            permission.id,
+            customReq.channel!.id
+        );
+
+        if(!customReq.isGlobalRole && !_hasAccessToPermission){
+            throw new AppError('You are not authorized to delete this permission, as it is not assigned to any of your roles.', 403);
+        }
 
         if (!permission) {
             res.status(404).json({

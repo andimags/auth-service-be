@@ -11,13 +11,17 @@ import {
     Scopes,
     Table,
     UpdatedAt,
-    BelongsToMany
+    BelongsToMany,
+    Default,
+    BeforeUpdate,
+    BeforeCreate
 } from 'sequelize-typescript';
 import Channel from './Channel';
 import { BelongsToManyGetAssociationsMixin } from 'sequelize';
 import Role from './Role';
 import RolePermission from './RolePermission';
 import { PermissionAccessLevelType, PermissionScopeType } from '../../constants/enums';
+import { AppError } from '../../middlewares/errorHandler';
 
 @DefaultScope(() => ({
     attributes: {
@@ -61,6 +65,7 @@ export default class Permission extends Model {
     module: string;
 
     @AllowNull(false)
+    @Default('channel')
     @Column(DataType.ENUM(...Object.values(PermissionScopeType)))
     scope: string;
 
@@ -84,4 +89,15 @@ export default class Permission extends Model {
     roles: Role[];
 
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
+
+    @BeforeUpdate
+    @BeforeCreate
+    static preventGlobalScopeModification(permission: Permission) {
+        if (permission.scope === 'global') {
+            throw new AppError(
+                'Global scope permissions must be seeded. You cannot create or update a permission to have a global scope.',
+                403
+            );
+        }
+    }
 }

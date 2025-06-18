@@ -93,7 +93,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['add:role', 'admin:role'], 
+            ['update:role', 'admin:role'], 
             authorizedUser,
             true
         ))!;
@@ -140,7 +140,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['add:role', 'admin:role'], 
+            ['delete:role', 'admin:role'], 
             authorizedUser,
             true
         ))!;

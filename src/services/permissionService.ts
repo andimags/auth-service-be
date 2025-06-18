@@ -6,10 +6,10 @@ import { AppError } from "../middlewares/errorHandler";
 // Channel based roles can only assign permissions in channel-based scope
 export async function isPermissionAssignable(
     permissionIds: number | number[],
-    isGlobalRole: boolean = false
+    isAuthorizedUserGlobalRole: boolean = false
 ): Promise<boolean> {
     // Global roles can assign any permissions
-    if (isGlobalRole) {
+    if (isAuthorizedUserGlobalRole) {
         return true;
     }
 
@@ -83,16 +83,23 @@ export async function checkPermissionLevel(
     return highestLevel;
 }
 
-export async function getUserPermissions(userId: number, channelId?: number){
-    const user = await User.findByPk(userId);
+export async function getUserPermissions(
+    targetUserId: number,                  // the user whose permissions you're checking
+    authorizedUserRoleLevel: number,       // the role level of the user requesting access
+    channelId?: number
+){
+    const user = await User.findByPk(targetUserId);
 
     if(!user) throw new AppError('User not found.', 404);
 
     const roles = await user.getRoles({
         where: {
             channel_id: {
-            [Op.in]: channelId ? [null, channelId] : [null]
-            }        
+                [Op.in]: channelId ? [null, channelId] : [null]
+            },
+            level: {
+                [Op.gte]: authorizedUserRoleLevel
+            }
         }
     });
 
@@ -107,6 +114,40 @@ export async function getUserPermissions(userId: number, channelId?: number){
         new Map(permissions.map(p => [p.id, p])).values()
     );
 
+    console.log(uniquePermissions);
+
     return uniquePermissions;
 }
 
+/**
+ * 
+ * @param userId 
+ * @param permissionId 
+ * @param channel_id - Assume to look only for global roles if it's empty
+ * 
+ * Checks if the user has access to a specific permission.
+ * It verifies whether the permission is assigned to the user. 
+ * If `channel_id` is provided, both global and channel-specific roles are considered.
+ * If `channel_id` is not provided, only global roles are checked.
+ * */
+export async function hasAccessToPermission(
+    userId: number,
+    permissionId: number,
+    channel_id?: number,
+){
+    const user = await User.findByPk(userId);
+    if(!user) throw new AppError('User not found.', 404);
+
+    const roles = await user?.getRoles({where: {channel_id: {[Op.in]: channel_id ? [null, channel_id] : [null]}}});
+    if(!roles) return false
+
+    for(const role of roles){
+        const [permission] = await role.getPermissions({where: {id: permissionId}});
+
+        if(permission){
+            return true;
+        }
+    }
+
+    return false;
+}
