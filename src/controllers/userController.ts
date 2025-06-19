@@ -1,31 +1,13 @@
 import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
-import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import { isUserMorePrivilegedThan } from '../services/roleService';
 import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const { isGlobalRole } = customReq;
-        let users = [];
-
-        if (isGlobalRole) {
-            users = await User.findAll({ include: Role });
-        } else {
-            users = await User.findAll({
-                include: [
-                    {
-                        model: Role,
-                        where: {
-                            channel_id: customReq?.channel?.id
-                        },
-                        required: true
-                    }
-                ]
-            });
-        }
+        const users = await User.findAll();
 
         res.json({
             status: 1,
@@ -38,25 +20,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const { isGlobalRole } = customReq;
-        let user = null;
-
-        if (isGlobalRole) {
-            user = await User.findByPk(req.params.id, { include: [Role] });
-        } else {
-            user = await User.findByPk(req.params.id, {
-                include: [
-                    {
-                        model: Role,
-                        where: {
-                            channel_id: customReq?.channel?.id
-                        },
-                        required: true
-                    }
-                ]
-            });
-        }
+        const user = await User.findByPk(req.params.id);
 
         if (!user) {
             throw new AppError('User not found', 404);
@@ -77,18 +41,6 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
         req.body.password = hash;
 
         let user = await User.create(req.body);
-
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
-
-        if (req.body.role_ids) {
-            await user.setRoles(req.body.role_ids);
-
-            user = await user.reload({
-                include: [Role]
-            });
-        }
 
         res.json({
             status: 1,
@@ -113,6 +65,13 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             req.body = rest;
         }
 
+        const customReq = req as IRequestWithUserAndChannel;
+        const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
+
+        if(!isAuthorizedUserMorePrivileged){
+            throw new AppError("You can't update a user with the same or higher privilege / role level than you.", 403);
+        }
+
         if (req.body.password) {
             const hash = bcrypt.hashSync(req.body.password, 10);
             req.body.password = hash;
@@ -132,16 +91,18 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
-        const user = await User.findByPk(req.params.id, { paranoid: false });
 
-        if (!user) {
-            res.status(404).json({
-                status: 0,
-                message: 'User not found.'
-            });
-        }
+        const user = await User.findByPk(req.params.id, { paranoid: false });
+        if (!user) throw new AppError('User not found.', 404);
 
         if (user?.username == 'superadmin') throw new AppError('Cannot delete superadmin user.');
+
+        const customReq = req as IRequestWithUserAndChannel;
+        const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
+
+        if(!isAuthorizedUserMorePrivileged){
+            throw new AppError("You can't delete a user with the same or higher privilege / role level than you.", 403);
+        }
 
         await user?.destroy({ force: shouldForce });
 

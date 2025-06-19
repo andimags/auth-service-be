@@ -16,12 +16,18 @@ import {
     Model,
     PrimaryKey,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    Scopes
 } from 'sequelize-typescript';
 import Role from './Role';
 import UserRole from './UserRole';
 import { UserStatusType } from '../../constants/enums';
 
+@Scopes(() => ({
+    withRoles: {
+        include: [Role]
+    },
+}))
 @Table({
     tableName: 'users'
 })
