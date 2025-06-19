@@ -12,10 +12,9 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         let roles = null;
 
         if (customReq.isGlobalRole) {
-            roles = await Role.findAll({ include: Channel });
+            roles = await Role.findAll();
         } else {
             roles = await Role.findAll({
-                include: Channel,
                 where: { channel_id: customReq?.channel?.id }
             });
         }
@@ -77,7 +76,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('You can only add roles with a lower level than yours.', 403);
         }
 
-        const roleWithChannel = await Role.findByPk(role.id, { include: Channel });
+        const roleWithChannel = await Role.findByPk(role.id);
 
         res.json({
             status: 1,
