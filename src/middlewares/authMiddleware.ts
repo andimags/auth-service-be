@@ -6,11 +6,10 @@ import { AppError } from './errorHandler';
 export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     try {
         const authHeader = req.header('Authorization');
-        const token = authHeader?.split(' ')[1];
+        if(!authHeader) return next(new AppError('Unauthorized: No token provided', 401));
 
-        if (!token) {
-            return next(new AppError('Unauthorized: No token provided', 401));
-        }
+        const token = authHeader?.split(' ')[1];
+        if(!authHeader) return next(new AppError('Invalid or expired token', 401));
 
         const secret = process.env.API_KEY;
         if (!secret) {
