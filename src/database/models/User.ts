@@ -15,14 +15,13 @@ import {
     DeletedAt,
     Model,
     PrimaryKey,
+    Scopes,
     Table,
-    UpdatedAt,
-    Scopes
+    UpdatedAt
 } from 'sequelize-typescript';
+import { UserStatusType } from '../../constants/enums';
 import Role from './Role';
 import UserRole from './UserRole';
-import { UserStatusType } from '../../constants/enums';
-
 @Scopes(() => ({
     withRoles: {
         include: [Role]

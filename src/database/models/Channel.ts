@@ -1,7 +1,9 @@
+import generateApiKey from 'generate-api-key';
 import {
     AllowNull,
     AutoIncrement,
     BeforeDestroy,
+    BeforeValidate,
     Column,
     CreatedAt,
     DataType,
@@ -53,6 +55,12 @@ export default class Channel extends Model {
     deleted_at: Date;
 
     // Hooks
+    @BeforeValidate
+    static generateApiKey(instance: Channel) {
+        // this will also be called when an instance is created
+        instance.api_key = generateApiKey() as string;
+    }
+    
     @BeforeDestroy
     static async softDeletePermissions(channel: Channel) {
         await Permission.update(

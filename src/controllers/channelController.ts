@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
-import generateApiKey from 'generate-api-key';
-import { IRequestWithUserAndChannel } from '../types';
 import { AppError } from '../middlewares/errorHandler';
 import { getUserChannels, hasAccessToChannel } from '../services/channelService';
+import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -57,8 +56,6 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const customReq = req as IRequestWithUserAndChannel;
-
-        req.body.api_key = generateApiKey();
 
         if (!customReq.isGlobalRole) {
             throw new AppError(

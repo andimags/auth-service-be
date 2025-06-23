@@ -4,6 +4,7 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { isUserMorePrivilegedThan } from '../services/roleService';
 import { IRequestWithUserAndChannel } from '../types';
+import { userHasPermissions } from '../services/permissionService';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -20,6 +21,16 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const customReq = req as IRequestWithUserAndChannel;
+        const _userHasPermissions = await userHasPermissions(
+            customReq.user.id,
+            ['view:user', 'admin:user'],
+        );
+
+        if(!_userHasPermissions && customReq.user.id != parseInt(req.params.id)){
+            throw new AppError('Unauthorized', 403);
+        }
+
         const user = await User.findByPk(req.params.id);
 
         if (!user) {
@@ -59,17 +70,21 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', 404);
         }
 
-        // Prevent changing superadmin's username
-        if (user.username === 'superadmin') {
-            const { username, ...rest } = req.body;
-            req.body = rest;
-        }
-
         const customReq = req as IRequestWithUserAndChannel;
-        const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
 
-        if(!isAuthorizedUserMorePrivileged){
-            throw new AppError("You can't update a user with the same or higher privilege / role level than you.", 403);
+        // Skip these validations if user is updating herself
+        if(user.id != customReq.user.id){
+            // Prevent changing superadmin's username
+            if (user.username === 'superadmin') {
+                const { username, ...rest } = req.body;
+                req.body = rest;
+            }
+
+            const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
+
+            if(!isAuthorizedUserMorePrivileged){
+                throw new AppError("You can't update a user with the same or higher privilege / role level than you.", 403);
+            }
         }
 
         if (req.body.password) {
