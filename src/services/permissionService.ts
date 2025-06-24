@@ -82,7 +82,7 @@ export async function userHasPermissions(
     }
 
     if (!channelId) {
-        return globalRoles?.length > 0;
+        return false;
     }
 
     // Check channel roles

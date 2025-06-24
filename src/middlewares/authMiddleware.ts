@@ -24,6 +24,6 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         next();
     } catch (error: any) {
         console.error('Token verification failed:', error.message ?? error);
-        next(new AppError('Invalid or expired token', 403));
+        next(new AppError('Invalid or expired token', 401));
     }
 };

@@ -8,7 +8,7 @@ userRoutes.get('/', checkPermission(['view:user', 'admin:user']), userController
 
 userRoutes.get('/:id', userController.find);
 userRoutes.post('/', checkPermission(['add:user', 'admin:user']), userController.add);
-userRoutes.put('/:id', checkPermission(['update:user', 'admin:user']), userController.update);
+userRoutes.put('/:id', userController.update);
 
 userRoutes.delete(
     '/:id',

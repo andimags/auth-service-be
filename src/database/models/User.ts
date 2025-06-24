@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import {
     BelongsToManyGetAssociationsMixin,
     BelongsToSetAssociationMixin,
@@ -7,6 +8,7 @@ import {
 import {
     AllowNull,
     AutoIncrement,
+    BeforeValidate,
     BelongsToMany,
     Column,
     CreatedAt,
@@ -22,6 +24,7 @@ import {
 import { UserStatusType } from '../../constants/enums';
 import Role from './Role';
 import UserRole from './UserRole';
+
 @Scopes(() => ({
     withRoles: {
         include: [Role]
@@ -77,4 +80,11 @@ export default class User extends Model {
     declare setRoles: BelongsToSetAssociationMixin<Role, number>;
     declare addRoles: HasManyAddAssociationsMixin<Role, number>;
     declare removeRoles: HasManyRemoveAssociationsMixin<Role, number>;
+
+    // Hooks
+    @BeforeValidate
+    static generateApiKey(instance: User) {
+        // this will also be called when an instance is created
+        instance.password = bcrypt.hashSync(instance.password, 10);
+    }
 }

@@ -1,10 +1,9 @@
-import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import { userHasPermissions } from '../services/permissionService';
 import { isUserMorePrivilegedThan } from '../services/roleService';
 import { IRequestWithUserAndChannel } from '../types';
-import { userHasPermissions } from '../services/permissionService';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -28,7 +27,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         );
 
         if(!_userHasPermissions && customReq.user.id != parseInt(req.params.id)){
-            throw new AppError('Unauthorized', 403);
+            throw new AppError('You do not have the required permissions to perform this action', 403);
         }
 
         const user = await User.findByPk(req.params.id);
@@ -48,9 +47,6 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const hash = bcrypt.hashSync(req.body.password, 10);
-        req.body.password = hash;
-
         let user = await User.create(req.body);
 
         res.json({
@@ -74,6 +70,15 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         // Skip these validations if user is updating herself
         if(user.id != customReq.user.id){
+            const _userHasPermissions = await userHasPermissions(
+                customReq.user.id,
+                ['update:user', 'admin:user'],
+            );
+
+            if(!_userHasPermissions){
+                throw new AppError('You do not have the required permissions to perform this action', 403);
+            }
+
             // Prevent changing superadmin's username
             if (user.username === 'superadmin') {
                 const { username, ...rest } = req.body;
@@ -83,13 +88,12 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
 
             if(!isAuthorizedUserMorePrivileged){
-                throw new AppError("You can't update a user with the same or higher privilege / role level than you.", 403);
+                throw new AppError("You can't update a user with the same or higher privilege / role level than you", 403);
             }
         }
-
-        if (req.body.password) {
-            const hash = bcrypt.hashSync(req.body.password, 10);
-            req.body.password = hash;
+        else{
+            delete req.body.status;
+            delete req.body.username;
         }
 
         await user?.update(req.body);
@@ -108,15 +112,15 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         const shouldForce = req.query.force === 'true';
 
         const user = await User.findByPk(req.params.id, { paranoid: false });
-        if (!user) throw new AppError('User not found.', 404);
+        if (!user) throw new AppError('User not found', 404);
 
-        if (user?.username == 'superadmin') throw new AppError('Cannot delete superadmin user.');
+        if (user?.username == 'superadmin') throw new AppError('Cannot delete superadmin user', 403);
 
         const customReq = req as IRequestWithUserAndChannel;
         const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
 
         if(!isAuthorizedUserMorePrivileged){
-            throw new AppError("You can't delete a user with the same or higher privilege / role level than you.", 403);
+            throw new AppError("You can't delete a user with the same or higher privilege / role level than you", 403);
         }
 
         await user?.destroy({ force: shouldForce });
@@ -124,7 +128,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         res.json({
             status: 1,
             message: shouldForce
-                ? 'User successfully deleted permanently.'
+                ? 'User successfully deleted permanently'
                 : 'User successfully soft-deleted'
         });
     } catch (error: unknown) {
