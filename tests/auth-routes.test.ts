@@ -15,8 +15,6 @@ beforeAll(async () => {
         });
 
     token = res.body.token;
-
-    console.log('token', token)
 });
 
 describe("POST /api/auth/generate-token", () => {
@@ -76,8 +74,6 @@ describe("GET /api/auth/verify-token", () => {
             .expect("Content-Type", /json/)
             .expect(200)
 
-        console.log('GET /api/auth/verify-token', response)    
-
         expect(response.body).toHaveProperty("status");
         expect(response.body.status).toBe(1);
         expect(response.body).toHaveProperty("decoded");
@@ -88,7 +84,7 @@ describe("GET /api/auth/verify-token", () => {
             .get("/api/auth/verify-token")
             .set('Authorization', `Bearer ${token}xxx`)
             .expect("Content-Type", /json/)
-            .expect(403)
+            .expect(401)
 
         expect(response.body).toEqual({
         message: "Invalid or expired token"
@@ -120,8 +116,6 @@ describe("GET /api/auth/refresh-token", () => {
         expect(response.body).toEqual(
             {"message": "Token not found"}
         );
-
-        console.log(response)
     });
 
 });
