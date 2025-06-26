@@ -60,12 +60,11 @@ export async function findMissingPermissions(permissionIds: number | number[]): 
  * True if the user has at least one of the requested permissions in the applicable scope(s), false otherwise.
  */
 export async function userHasPermissions(
-    userId: number,
+    user: User,
     permissionRefNames: string | string[],
     permissionScope: 'channel' | 'global' = 'global',
     channelId?: number
 ): Promise<boolean> {
-    const user = await User.findByPk(userId);
     if (!user) throw new AppError('User not found', 404);
 
     if (permissionScope === 'channel' && !channelId) {

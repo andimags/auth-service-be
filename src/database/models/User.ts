@@ -8,6 +8,7 @@ import {
 import {
     AllowNull,
     AutoIncrement,
+    BeforeUpdate,
     BeforeValidate,
     BelongsToMany,
     Column,
@@ -24,6 +25,8 @@ import {
 import { UserStatusType } from '../../constants/enums';
 import Role from './Role';
 import UserRole from './UserRole';
+import { userHasPermissions } from '../../services/permissionService';
+import { isUserMorePrivilegedThan } from '../../services/roleService';
 
 @Scopes(() => ({
     withRoles: {
@@ -34,6 +37,29 @@ import UserRole from './UserRole';
     tableName: 'users'
 })
 export default class User extends Model {
+    // Custom functions
+    getFullName() {
+        return [this.first_name, this.last_name].join(' ');
+    }
+
+    async hasPermissions(
+        permissionRefNames: string | string[], 
+        permissionScope: 'channel' | 'global' = 'global', 
+        channelId?: number)
+    {
+        return await userHasPermissions(
+            this,
+            permissionRefNames,
+            permissionScope,
+            channelId
+        )
+    }
+
+    async isMorePrivilegedThan(userId: number) {
+        return await isUserMorePrivilegedThan(this.id, userId);
+    }
+
+    // Columns
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
@@ -73,9 +99,11 @@ export default class User extends Model {
     @DeletedAt
     deleted_at: Date;
 
+    // Associations
     @BelongsToMany(() => Role, () => UserRole)
     roles: Role[];
 
+    // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
     declare setRoles: BelongsToSetAssociationMixin<Role, number>;
     declare addRoles: HasManyAddAssociationsMixin<Role, number>;
@@ -84,7 +112,15 @@ export default class User extends Model {
     // Hooks
     @BeforeValidate
     static generateApiKey(instance: User) {
-        // this will also be called when an instance is created
         instance.password = bcrypt.hashSync(instance.password, 10);
+    }
+
+    @BeforeUpdate
+    static preventUsernameUpdateForSuperadmin(instance: User) {
+        const originalUsername = instance.previous('username');
+
+        if (originalUsername === 'superadmin' && instance.username !== originalUsername) {
+            instance.username = originalUsername;
+        }
     }
 }

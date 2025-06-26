@@ -1,17 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { userHasPermissions } from '../services/permissionService';
-import { isUserMorePrivilegedThan } from '../services/roleService';
-import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const users = await User.findAll();
+        const allUsers = await User.findAll();
 
         res.json({
             status: 1,
-            data: users
+            data: allUsers
         });
     } catch (error: unknown) {
         next(error);
@@ -20,25 +17,23 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const _userHasPermissions = await userHasPermissions(
-            customReq.user.id,
-            ['view:user', 'admin:user'],
-        );
+        const authorizedUser = req.authorizedUser;
+        const authorizedUserHasPermissions = await authorizedUser!.hasPermissions(['view:user', 'admin:user'])
 
-        if(!_userHasPermissions && customReq.user.id != parseInt(req.params.id)){
+        if(!authorizedUserHasPermissions && 
+            req.authorizedUser.id != parseInt(req.params.id)){
             throw new AppError('You do not have the required permissions to perform this action', 403);
         }
 
-        const user = await User.findByPk(req.params.id);
+        const targetUser = await User.findByPk(req.params.id);
 
-        if (!user) {
+        if (!targetUser) {
             throw new AppError('User not found', 404);
         }
 
         res.json({
             status: 1,
-            data: user
+            data: targetUser
         });
     } catch (error: unknown) {
         next(error);
@@ -47,11 +42,11 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let user = await User.create(req.body);
+        let newUser = await User.create(req.body);
 
         res.json({
             status: 1,
-            data: user
+            data: newUser
         });
     } catch (error: unknown) {
         next(error);
@@ -60,32 +55,23 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let user = await User.findByPk(req.params.id);
+        let targetUser = await User.findByPk(req.params.id);
 
-        if (!user) {
+        if (!targetUser) {
             throw new AppError('User not found', 404);
         }
 
-        const customReq = req as IRequestWithUserAndChannel;
+        const authorizedUser = req.authorizedUser;
+
+        const authorizedUserHasPermissions = await authorizedUser!.hasPermissions(['update:user', 'admin:user']);
 
         // Skip these validations if user is updating herself
-        if(user.id != customReq.user.id){
-            const _userHasPermissions = await userHasPermissions(
-                customReq.user.id,
-                ['update:user', 'admin:user'],
-            );
-
-            if(!_userHasPermissions){
+        if(targetUser.id != authorizedUser!.id){
+            if(!authorizedUserHasPermissions){
                 throw new AppError('You do not have the required permissions to perform this action', 403);
             }
 
-            // Prevent changing superadmin's username
-            if (user.username === 'superadmin') {
-                const { username, ...rest } = req.body;
-                req.body = rest;
-            }
-
-            const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
+            const isAuthorizedUserMorePrivileged = await authorizedUser?.isMorePrivilegedThan(targetUser.id);
 
             if(!isAuthorizedUserMorePrivileged){
                 throw new AppError("You can't update a user with the same or higher privilege / role level than you", 403);
@@ -96,11 +82,11 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             delete req.body.username;
         }
 
-        await user?.update(req.body);
+        await targetUser?.update(req.body);
 
         res.json({
             status: 1,
-            data: user
+            data: targetUser
         });
     } catch (error: unknown) {
         next(error);
@@ -111,19 +97,19 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
 
-        const user = await User.findByPk(req.params.id, { paranoid: false });
-        if (!user) throw new AppError('User not found', 404);
+        const targetUser = await User.findByPk(req.params.id, { paranoid: false });
+        if (!targetUser) throw new AppError('User not found', 404);
 
-        if (user?.username == 'superadmin') throw new AppError('Cannot delete superadmin user', 403);
+        if (targetUser?.username == 'superadmin') throw new AppError('Cannot delete superadmin user', 403);
 
-        const customReq = req as IRequestWithUserAndChannel;
-        const isAuthorizedUserMorePrivileged = await isUserMorePrivilegedThan(customReq.user.id, user.id);
+        const authorizedUser = req.authorizedUser;
+        const isAuthorizedUserMorePrivileged = await authorizedUser?.isMorePrivilegedThan(targetUser.id);
 
         if(!isAuthorizedUserMorePrivileged){
             throw new AppError("You can't delete a user with the same or higher privilege / role level than you", 403);
         }
 
-        await user?.destroy({ force: shouldForce });
+        await targetUser?.destroy({ force: shouldForce });
 
         res.json({
             status: 1,

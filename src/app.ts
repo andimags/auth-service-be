@@ -3,6 +3,9 @@ import 'dotenv/config';
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
 
+// Augmentations
+import type {} from './types/express-augment';
+
 // Routes
 import { authMiddleware } from './middlewares/authMiddleware';
 import { checkApiKeyMiddleware } from './middlewares/checkApiKeyMiddleware';

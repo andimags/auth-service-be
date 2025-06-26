@@ -1,7 +1,5 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
-import User from '../database/models/User';
 import { userHasPermissions } from '../services/permissionService';
-import { IRequestWithChannel, IRequestWithUserAndChannel } from '../types';
 import { AppError } from './errorHandler';
 
 const errorMsg = 'You do not have the required permissions to perform this action';
@@ -13,21 +11,17 @@ export default function checkPermission(
     roleScope: 'channel' | 'global' = 'channel'
 ): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction) => {
-        const customReq = req as unknown as IRequestWithUserAndChannel;
-
         try {
-            const decoded = customReq.user;
-            const user = await User.findByPk(decoded.id);
             const apiKey = req.header('x-api-key');
 
             // Check for global permissions first
             const _userHasPermissionsOnGlobalRoles = await userHasPermissions(
-                user!.id,
+                req.authorizedUser,
                 permissionRefNames
             );
 
             if (_userHasPermissionsOnGlobalRoles) {
-                customReq.isGlobalRole = true;
+                req.isGlobalRole = true;
                 return next(); // Continue to next middleware/route handler
             }
 
@@ -44,17 +38,17 @@ export default function checkPermission(
             }
 
             // Check for channel-based roles (only if roleScope is 'channel')
-            const channelId = (req as IRequestWithChannel).channel!.id;
+            const channelId = req.channel!.id;
 
             const _userHasPermissionsOnChannelBasedRoles = await userHasPermissions(
-                user!.id,
+                req.authorizedUser,
                 permissionRefNames,
                 'channel',
                 channelId
             );
 
             if (_userHasPermissionsOnChannelBasedRoles) {
-                customReq.isGlobalRole = false;
+                req.isGlobalRole = false;
                 return next(); // Continue to next middleware/route handler
             }
 

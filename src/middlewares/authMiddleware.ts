@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { IAuthenticatedRequest, IUser } from '../types';
+import User from '../database/models/User';
+import { IUser } from '../types';
 import { AppError } from './errorHandler';
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const authHeader = req.header('Authorization');
         if(!authHeader) return next(new AppError('Unauthorized: No token provided', 401));
@@ -19,7 +20,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 
         const decoded = jwt.verify(token, secret) as IUser;
 
-        (req as IAuthenticatedRequest).user = decoded;
+        req.authorizedUser = await User.findByPk(decoded.id);
 
         next();
     } catch (error: any) {
