@@ -42,20 +42,20 @@ export async function findMissingPermissions(permissionIds: number | number[]): 
 }
 
 /**
- * @param userId 
+ * @param userId
  * The ID of the user to check permission for.
- * 
- * @param permissionRefNames 
+ *
+ * @param permissionRefNames
  * A single permission name or an array of permission names to check.
- * 
- * @param permissionScope 
+ *
+ * @param permissionScope
  * If provided, restricts the check to either 'channel' or 'global' permissions only.
- * 
- * @param channelId 
+ *
+ * @param channelId
  * If provided, checks for channel-based roles for the specified channelId
  * If not provided, checks only global roles.
  * Must be provided if permissionScope is 'channel'.
- * 
+ *
  * @returns boolean
  * True if the user has at least one of the requested permissions in the applicable scope(s), false otherwise.
  */
@@ -64,7 +64,7 @@ export async function userHasPermissions(
     permissionRefNames: string | string[],
     permissionScope: 'channel' | 'global' = 'global',
     channelId?: number
-): Promise<any> {
+): Promise<boolean> {
     if (!user) throw new AppError('User not found', 404);
 
     if (permissionScope === 'channel' && !channelId) {
@@ -76,7 +76,10 @@ export async function userHasPermissions(
         where: { channel_id: { [Op.is]: null }, scope: 'global' }
     });
 
-    if (globalRoles && await rolesHasPermissions(globalRoles, permissionRefNames, permissionScope)) {
+    if (
+        globalRoles &&
+        (await rolesHasPermissions(globalRoles, permissionRefNames, permissionScope))
+    ) {
         return true;
     }
 
@@ -110,7 +113,7 @@ async function rolesHasPermissions(
         });
         if (permission) return true;
     }
-    
+
     return false;
 }
 

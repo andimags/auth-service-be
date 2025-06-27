@@ -32,7 +32,7 @@ import { getUserChannels, hasAccessToChannel } from '../../services/channelServi
 @Scopes(() => ({
     withRoles: {
         include: [Role]
-    },
+    }
 }))
 @Table({
     tableName: 'users'
@@ -44,27 +44,22 @@ export default class User extends Model {
     }
 
     async hasPermissions(
-        permissionRefNames: string | string[], 
-        permissionScope: 'channel' | 'global' = 'global', 
-        channelId?: number)
-    {
-        return await userHasPermissions(
-            this,
-            permissionRefNames,
-            permissionScope,
-            channelId
-        )
+        permissionRefNames: string | string[],
+        permissionScope: 'channel' | 'global' = 'global',
+        channelId?: number
+    ) {
+        return await userHasPermissions(this, permissionRefNames, permissionScope, channelId);
     }
 
     async isMorePrivilegedThan(userId: number) {
         return await isUserMorePrivilegedThan(this.id, userId);
     }
 
-    async getChannels(){
+    async getChannels() {
         await getUserChannels(this.id);
     }
 
-    async hasAccessToChannel(channel_id: number){
+    async hasAccessToChannel(channel_id: number) {
         await hasAccessToChannel(this.id, channel_id);
     }
 

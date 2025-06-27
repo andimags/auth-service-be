@@ -24,9 +24,11 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const channel = await Channel.findByPk(req.params.id);
-        if(!channel) throw new AppError('Channel not found', 404);
+        if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(channel.id);
+        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(
+            channel.id
+        );
 
         if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
             throw new AppError('You can only view channels associated to your roles', 403);
@@ -57,9 +59,11 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const channel = await Channel.findByPk(req.params.id);
-        if (!channel) throw new AppError('Channel not found', 404)
+        if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(channel.id);
+        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(
+            channel.id
+        );
 
         if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
             throw new AppError("You can only update channels you're associated to", 403);

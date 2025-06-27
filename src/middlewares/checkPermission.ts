@@ -20,24 +20,26 @@ export default function checkPermission(
                 permissionRefNames
             );
 
-            console.log('apiKey?.toLowerCase() === ', apiKey?.toLowerCase() === 'global')
+            console.log('apiKey?.toLowerCase() === ', apiKey?.toLowerCase() === 'global');
 
             if (_userHasPermissionsOnGlobalRoles) {
                 req.isGlobalRole = true;
                 return next(); // Continue to next middleware/route handler
             }
 
-
             // Special handling for global API key
             if (apiKey?.toLowerCase() === 'global' && !_userHasPermissionsOnGlobalRoles) {
                 console.warn('No global roles attached to this user');
-                throw new AppError(errorMsg, 403)
+                throw new AppError(errorMsg, 403);
             }
 
             // If roleScope is 'global', only global permissions are allowed
             if (requireGlobalRole) {
                 console.warn('Only users with global role for this permission must be allowed');
-                throw new AppError('Only users with global role for this permission must be allowed', 403)
+                throw new AppError(
+                    'Only users with global role for this permission must be allowed',
+                    403
+                );
             }
 
             // Check for channel-based roles (only if roleScope is 'channel')
@@ -54,7 +56,7 @@ export default function checkPermission(
                 req.isGlobalRole = false;
                 return next(); // Continue to next middleware/route handler
             }
-            throw new AppError(errorMsg, 403)
+            throw new AppError(errorMsg, 403);
         } catch (error: unknown) {
             next(error);
         }

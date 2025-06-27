@@ -60,7 +60,7 @@ export default class Channel extends Model {
         // this will also be called when an instance is created
         instance.api_key = generateApiKey() as string;
     }
-    
+
     @BeforeDestroy
     static async softDeletePermissions(channel: Channel) {
         await Permission.update(

@@ -47,12 +47,9 @@ export async function findMissingRoles(roleIds: number | number[]): Promise<numb
  * - If `channelId` is provided, global roles and roles for the specified channel are considered.
  * - Prioritize global roles when finding the highest level
  */
-export async function getUsersHigestRoleLevel(
-    userId: number,
-    channelId?: number
-){
+export async function getUsersHigestRoleLevel(userId: number, channelId?: number) {
     const user = await User.findByPk(userId);
-    if(!user) throw new AppError('User not found', 404);
+    if (!user) throw new AppError('User not found', 404);
 
     const [highestLevelGlobalRole] = await user.getRoles({
         where: {
@@ -61,35 +58,33 @@ export async function getUsersHigestRoleLevel(
             }
         },
         order: [['level', 'ASC']],
-        limit: 1,   
+        limit: 1
     });
 
-    if(highestLevelGlobalRole){
+    if (highestLevelGlobalRole) {
         return {
             level: highestLevelGlobalRole.level,
             scope: highestLevelGlobalRole.scope
         };
     }
 
-    const channelIdCondition = 
-        channelId ? 
-            {
-                [Op.eq]: channelId
-            }  
-        :
-            {
-                [Op.ne]: null
-            }  
+    const channelIdCondition = channelId
+        ? {
+              [Op.eq]: channelId
+          }
+        : {
+              [Op.ne]: null
+          };
 
     const [highestLevelChannelBasedRole] = await user.getRoles({
         where: {
             channel_id: channelIdCondition
         },
         order: [['level', 'ASC']],
-        limit: 1,   
+        limit: 1
     });
 
-    if(!highestLevelChannelBasedRole) return null;
+    if (!highestLevelChannelBasedRole) return null;
 
     return {
         level: highestLevelChannelBasedRole.level,
@@ -97,12 +92,11 @@ export async function getUsersHigestRoleLevel(
     };
 }
 
-
 /**
- * 
- * @param firstUserId 
- * @param secondUserId 
- * 
+ *
+ * @param firstUserId
+ * @param secondUserId
+ *
  * - Find the most privileged between the two users
  */
 export async function isUserMorePrivilegedThan(
@@ -111,7 +105,7 @@ export async function isUserMorePrivilegedThan(
 ): Promise<boolean> {
     const [firstRole, secondRole] = await Promise.all([
         getUsersHigestRoleLevel(firstUserId),
-        getUsersHigestRoleLevel(secondUserId),
+        getUsersHigestRoleLevel(secondUserId)
     ]);
 
     // Handle cases where one or both roles are null
@@ -120,12 +114,11 @@ export async function isUserMorePrivilegedThan(
     if (!secondRole) return true; // Only first user has a role
 
     // Handle cases for different role scopes
-    if(firstRole.scope == 'global' && secondRole.scope == 'channel') return true;
-    if(firstRole.scope == 'channel' && secondRole.scope == 'global') return false;
+    if (firstRole.scope == 'global' && secondRole.scope == 'channel') return true;
+    if (firstRole.scope == 'channel' && secondRole.scope == 'global') return false;
 
     // Now TypeScript knows both roles are same value
     if (firstRole.level < secondRole.level) return true;
-    
+
     return false;
 }
-

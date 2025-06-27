@@ -105,10 +105,7 @@ export default class Permission extends Model {
     @BeforeDestroy
     static preventGlobalScopeDeletion(permission: Permission) {
         if (permission.scope === 'global') {
-            throw new AppError(
-                'Global scope permissions cannot be deleted',
-                403
-            );
+            throw new AppError('Global scope permissions cannot be deleted', 403);
         }
     }
 }
