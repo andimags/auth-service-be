@@ -1,12 +1,18 @@
 import request from 'supertest';
 import app from '../src/app';
 import Channel from '../src/database/models/Channel';
-import Permission from '../src/database/models/Permission';
 import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
-import { generateChannelData, generateToken, generateUserData } from './utils';
+import {
+    cleanupUserRoles,
+    createAuthHeaders,
+    createChannelRole,
+    generateChannelData,
+    generateToken,
+    generateUserData
+} from './utils';
 
 describe('Channel Routes', () => {
     let superadminUser: User;
@@ -15,13 +21,6 @@ describe('Channel Routes', () => {
     const NON_EXISTENT_CHANNEL_ID = 999999;
     const DEFAULT_PASSWORD = 'abcd1234';
     const API_BASE_URL = '/api/channels';
-
-    const HEADERS = {
-        GLOBAL: {
-            'x-api-key': 'global',
-            'Content-Type': 'application/json'
-        }
-    };
 
     beforeAll(async () => {
         await sequelize.sync();
@@ -41,55 +40,6 @@ describe('Channel Routes', () => {
         await superadminUser?.destroy({ force: true });
         await sequelize.close();
     });
-
-    // Helper function to create authenticated headers
-    const createAuthHeaders = (token: string, apiKey: string = 'global') => ({
-        Authorization: `Bearer ${token}`,
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json'
-    });
-
-    // Helper function to clean up user roles and permissions
-    const cleanupUserRoles = async (user: User) => {
-        const roles = await user.getRoles();
-
-        for (const role of roles) {
-            const permissions = await role.getPermissions();
-
-            for (const permission of permissions) {
-                await role.removePermissions([permission]);
-
-                if (permission.scope === 'channel') {
-                    await permission.destroy({ force: true });
-                }
-            }
-
-            await user.removeRoles([role]);
-            await role.destroy({ force: true });
-        }
-    };
-
-    // Helper function to create channel-scoped role with permissions
-    const createChannelRole = async (channelId: number, permissionRefNames: string[]) => {
-        const role = await Role.create({
-            name: 'Test Channel Role',
-            ref_name: `test_channel_role_${Date.now()}`,
-            level: 5,
-            channel_id: channelId,
-            scope: 'channel'
-        });
-
-        const permissions = await Permission.findAll({
-            where: { ref_name: permissionRefNames }
-        });
-
-        if (permissions.length !== permissionRefNames.length) {
-            throw new AppError('Some permissions not found');
-        }
-
-        await role.addPermissions(permissions);
-        return role;
-    };
 
     describe('GET /api/channels', () => {
         let userWithNoPermissions: User;
