@@ -27,6 +27,7 @@ import Role from './Role';
 import UserRole from './UserRole';
 import { userHasPermissions } from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
+import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
 
 @Scopes(() => ({
     withRoles: {
@@ -57,6 +58,14 @@ export default class User extends Model {
 
     async isMorePrivilegedThan(userId: number) {
         return await isUserMorePrivilegedThan(this.id, userId);
+    }
+
+    async getChannels(){
+        await getUserChannels(this.id);
+    }
+
+    async hasAccessToChannel(channel_id: number){
+        await hasAccessToChannel(this.id, channel_id);
     }
 
     // Columns

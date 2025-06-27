@@ -13,7 +13,7 @@ export const checkApiKeyMiddleware = async (
 
         if (!apiKey) throw new AppError('API Key not found', 401);
 
-        if (apiKey.toLocaleLowerCase()) return next();
+        if (apiKey.toLocaleLowerCase() == 'global') return next();
 
         const channel = await Channel.findOne({
             where: {

@@ -64,7 +64,7 @@ export async function userHasPermissions(
     permissionRefNames: string | string[],
     permissionScope: 'channel' | 'global' = 'global',
     channelId?: number
-): Promise<boolean> {
+): Promise<any> {
     if (!user) throw new AppError('User not found', 404);
 
     if (permissionScope === 'channel' && !channelId) {
@@ -76,7 +76,7 @@ export async function userHasPermissions(
         where: { channel_id: { [Op.is]: null }, scope: 'global' }
     });
 
-    if (await rolesHasPermissions(globalRoles, permissionRefNames, permissionScope)) {
+    if (globalRoles && await rolesHasPermissions(globalRoles, permissionRefNames, permissionScope)) {
         return true;
     }
 

@@ -14,7 +14,8 @@ import {
     BelongsToMany,
     Default,
     BeforeUpdate,
-    BeforeCreate
+    BeforeCreate,
+    BeforeDestroy
 } from 'sequelize-typescript';
 import Channel from './Channel';
 import { BelongsToManyGetAssociationsMixin } from 'sequelize';
@@ -95,7 +96,17 @@ export default class Permission extends Model {
     static preventGlobalScopeModification(permission: Permission) {
         if (permission.scope === 'global') {
             throw new AppError(
-                'Global scope permissions must be seeded. You cannot create or update a permission to have a global scope.',
+                'Global scope permissions must be seeded. You cannot create or update a permission to have a global scope',
+                403
+            );
+        }
+    }
+
+    @BeforeDestroy
+    static preventGlobalScopeDeletion(permission: Permission) {
+        if (permission.scope === 'global') {
+            throw new AppError(
+                'Global scope permissions cannot be deleted',
                 403
             );
         }

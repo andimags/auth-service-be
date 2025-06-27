@@ -6,31 +6,31 @@ const channelRoutes = Router();
 
 channelRoutes.get(
     '/',
-    checkPermission(['view:channel', 'admin:channel']),
+    checkPermission(['view:channel', 'admin:channel'], false),
     channelController.getAll
 );
 
 channelRoutes.get(
     '/:id',
-    checkPermission(['view:channel', 'admin:channel']),
+    checkPermission(['view:channel', 'admin:channel'], false),
     channelController.find
 );
 
 channelRoutes.post(
     '/',
-    checkPermission(['add:channel', 'admin:channel'], 'global'),
+    checkPermission(['add:channel', 'admin:channel']),
     channelController.add
 );
 
 channelRoutes.put(
     '/:id',
-    checkPermission(['update:channel', 'admin:channel']),
+    checkPermission(['update:channel', 'admin:channel'], false),
     channelController.update
 );
 
 channelRoutes.delete(
     '/:id',
-    checkPermission(['delete:channel', 'admin:channel'], 'global'),
+    checkPermission(['delete:channel', 'admin:channel']),
     channelController.destroy
 );
 

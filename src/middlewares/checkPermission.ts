@@ -8,7 +8,7 @@ const errorMsg = 'You do not have the required permissions to perform this actio
 // If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
 export default function checkPermission(
     permissionRefNames: string | string[],
-    roleScope: 'channel' | 'global' = 'channel'
+    requireGlobalRole: boolean = true
 ): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -20,21 +20,24 @@ export default function checkPermission(
                 permissionRefNames
             );
 
+            console.log('apiKey?.toLowerCase() === ', apiKey?.toLowerCase() === 'global')
+
             if (_userHasPermissionsOnGlobalRoles) {
                 req.isGlobalRole = true;
                 return next(); // Continue to next middleware/route handler
             }
 
+
             // Special handling for global API key
-            if (!_userHasPermissionsOnGlobalRoles && apiKey?.toLowerCase() === 'global') {
+            if (apiKey?.toLowerCase() === 'global' && !_userHasPermissionsOnGlobalRoles) {
                 console.warn('No global roles attached to this user');
                 throw new AppError(errorMsg, 403)
             }
 
             // If roleScope is 'global', only global permissions are allowed
-            if (roleScope === 'global') {
+            if (requireGlobalRole) {
                 console.warn('Only users with global role for this permission must be allowed');
-                throw new AppError(errorMsg, 403)
+                throw new AppError('Only users with global role for this permission must be allowed', 403)
             }
 
             // Check for channel-based roles (only if roleScope is 'channel')
@@ -43,7 +46,7 @@ export default function checkPermission(
             const _userHasPermissionsOnChannelBasedRoles = await userHasPermissions(
                 req.authorizedUser,
                 permissionRefNames,
-                'channel',
+                'global',
                 channelId
             );
 
@@ -51,7 +54,6 @@ export default function checkPermission(
                 req.isGlobalRole = false;
                 return next(); // Continue to next middleware/route handler
             }
-
             throw new AppError(errorMsg, 403)
         } catch (error: unknown) {
             next(error);

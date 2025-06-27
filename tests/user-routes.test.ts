@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import request from "supertest";
 import app from '../src/app';
 import Permission from '../src/database/models/Permission';
@@ -6,43 +5,18 @@ import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
+import { generateUserData, generateToken } from './utils';
 
 let superadminUser: User | null;
 let superadminToken: string | null;
 
-const agent = request.agent(app); // preserves cookies
 const nonExistentUserId = 999999; // For testing unhappy paths
 const defaultPassword = 'abcd1234'; // All users use this password
-
-async function generateUserPayload(){
-    const firstName = faker.person.firstName();
-    const lastName = faker.person.lastName();
-    
-    return {
-        username: `${firstName}_${lastName}`,
-        email: `${firstName}_${lastName}@gmail.com`,
-        first_name: firstName,
-        last_name: lastName,
-        password: defaultPassword,
-        status: 'active'
-    }
-}
-
-async function generateToken(email: string, password: string){
-    const res = await agent
-        .post('/api/auth/generate-token')
-        .send({
-            email: email,
-            password: password
-        });
-
-    return res.body.token;
-}
 
 beforeAll(async () => {
     await sequelize.sync(); // or authenticate() if DB is already ready
 
-    superadminUser = await User.create(await generateUserPayload());
+    superadminUser = await User.create(await generateUserData());
 
     // Find superadmin role and attach to the new created superadmin user
     const superadminRole = await Role.findOne({where: {ref_name: 'superadmin'}});
@@ -57,7 +31,7 @@ describe("GET /api/users", () => {
     let userWithNoPermissionsToken: string | null;
 
     beforeAll(async () => {
-        userWithNoPermissions = await User.create(await generateUserPayload());
+        userWithNoPermissions = await User.create(await generateUserData());
         userWithNoPermissionsToken = await generateToken(userWithNoPermissions.email, defaultPassword);
     })
 
@@ -103,11 +77,11 @@ describe("GET /api/users/:user_id", () => {
     let targetUser: User | null; // Use this ID for parameter user_id
 
     beforeAll(async () => {
-        userWithNoPermissions = await User.create(await generateUserPayload());
+        userWithNoPermissions = await User.create(await generateUserData());
         if(!userWithNoPermissions) throw new AppError('userWithNoPermissions is null');
         userWithNoPermissionsToken = await generateToken(userWithNoPermissions.email, defaultPassword);
 
-        targetUser = await User.create(await generateUserPayload());
+        targetUser = await User.create(await generateUserData());
     })
 
     it("should return 200 with user's data", async () => {
@@ -183,11 +157,11 @@ describe("POST /api/users/", () => {
     let targetUser: User | null; // Use this ID for parameter user_id
 
     beforeAll(async () => {
-        userWithNoPermissions = await User.create(await generateUserPayload());
+        userWithNoPermissions = await User.create(await generateUserData());
         if(!userWithNoPermissions) throw new AppError('userWithNoPermissions is null');
         userWithNoPermissionsToken = await generateToken(userWithNoPermissions.email, defaultPassword);
 
-        targetUser = await User.create(await generateUserPayload());
+        targetUser = await User.create(await generateUserData());
     })
 
     it("should return 200 with newly created user data", async () => {
@@ -197,7 +171,7 @@ describe("POST /api/users/", () => {
                 'Authorization': `Bearer ${superadminToken}`,
                 'x-api-key': 'global'
             })
-            .send(await generateUserPayload())
+            .send(await generateUserData())
             .expect("Content-Type", /json/)
             .expect(200)
 
@@ -213,7 +187,7 @@ describe("POST /api/users/", () => {
                 'Authorization': `Bearer ${userWithNoPermissionsToken}`,
                 'x-api-key': 'global'
             })
-            .send(await generateUserPayload())
+            .send(await generateUserData())
             .expect("Content-Type", /json/)
             .expect(403)
 
@@ -243,14 +217,14 @@ describe("PUT /api/users/:user_id", () => {
     let targetUser: User | null; // Use this ID for parameter user_id
 
     beforeAll(async () => {
-        userWithNoPermissions = await User.create(await generateUserPayload());
+        userWithNoPermissions = await User.create(await generateUserData());
         if(!userWithNoPermissions) throw new AppError('userWithNoPermissions is null');
         userWithNoPermissionsToken = await generateToken(userWithNoPermissions.email, defaultPassword);
 
-        targetUser = await User.create(await generateUserPayload());
+        targetUser = await User.create(await generateUserData());
         if(!targetUser) throw new AppError('targetUser is null');
 
-        userWithLowLevelRole = await User.create(await generateUserPayload());
+        userWithLowLevelRole = await User.create(await generateUserData());
         if(!userWithLowLevelRole) throw new AppError('userWithLowLevelRole is null');
         userWithLowLevelRoleToken = await generateToken(userWithLowLevelRole.email, defaultPassword);
 
@@ -269,7 +243,7 @@ describe("PUT /api/users/:user_id", () => {
     })
 
     it("should return 200 with newly updated user data", async () => {
-        const payload = await generateUserPayload();
+        const payload = await generateUserData();
 
         const response = await request(app)
             .put(`/api/users/${targetUser!.id}`)
@@ -309,7 +283,7 @@ describe("PUT /api/users/:user_id", () => {
                 'Authorization': `Bearer ${superadminToken}`,
                 'x-api-key': 'global'
             })
-            .send(await generateUserPayload())
+            .send(await generateUserData())
             .expect("Content-Type", /json/)
             .expect(404)
 
@@ -325,7 +299,7 @@ describe("PUT /api/users/:user_id", () => {
                 'Authorization': `Bearer ${userWithNoPermissionsToken}`,
                 'x-api-key': 'global'
             })
-            .send(await generateUserPayload())
+            .send(await generateUserData())
             .expect("Content-Type", /json/)
             .expect(403)
 
@@ -335,7 +309,7 @@ describe("PUT /api/users/:user_id", () => {
     });
 
     it("should return 403 with authorized user having low level role compared to the target user", async () => {
-        const payload = await generateUserPayload();
+        const payload = await generateUserData();
         
         const response = await request(app)
             .put(`/api/users/${superadminUser!.id}`)
@@ -374,16 +348,16 @@ describe("DELETE /api/users/:user_id", () => {
     let targetUser: User | null; // Use this ID for parameter user_id
 
     beforeEach(async () => {
-        targetUser = await User.create(await generateUserPayload());
+        targetUser = await User.create(await generateUserData());
         if(!targetUser) throw new AppError('targetUser is null');
     });
 
     beforeAll(async () => {
-        userWithNoPermissions = await User.create(await generateUserPayload());
+        userWithNoPermissions = await User.create(await generateUserData());
         if(!userWithNoPermissions) throw new AppError('userWithNoPermissions is null');
         userWithNoPermissionsToken = await generateToken(userWithNoPermissions.email, defaultPassword);
 
-        userWithLowLevelRole = await User.create(await generateUserPayload());
+        userWithLowLevelRole = await User.create(await generateUserData());
         if(!userWithLowLevelRole) throw new AppError('userWithLowLevelRole is null');
         userWithLowLevelRoleToken = await generateToken(userWithLowLevelRole.email, defaultPassword);
 

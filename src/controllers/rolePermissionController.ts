@@ -34,9 +34,8 @@ const getRolePermissions = async (req: Request, res: Response, next: NextFunctio
 // Assign one or more permissions to a role
 const addRolePermissions = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
         const role = await Role.findByPk(req.params.role_id);
-        const authorizedUser = (await User.findByPk(customReq.user.id))!;
+        const authorizedUser = (await User.findByPk(req.authorizedUser.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
@@ -54,11 +53,11 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
             );
         }
 
-        if (!customReq.isGlobalRole && role?.channel_id != customReq.channel?.id) {
+        if (!req.isGlobalRole && role?.channel_id != req.channel?.id) {
             throw new AppError('Unauthorized to add permissions to this role.', 403);
         }
 
-        const missingPermissions = await findMissingPermissions(customReq.body.permission_ids);
+        const missingPermissions = await findMissingPermissions(req.body.permission_ids);
 
         console.log(missingPermissions);
 

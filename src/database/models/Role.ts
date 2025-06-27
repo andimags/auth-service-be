@@ -18,9 +18,13 @@ import {
 } from 'sequelize-typescript';
 
 import {
+    BelongsToManyAddAssociationsMixin,
     BelongsToManyGetAssociationsMixin,
+    BelongsToManyRemoveAssociationsMixin,
+    BelongsToManySetAssociationsMixin,
     BelongsToSetAssociationMixin,
-    HasManyAddAssociationsMixin
+    HasManyAddAssociationsMixin,
+    HasManyRemoveAssociationsMixin
 } from 'sequelize';
 import Channel from './Channel';
 import Permission from './Permission';
@@ -92,8 +96,9 @@ export default class Role extends Model {
 
     // Mixins
     declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
-    declare setPermissions: BelongsToSetAssociationMixin<Permission, number>;
-    declare addPermissions: HasManyAddAssociationsMixin<Permission, number>;
+    declare setPermissions: BelongsToManySetAssociationsMixin<Permission, number>;
+    declare addPermissions: BelongsToManyAddAssociationsMixin<Permission, number>;
+    declare removePermissions: BelongsToManyRemoveAssociationsMixin<Permission, number>;
 
     // Hooks
     @AfterCreate
