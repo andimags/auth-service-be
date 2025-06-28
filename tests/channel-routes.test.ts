@@ -8,7 +8,7 @@ import { AppError } from '../src/middlewares/errorHandler';
 import {
     cleanupUserRoles,
     createAuthHeaders,
-    createChannelRole,
+    createRole,
     generateChannelData,
     generateToken,
     generateUserData
@@ -142,7 +142,7 @@ describe('Channel Routes', () => {
 
         it('should return 403 when user has channel permissions but for wrong channel', async () => {
             const wrongChannel = await Channel.create(await generateChannelData());
-            const role = await createChannelRole(wrongChannel.id, ['admin:channel']);
+            const role = await createRole(['admin:channel'], wrongChannel.id);
 
             await authorizedUser.setRoles(role);
 
@@ -282,7 +282,7 @@ describe('Channel Routes', () => {
 
         it('should return 403 when user has permissions but for wrong channel', async () => {
             const unrelatedChannel = await Channel.create(await generateChannelData());
-            const role = await createChannelRole(unrelatedChannel.id, ['admin:channel']);
+            const role = await createRole(['admin:channel'], unrelatedChannel.id);
 
             await authorizedUser.setRoles(role);
 
