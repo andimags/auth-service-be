@@ -9,7 +9,7 @@ export const blockIfGlobalPermission = async (
     next: NextFunction
 ): Promise<any> => {
     try {
-        const permission = await Permission.findByPk(req.params.id);
+        const permission = await Permission.findByPk(req.params.permission_id);
 
         if (!permission) throw new AppError('Permission not found');
 

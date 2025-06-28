@@ -7,30 +7,30 @@ const permissionRoutes = Router();
 
 permissionRoutes.get(
     '/',
-    checkPermission(['view:permission', 'admin:permission']),
+    checkPermission(['view:permission', 'admin:permission'], false),
     permissionController.getAll
 );
 
 permissionRoutes.get(
-    '/:id',
-    checkPermission(['view:permission', 'admin:permission']),
+    '/:permission_id',
+    checkPermission(['view:permission', 'admin:permission'], false),
     permissionController.find
 );
 
 permissionRoutes.post(
     '/',
-    checkPermission(['add:permission', 'admin:permission']),
+    checkPermission(['add:permission', 'admin:permission'], false),
     permissionController.add
 );
 
 permissionRoutes.put(
-    '/:id',
-    checkPermission(['update:permission', 'admin:permission']),
+    '/:permission_id',
+    checkPermission(['update:permission', 'admin:permission'], false),
     blockIfGlobalPermission,
     permissionController.update
 );
 permissionRoutes.delete(
-    '/:id',
+    '/:permission_id',
     checkPermission(['delete:permission', 'admin:permission']),
     blockIfGlobalPermission,
     permissionController.destroy

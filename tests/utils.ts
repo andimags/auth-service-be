@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
 import request from 'supertest';
 import app from '../src/app';
-import User from '../src/database/models/User';
-import Role from '../src/database/models/Role';
+import { PermissionAccessLevelType } from '../src/constants/enums';
 import Permission from '../src/database/models/Permission';
+import Role from '../src/database/models/Role';
+import User from '../src/database/models/User';
 import { AppError } from '../src/middlewares/errorHandler';
 
 const defaultPassword = 'abcd1234'; // All users use this password
@@ -31,6 +32,20 @@ export async function generateChannelData() {
         description: description,
         ref_name: name.replace(' ', '_')
     };
+}
+
+export async function generatePermissionData(){
+    const accesLevelValues = Object.values(PermissionAccessLevelType); // ['read', 'write', admin]
+
+    const randomAccessLevel = accesLevelValues[Math.floor(Math.random() * accesLevelValues.length)];
+
+    return {
+        name: `Permission Test ${Date.now()}`,
+        ref_name: `permission_test_${Date.now()}`,
+        module: 'Test Module',
+        scope: 'channel', // Global scopes can only be seeded
+        access_level: randomAccessLevel
+    }
 }
 
 export async function generateToken(email: string, password: string) {
@@ -70,13 +85,13 @@ export const cleanupUserRoles = async (user: User) => {
 };
 
 // Helper function to create channel-scoped role with existing global permissions
-export const createChannelRole = async (channelId: number, permissionRefNames: string[], roleLevel: number = 5) => {
+export const createRole = async (permissionRefNames: string[], channelId?: number, roleLevel: number = 5) => {
     const role = await Role.create({
         name: 'Test Channel Role',
         ref_name: `test_channel_role_${Date.now()}`,
         level: roleLevel,
-        channel_id: channelId,
-        scope: 'channel'
+        channel_id: channelId ?? null,
+        scope: channelId ? 'channel' : 'global'
     });
 
     const permissions = await Permission.findAll({

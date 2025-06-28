@@ -23,11 +23,11 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 import { UserStatusType } from '../../constants/enums';
+import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
+import { checkPermissionLevel, getUserPermissions, userHasAccessToPermission, userHasPermissions } from '../../services/permissionService';
+import { isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
 import UserRole from './UserRole';
-import { userHasPermissions } from '../../services/permissionService';
-import { isUserMorePrivilegedThan } from '../../services/roleService';
-import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
 
 @Scopes(() => ({
     withRoles: {
@@ -59,8 +59,40 @@ export default class User extends Model {
         await getUserChannels(this.id);
     }
 
-    async hasAccessToChannel(channel_id: number) {
-        await hasAccessToChannel(this.id, channel_id);
+    async hasAccessToChannel(channelId: number) {
+        await hasAccessToChannel(this.id, channelId);
+    }
+
+    async getPermissions(channelId?: number){
+        await getUserPermissions(
+            this.id,
+            channelId
+        );
+    }
+
+    async checkPermissionLevel(
+        permissionRefNames: string | string[], 
+        permissionsScope: 'global' | 'channel', 
+        channelId?: number
+    )
+    {
+        await checkPermissionLevel(
+            this,
+            permissionRefNames,
+            permissionsScope,
+            channelId
+        )
+    }
+
+    async hasAccessToPermission(    
+        permissionId: number,
+        channelId?: number
+    ): Promise<boolean>{
+        return await userHasAccessToPermission(
+            this,
+            permissionId,
+            channelId
+        )
     }
 
     // Columns

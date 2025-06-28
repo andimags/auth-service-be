@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 import Permission from '../database/models/Permission';
+import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 
@@ -117,25 +118,34 @@ async function rolesHasPermissions(
     return false;
 }
 
+/**
+ * 
+ * @param user 
+ * @param permissionRefNames 
+ * @param permissionsScope 
+ * @param channelId 
+ * If provided, will check only channel-based roles, if not, it will check all roles
+ * 
+ * @returns Promise<number | null>
+ */
 export async function checkPermissionLevel(
-    permissionRefNames: string | string[],
     user: User,
-    isGlobalRole: boolean = false,
+    permissionRefNames: string | string[],
+    permissionsScope: 'global' | 'channel',
     channelId?: number
 ): Promise<number | null> {
     let highestLevel: number | null = null;
 
-    if (!isGlobalRole && !channelId) {
-        throw new AppError('Channel ID parameter is required if isGlobalRole is false.');
-    }
-
-    let roles = await user.getRoles();
-
-    console.log('roles.length', roles.length);
+    let roles: Role[] | null = null;
 
     if (channelId) {
-        roles = await user.getRoles({ where: { channel_id: { [Op.in]: [channelId, null] } } });
+        roles = await user.getRoles({ where: {channel_id: {[Op.in]: [channelId, null]}}});
     }
+    else{
+        roles = await user.getRoles({ where: {channel_id: {[Op.eq]: null}}});
+    }
+
+    if(!roles) return null;
 
     for (const role of roles) {
         const permissions = await role.getPermissions({
@@ -145,7 +155,7 @@ export async function checkPermissionLevel(
                         ? permissionRefNames
                         : [permissionRefNames]
                 },
-                scope: 'global'
+                scope: permissionsScope
             }
         });
 
@@ -163,7 +173,6 @@ export async function checkPermissionLevel(
 
 export async function getUserPermissions(
     targetUserId: number, // the user whose permissions you're checking
-    authorizedUserRoleLevel: number, // the role level of the user requesting access
     channelId?: number
 ) {
     const user = await User.findByPk(targetUserId);
@@ -174,9 +183,6 @@ export async function getUserPermissions(
         where: {
             channel_id: {
                 [Op.in]: channelId ? [null, channelId] : [null]
-            },
-            level: {
-                [Op.gte]: authorizedUserRoleLevel
             }
         }
     });
@@ -197,23 +203,20 @@ export async function getUserPermissions(
  *
  * @param userId
  * @param permissionId
- * @param channel_id - Assume to look only for global roles if it's empty
+ * @param channelId - Assume to look only for global roles if it's empty
  *
  * Checks if the user has access to a specific permission.
  * It verifies whether the permission is assigned to the user.
- * If `channel_id` is provided, both global and channel-specific roles are considered.
- * If `channel_id` is not provided, only global roles are checked.
+ * If `channelId` is provided, both global and channel-specific roles are considered.
+ * If `channelId` is not provided, only global roles are checked.
  * */
-export async function hasAccessToPermission(
-    userId: number,
+export async function userHasAccessToPermission(
+    user: User,
     permissionId: number,
-    channel_id?: number
-) {
-    const user = await User.findByPk(userId);
-    if (!user) throw new AppError('User not found.', 404);
-
+    channelId?: number
+): Promise<boolean> {
     const roles = await user?.getRoles({
-        where: { channel_id: { [Op.in]: channel_id ? [null, channel_id] : [null] } }
+        where: { channel_id: { [Op.in]: channelId ? [null, channelId] : [null] } }
     });
     if (!roles) return false;
 
