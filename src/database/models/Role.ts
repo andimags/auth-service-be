@@ -2,6 +2,7 @@ import {
     AfterCreate,
     AllowNull,
     AutoIncrement,
+    BeforeUpdate,
     BelongsTo,
     BelongsToMany,
     Column,
@@ -13,25 +14,23 @@ import {
     PrimaryKey,
     Scopes,
     Table,
-    UpdatedAt,
-    BeforeUpdate
+    UpdatedAt
 } from 'sequelize-typescript';
 
 import {
+    BelongsToManyAddAssociationMixin,
     BelongsToManyAddAssociationsMixin,
     BelongsToManyGetAssociationsMixin,
+    BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin,
-    BelongsToSetAssociationMixin,
-    HasManyAddAssociationsMixin,
-    HasManyRemoveAssociationsMixin
+    BelongsToManySetAssociationsMixin
 } from 'sequelize';
+import { RoleScopeType } from '../../constants/enums';
 import Channel from './Channel';
 import Permission from './Permission';
 import RolePermission from './RolePermission';
 import User from './User';
 import UserRole from './UserRole';
-import { RoleScopeType } from '../../constants/enums';
 
 @Scopes(() => ({
     // includes
@@ -96,9 +95,14 @@ export default class Role extends Model {
 
     // Mixins
     declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
+
     declare setPermissions: BelongsToManySetAssociationsMixin<Permission, number>;
+
     declare addPermissions: BelongsToManyAddAssociationsMixin<Permission, number>;
+    declare addPermission: BelongsToManyAddAssociationMixin<Permission, number>;
+
     declare removePermissions: BelongsToManyRemoveAssociationsMixin<Permission, number>;
+    declare removePermission: BelongsToManyRemoveAssociationMixin<Permission, number>;
 
     // Hooks
     @AfterCreate

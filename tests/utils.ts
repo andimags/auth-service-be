@@ -7,9 +7,9 @@ import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import { AppError } from '../src/middlewares/errorHandler';
 
-const defaultPassword = 'abcd1234'; // All users use this password
+const DEFAULT_PASSWORD = 'abcd1234';
 
-export async function generateUserData() {
+export function generateUserData() {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
 
@@ -18,12 +18,12 @@ export async function generateUserData() {
         email: `${firstName}_${lastName}@gmail.com`,
         first_name: firstName,
         last_name: lastName,
-        password: defaultPassword,
+        password: DEFAULT_PASSWORD,
         status: 'active'
     };
 }
 
-export async function generateChannelData() {
+export function generateChannelData() {
     const name = faker.lorem.words(2);
     const description = faker.lorem.sentence();
 
@@ -34,7 +34,7 @@ export async function generateChannelData() {
     };
 }
 
-export async function generatePermissionData(){
+export function generatePermissionData(){
     const accesLevelValues = Object.values(PermissionAccessLevelType); // ['read', 'write', admin]
 
     const randomAccessLevel = accesLevelValues[Math.floor(Math.random() * accesLevelValues.length)];
@@ -73,6 +73,15 @@ export const createAuthHeaders = (token: string, apiKey: string = 'global') => (
     'x-api-key': apiKey,
     'Content-Type': 'application/json'
 });
+
+export const createAuthUser = async () => {
+    const user = await User.create(await generateUserData());
+
+    return {
+        user: user,
+        token: await generateToken(user.email, DEFAULT_PASSWORD),
+    };
+}
 
 // Helper function to clean up user roles and permissions
 export const cleanupUserRoles = async (user: User) => {
@@ -114,3 +123,20 @@ export const createRole = async (permissionRefNames: string[], channelId?: numbe
     await role.addPermissions(permissions);
     return role;
 };
+
+/**
+ * 
+ * @param instances 
+ * 
+ * You are passing an array of objects.
+ * Each object must have a .destroy() method.
+ * The .destroy() method must accept an object like { force: true } and return a Promise.
+ * In other words: it's describing Sequelize model instances.
+ */
+export async function forceDeleteInstances(instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>) {
+    for (const instance of instances) {
+        if (instance?.destroy) {
+            await instance.destroy({ force: true });
+        }
+    }
+}

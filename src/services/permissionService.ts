@@ -188,13 +188,10 @@ export async function getUserPermissions(
     });
 
     const permissionsNested = await Promise.all(roles.map((role) => role.getPermissions()));
-
     const permissions = permissionsNested.flat();
 
     // Remove duplicate permissions
     const uniquePermissions = Array.from(new Map(permissions.map((p) => [p.id, p])).values());
-
-    console.log(uniquePermissions);
 
     return uniquePermissions;
 }
