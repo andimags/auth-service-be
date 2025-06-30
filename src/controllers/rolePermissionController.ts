@@ -37,9 +37,9 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(req.authorizedUser.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
-            true
+            ['remove:role_permission', 'admin:role_permission'],
+            'global'
         ))!;
 
         if (!role) {
@@ -85,9 +85,9 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         const role = await Role.findByPk(req.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
-            true
+            ['remove:role_permission', 'admin:role_permission'],
+            'global'
         ))!;
 
         if (!role) {
@@ -131,9 +131,9 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         const role = await Role.findByPk(customReq.params.role_id);
         const authorizedUser = (await User.findByPk(customReq.user.id))!;
         const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['remove:role_permission', 'admin:role_permission'],
             authorizedUser,
-            true
+            ['remove:role_permission', 'admin:role_permission'],
+            'global'
         ))!;
 
         if (!role) {

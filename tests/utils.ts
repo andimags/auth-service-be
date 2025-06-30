@@ -48,6 +48,16 @@ export async function generatePermissionData(){
     }
 }
 
+export function generateRoleData(channelId?: number, level?: number){
+    return {
+        name: `Role Test ${Date.now()}`,
+        ref_name: `role_test_${Date.now()}`,
+        level: level ?? 5,
+        channel_id: channelId ?? null,
+        scope: channelId ? 'channel' : 'global'
+    }
+}
+
 export async function generateToken(email: string, password: string) {
     const res = await request(app).post('/api/auth/generate-token').send({
         email: email,
@@ -69,14 +79,13 @@ export const cleanupUserRoles = async (user: User) => {
     const roles = await user.getRoles();
 
     for (const role of roles) {
-        const permissions = await role.getPermissions();
+        // Avoid deleting global permissions
+        const permissions = await role.getPermissions({where: {scope: 'channel'}});
+        console.log('xxx', permissions);
 
         for (const permission of permissions) {
             await role.removePermissions([permission]);
-
-            if (permission.scope === 'channel') {
-                await permission.destroy({ force: true });
-            }
+            await permission.destroy({ force: true });
         }
 
         await user.removeRoles([role]);

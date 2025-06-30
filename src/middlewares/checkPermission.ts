@@ -20,8 +20,6 @@ export default function checkPermission(
                 permissionRefNames
             );
 
-            console.log('apiKey?.toLowerCase() === ', apiKey?.toLowerCase() === 'global');
-
             if (_userHasPermissionsOnGlobalRoles) {
                 req.isGlobalRole = true;
                 return next(); // Continue to next middleware/route handler

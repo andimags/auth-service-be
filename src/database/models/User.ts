@@ -74,9 +74,9 @@ export default class User extends Model {
         permissionRefNames: string | string[], 
         permissionsScope: 'global' | 'channel', 
         channelId?: number
-    )
+    ): Promise<number | null>
     {
-        await checkPermissionLevel(
+        return await checkPermissionLevel(
             this,
             permissionRefNames,
             permissionsScope,

@@ -1,21 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
-import Channel from '../database/models/Channel';
 import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { checkPermissionLevel } from '../services/permissionService';
-import { IRequestWithUserAndChannel } from '../types';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
         let roles = null;
 
-        if (customReq.isGlobalRole) {
+        if (req.isGlobalRole) {
             roles = await Role.findAll();
         } else {
             roles = await Role.findAll({
-                where: { channel_id: customReq?.channel?.id }
+                where: { channel_id: req?.channel?.id }
             });
         }
 
@@ -30,23 +26,16 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.scope('withChannel').findByPk(req.params.role_id);
+        const targetRole = await Role.findByPk(req.params.role_id);
+        if (!targetRole) throw new AppError('Role not found', 404);
 
-        if (!role) {
-            res.status(404).json({
-                status: 0,
-                message: 'Role not found.'
-            });
-        }
-
-        if (!customReq.isGlobalRole && role?.channel_id != customReq?.channel?.id) {
-            throw new AppError('Unauthorized to access roles outside your channel.', 403);
+        if (!req.isGlobalRole && targetRole?.channel_id != req?.channel?.id) {
+            throw new AppError('Unauthorized to access roles outside your channel', 403);
         }
 
         res.json({
             status: 1,
-            data: role
+            data: targetRole
         });
     } catch (error: unknown) {
         next(error);
@@ -55,32 +44,25 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.create(req.body);
-        const authorizedUser = (await User.findByPk(customReq.user.id))!;
-        const authorizeUserRoleLevel = (await checkPermissionLevel(
-            ['add:role', 'admin:role'],
-            authorizedUser,
-            true
-        ))!;
-
-        if (!customReq.isGlobalRole && customReq.channel?.id != customReq.body.channel_id) {
-            throw new AppError('You can only add roles within your channel.', 403);
+        if (!req.isGlobalRole && req.channel?.id != req.body.channel_id) {
+            throw new AppError('You can only add roles within your channel', 403);
         }
 
-        console.log('customReq.body.level', customReq.body.level);
-        console.log('authorizeUserRoleLevel', authorizeUserRoleLevel);
+        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+            ['add:role', 'admin:role'],
+            'global'
+        );
 
         // Level with value 1 is the highest
-        if (customReq.body.level <= authorizeUserRoleLevel) {
-            throw new AppError('You can only add roles with a lower level than yours.', 403);
+        if (authorizeUserRoleLevel && authorizeUserRoleLevel > req.body.level) {
+            throw new AppError(`You can only add roles with a lower level than yours`, 403);
         }
 
-        const roleWithChannel = await Role.findByPk(role.id);
+        const newRole = await Role.create(req.body);
 
         res.json({
             status: 1,
-            data: roleWithChannel
+            data: newRole
         });
     } catch (error: unknown) {
         next(error);
@@ -89,45 +71,33 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const role = await Role.findByPk(req.params.role_id);
-        const authorizedUser = (await User.findByPk(customReq.user.id))!;
-        const authorizeUserRoleLevel = (await checkPermissionLevel(
+        const targetRole = await Role.findByPk(req.params.role_id);
+        if (!targetRole) throw new AppError('Role not found',404)
+
+        if (!req.isGlobalRole && req.channel?.id != targetRole.channel_id) {
+            throw new AppError('You can only update roles within your channel', 403);
+        }
+
+        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['update:role', 'admin:role'],
-            authorizedUser,
-            true
-        ))!;
+            'global'
+        );
 
-        if (!role) {
-            res.status(404).json({
-                status: 0,
-                message: 'Role not found.'
-            });
-
-            return;
-        }
-
-        if (!customReq.isGlobalRole && customReq.channel?.id != role.channel_id) {
-            throw new AppError('You can only update roles within your channel.', 403);
-        }
-
-        if (role.level <= authorizeUserRoleLevel) {
-            throw new AppError("You can't update level field with a higher level than yours", 403);
+        if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
+            throw new AppError("You can't update role level field with a higher level than yours", 403);
         }
 
         // Level with value 1 is the highest
-        if (customReq.body.level <= authorizeUserRoleLevel) {
-            throw new AppError('New value for level field must be lower level than yours.', 403);
+        if (authorizeUserRoleLevel && req.body.level <= authorizeUserRoleLevel) {
+            throw new AppError('New value for role level field must be lower level than yours', 403);
         }
 
-        await role?.update(req.body);
+        await targetRole?.update(req.body);
 
         res.json({
             status: 1,
-            data: role
+            data: targetRole
         });
-
-        return;
     } catch (error: unknown) {
         next(error);
         return;
@@ -136,40 +106,33 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
         const role = await Role.findByPk(req.params.role_id);
-        const authorizedUser = (await User.findByPk(customReq.user.id))!;
-        const authorizeUserRoleLevel = (await checkPermissionLevel(
+        if (!role) throw new AppError('Role not found', 404);
+
+        if (!req.isGlobalRole && req.channel?.id != role.channel_id) {
+            throw new AppError('You can only delete roles within your channel', 403);
+        }
+
+        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['delete:role', 'admin:role'],
-            authorizedUser,
-            true
-        ))!;
-
-        if (!role) {
-            res.status(404).json({
-                status: 0,
-                message: 'Role not found.'
-            });
-
-            return;
-        }
-
-        if (!customReq.isGlobalRole && customReq.channel?.id != role.channel_id) {
-            throw new AppError('You can only delete roles within your channel.', 403);
-        }
+            'global'
+        );
 
         // Level with value 1 is the highest
-        if (role.level <= authorizeUserRoleLevel) {
-            throw new AppError('You can only delete roles with a lower level than yours.', 403);
+        if (authorizeUserRoleLevel && role.level <= authorizeUserRoleLevel) {
+            throw new AppError('You can only delete roles with a lower level than yours', 403);
         }
 
-        await role?.destroy();
+        const shouldForce = req.query.force === 'true';
+
+        await role?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1
+            status: 1,
+            message: shouldForce
+                ? 'Role successfully deleted permanently'
+                : 'Role successfully soft-deleted'
         });
-
-        return;
     } catch (error: unknown) {
         next(error);
     }
