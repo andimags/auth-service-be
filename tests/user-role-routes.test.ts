@@ -59,6 +59,7 @@ describe('Role Permission Routes', () => {
 
     afterAll(async () => {
         await superadminAuth.user?.destroy({ force: true });
+        await userWithNoPermissionsAuth.user?.destroy({ force: true });
         await sequelize.close();
     });
 
@@ -234,7 +235,8 @@ describe('Role Permission Routes', () => {
                 message: 'One or more roles cannot be added: they either belong to a different channel or have a level equal to or higher than your own'
             });
 
-            await forceDeleteInstances([customAuthUser.user!, correctChannel, wrongChannel, authUserRole, targetUser, roleForPayload])
+            // await forceDeleteInstances([customAuthUser.user!, correctChannel, wrongChannel, authUserRole, targetUser, roleForPayload])
+            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetUser, roleForPayload, wrongChannel, correctChannel])
         });
 
         it("should return 403 when authorized user lacks required permissions", async () => {
@@ -539,7 +541,7 @@ describe('Role Permission Routes', () => {
                 .set(createAuthHeaders(customAuthUser.token!))
                 .send(payload)
                 .expect('Content-Type', /json/)
-                // .expect(403);
+                .expect(403);
 
             expect(response.body).toEqual({
                 message: 'One or more roles cannot be deleted: they either belong to a different channel or have a level equal to or higher than your own'

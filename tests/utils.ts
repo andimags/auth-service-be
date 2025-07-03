@@ -24,13 +24,10 @@ export function generateUserData() {
 }
 
 export function generateChannelData() {
-    const name = faker.lorem.words(2);
-    const description = faker.lorem.sentence();
-
     return {
-        name: name,
-        description: description,
-        ref_name: name.replace(' ', '_')
+        name: `Channel Test ${Date.now()}`,
+        description: `Channel Test Description ${Date.now()}`,
+        ref_name: `channel_test_${Date.now()}`
     };
 }
 
@@ -135,6 +132,10 @@ export const createRole = async (permissionRefNames: string[], channelId?: numbe
  */
 export async function forceDeleteInstances(instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>) {
     for (const instance of instances) {
+        if(instance instanceof Permission && instance.scope == 'global'){
+            return;
+        }
+
         if (instance?.destroy) {
             await instance.destroy({ force: true });
         }

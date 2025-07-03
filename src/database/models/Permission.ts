@@ -1,28 +1,28 @@
+import { BelongsToManyGetAssociationsMixin } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
+    BeforeCreate,
+    BeforeDestroy,
+    BeforeUpdate,
+    BelongsToMany,
     Column,
     CreatedAt,
     DataType,
+    Default,
     DefaultScope,
     DeletedAt,
     Model,
     PrimaryKey,
     Scopes,
     Table,
-    UpdatedAt,
-    BelongsToMany,
-    Default,
-    BeforeUpdate,
-    BeforeCreate,
-    BeforeDestroy
+    UpdatedAt
 } from 'sequelize-typescript';
-import Channel from './Channel';
-import { BelongsToManyGetAssociationsMixin } from 'sequelize';
-import Role from './Role';
-import RolePermission from './RolePermission';
 import { PermissionAccessLevelType, PermissionScopeType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
+import Channel from './Channel';
+import Role from './Role';
+import RolePermission from './RolePermission';
 
 @DefaultScope(() => ({
     attributes: {
@@ -42,7 +42,14 @@ import { AppError } from '../../middlewares/errorHandler';
     }
 }))
 @Table({
-    tableName: 'permissions'
+    tableName: 'permissions',
+    indexes: [
+        {
+        name: 'unique_ref_name_scope', // optional name
+        unique: true,
+        fields: ['ref_name', 'scope']
+        }
+    ]
 })
 export default class Permission extends Model {
     @PrimaryKey
@@ -90,6 +97,13 @@ export default class Permission extends Model {
     roles: Role[];
 
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
+
+    @BeforeUpdate
+    static preventGlobalScopeSoftDeletion(permission: Permission) {
+        if (permission.scope === 'global' && permission.changed('deleted_at')) {
+            throw new AppError('Global scope permissions cannot be deleted', 403);
+        }
+    }
 
     @BeforeUpdate
     @BeforeCreate
