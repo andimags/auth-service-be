@@ -1,13 +1,16 @@
 import bcrypt from 'bcrypt';
 import {
+    BelongsToManyAddAssociationMixin,
+    BelongsToManyAddAssociationsMixin,
     BelongsToManyGetAssociationsMixin,
-    BelongsToSetAssociationMixin,
-    HasManyAddAssociationsMixin,
-    HasManyRemoveAssociationsMixin
+    BelongsToManyRemoveAssociationMixin,
+    BelongsToManyRemoveAssociationsMixin,
+    BelongsToSetAssociationMixin
 } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
+    BeforeDestroy,
     BeforeUpdate,
     BeforeValidate,
     BelongsToMany,
@@ -23,6 +26,7 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 import { UserStatusType } from '../../constants/enums';
+import { AppError } from '../../middlewares/errorHandler';
 import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
 import { checkPermissionLevel, getUserPermissions, userHasAccessToPermission, userHasPermissions } from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
@@ -141,9 +145,14 @@ export default class User extends Model {
 
     // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
+
     declare setRoles: BelongsToSetAssociationMixin<Role, number>;
-    declare addRoles: HasManyAddAssociationsMixin<Role, number>;
-    declare removeRoles: HasManyRemoveAssociationsMixin<Role, number>;
+
+    declare addRoles: BelongsToManyAddAssociationsMixin<Role, number>;
+    declare addRole: BelongsToManyAddAssociationMixin<Role, number>;
+
+    declare removeRoles: BelongsToManyRemoveAssociationsMixin<Role, number>;
+    declare removeRole: BelongsToManyRemoveAssociationMixin<Role, number>;
 
     // Hooks
     @BeforeValidate
@@ -157,6 +166,13 @@ export default class User extends Model {
 
         if (originalUsername === 'superadmin' && instance.username !== originalUsername) {
             instance.username = originalUsername;
+        }
+    }
+
+    @BeforeDestroy
+    static preventDeletingUserWithUsernameAsSuperadmin(instance: User) {
+        if(instance.username == 'superadmin'){
+            throw new AppError("User with username as superadmin cannot be deleted", 403)
         }
     }
 }

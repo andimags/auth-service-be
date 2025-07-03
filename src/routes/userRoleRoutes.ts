@@ -6,24 +6,24 @@ const userRoleRoutes = Router();
 
 userRoleRoutes.get(
     '/user/:user_id',
-    checkPermission(['view:user_role', 'admin:user_role']),
+    checkPermission(['view:user_role', 'admin:user_role'], false),
     userRoleController.getUserRoles
 );
 
 userRoleRoutes.post(
     '/user/:user_id',
-    checkPermission(['assign:user_role', 'admin:user_role']),
+    checkPermission(['assign:user_role', 'admin:user_role'], false),
     userRoleController.addUserRoles
 );
 
 userRoleRoutes.put(
     '/user/:user_id',
-    checkPermission(['update:user_role', 'admin:user_role']),
+    checkPermission(['update:user_role', 'admin:user_role'], false),
     userRoleController.replaceUserRoles
 );
 userRoleRoutes.delete(
     '/user/:user_id',
-    checkPermission(['remove:user_role', 'admin:user_role']),
+    checkPermission(['remove:user_role', 'admin:user_role'], false),
     userRoleController.destroyUserRole
 );
 

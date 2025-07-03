@@ -3,29 +3,30 @@ import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 
-export async function isRoleAssignable(
+export async function userCanManageRoles(
     roleIds: number | number[],
-    channelId: number | null,
-    isGlobalRole: boolean = false
+    userRoleLevel: number,
+    userChannelId: number | null,
+    userHasGlobalRole: boolean = false
 ): Promise<boolean> {
-    // Global roles can assign any roles
-    if (isGlobalRole) {
-        return true;
-    }
+    if(!userHasGlobalRole && !userChannelId) throw new AppError('authUserChannelId is required if authUserIsGlobalRole is false',400);
 
-    let role = null;
+    const roles = await Role.findAll({where: {id: roleIds}});
+    if(!roles) throw new AppError('Roles not found',404);
 
-    // Channel-based roles can only assign roles within their channel
-    if (Array.isArray(roleIds)) {
-        if (roleIds.length > 1) {
-            return false;
+    const roleIdsLength = Array.isArray(roleIds) ? roleIds.length : 1;
+    if(roleIdsLength != roles.length) throw new AppError('Some roles not found',404)
+        
+    let unassignableRoleIds = [];
+
+    roles.forEach(r => {
+        console.log('userRoleLevel >= r.level', userRoleLevel >= r.level)
+        if(r.channel_id != userChannelId || userRoleLevel >= r.level){
+            unassignableRoleIds.push(r.id)
         }
-        role = await Role.findByPk(roleIds[0]);
-    } else {
-        role = await Role.findByPk(roleIds);
-    }
+    });
 
-    return role?.channel_id === channelId;
+    return unassignableRoleIds.length == 0;
 }
 
 export async function findMissingRoles(roleIds: number | number[]): Promise<number[]> {
@@ -62,10 +63,7 @@ export async function getUsersHigestRoleLevel(userId: number, channelId?: number
     });
 
     if (highestLevelGlobalRole) {
-        return {
-            level: highestLevelGlobalRole.level,
-            scope: highestLevelGlobalRole.scope
-        };
+        return highestLevelGlobalRole;
     }
 
     const channelIdCondition = channelId
@@ -86,10 +84,7 @@ export async function getUsersHigestRoleLevel(userId: number, channelId?: number
 
     if (!highestLevelChannelBasedRole) return null;
 
-    return {
-        level: highestLevelChannelBasedRole.level,
-        scope: highestLevelChannelBasedRole.scope
-    };
+    return highestLevelChannelBasedRole;
 }
 
 /**
@@ -113,6 +108,10 @@ export async function isUserMorePrivilegedThan(
     if (!firstRole) return false; // Only second user has a role
     if (!secondRole) return true; // Only first user has a role
 
+    return isRoleHigher(firstRole, secondRole);
+}
+
+export async function isRoleHigher(firstRole: Role, secondRole: Role){
     // Handle cases for different role scopes
     if (firstRole.scope == 'global' && secondRole.scope == 'channel') return true;
     if (firstRole.scope == 'channel' && secondRole.scope == 'global') return false;

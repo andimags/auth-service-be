@@ -31,6 +31,7 @@ import Permission from './Permission';
 import RolePermission from './RolePermission';
 import User from './User';
 import UserRole from './UserRole';
+import { isRoleHigher } from '../../services/roleService';
 
 @Scopes(() => ({
     // includes
@@ -42,6 +43,11 @@ import UserRole from './UserRole';
     tableName: 'roles'
 })
 export default class Role extends Model {
+    // Custom functions
+    async isRoleHighter(otherRole: Role){
+        return await isRoleHigher(this, otherRole);
+    }
+
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)

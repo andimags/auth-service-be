@@ -1,28 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { findMissingRoles, isRoleAssignable } from '../services/roleService';
-import { IRequestWithUserAndChannel } from '../types';
+import { findMissingRoles, userCanManageRoles } from '../services/roleService';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const user = await User.findByPk(req.params.user_id);
-
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        const targetUser = await User.findByPk(req.params.user_id);
+        if (!targetUser) throw new AppError('User not found', 404);
 
         let roles = null;
 
         // Only show user roles within their channel if the authenticated user's role is not global
-        if (customReq.isGlobalRole) {
-            roles = await user.getRoles();
+        if (req.isGlobalRole) {
+            roles = await targetUser.getRoles();
         } else {
-            roles = await user.getRoles({
+            roles = await targetUser.getRoles({
                 where: {
-                    channel_id: customReq?.channel?.id
+                    channel_id: req?.channel?.id
                 }
             });
         }
@@ -39,32 +34,37 @@ const getUserRoles = async (req: Request, res: Response, next: NextFunction) => 
 // Assign one or more roles to a user
 const addUserRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const user = await User.findByPk(req.params.user_id);
+        const targetUser = await User.findByPk(req.params.user_id);
+        if (!targetUser) throw new AppError('User not found', 404);
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
-
-        const missingRoles = await findMissingRoles(customReq.body.role_ids);
+        const missingRoles = await findMissingRoles(req.body.role_ids);
 
         if (missingRoles.length > 0) {
-            throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
+            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
         }
 
-        const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids,
-            customReq.channel?.id ?? null
+        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+            ['assign:user_role', 'admin:user_role'],
+            'global'
         );
+        const authUserCanAssignRoles = await userCanManageRoles(
+            req.body.role_ids,
+            authUserRoleLevel!,
+            req.channel?.id,
+            req.isGlobalRole
+        )
 
         // If the request is made by a channel-based role, it ensures that they can only attach role ids within their channel
-        if (!customReq.isGlobalRole && !_isRoleAssignable) {
-            throw new AppError('You can only attach roles to this user within your channel.', 403);
+        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be added: they either belong to a different channel or have a level equal to or higher than your own', 403);
+
+        if(Array.isArray(req.body.role_ids)){
+            await targetUser.addRoles(req.body.role_ids);
+        }
+        else{
+            await targetUser.addRole(req.body.role_ids);
         }
 
-        await user.addRoles(customReq.body.role_ids);
-
-        const roles = await user.getRoles();
+        const roles = await targetUser.getRoles();
 
         res.json({
             status: 1,
@@ -78,39 +78,34 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
 // Replace all roles of a user
 const replaceUserRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const user = await User.findByPk(req.params.user_id);
+        const targetUser = await User.findByPk(req.params.user_id);
+        if (!targetUser) throw new AppError('User not found', 404);
+        if (targetUser.username == 'superadmin') throw new AppError("Superadmin's roles cannot be updated", 403);
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        const missingRoles = await findMissingRoles(req.body.role_ids);
+        if (missingRoles.length > 0) throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        if (user.username == 'superadmin') {
-            throw new AppError("Superadmin's roles cannot be updated.", 403);
-        }
-
-        const missingRoles = await findMissingRoles(customReq.body.role_ids);
-
-        if (missingRoles.length > 0) {
-            throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
-        }
-
-        const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids,
-            customReq.channel?.id ?? null
+        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+            ['assign:user_role', 'admin:user_role'],
+            'global'
         );
 
-        if (!customReq.isGlobalRole && !_isRoleAssignable) {
-            throw new AppError('You can only attach roles to this user within your channel.', 403);
-        }
+        const authUserCanAssignRoles = await userCanManageRoles(
+            req.body.role_ids,
+            authUserRoleLevel!,
+            req.channel?.id,
+            req.isGlobalRole
+        )
 
-        await user.setRoles(req.body.role_ids);
+        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be replaced: they either belong to a different channel or have a level equal to or higher than your own', 403);
 
-        const roles = await user.getRoles();
+        await targetUser.setRoles(req.body.role_ids);
+
+        const updatedRoles = await targetUser.getRoles();
 
         res.json({
             status: 1,
-            data: roles
+            data: updatedRoles
         });
     } catch (error: unknown) {
         next(error);
@@ -120,38 +115,39 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
 // Remove a specific role from a user
 const destroyUserRole = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const customReq = req as IRequestWithUserAndChannel;
-        const user = await User.findByPk(req.params.user_id);
+        const targetUser = await User.findByPk(req.params.user_id);
+        if (!targetUser) throw new AppError('User not found', 404);
+        if (targetUser.username == 'superadmin') throw new AppError("Superadmin's roles cannot be deleted", 403);
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        const missingRoles = await findMissingRoles(req.body.role_ids);
+        if (missingRoles.length > 0) throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        if (user.username == 'superadmin') {
-            throw new AppError("Superadmin's roles cannot be updated.", 403);
-        }
-
-        const missingRoles = await findMissingRoles(customReq.body.role_ids);
-
-        if (missingRoles.length > 0) {
-            throw new AppError(`Role IDs ${missingRoles} do not exist.`, 403);
-        }
-
-        const _isRoleAssignable = await isRoleAssignable(
-            customReq.body.role_ids,
-            customReq.channel?.id ?? null
+        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+            ['assign:user_role', 'admin:user_role'],
+            'global'
         );
+        const authUserCanAssignRoles = await userCanManageRoles(
+            req.body.role_ids,
+            authUserRoleLevel!,
+            req.channel?.id,
+            req.isGlobalRole
+        )
 
-        // If the request is made by a channel-based role, it ensures that they can only remove role ids within their channel
-        if (!customReq.isGlobalRole && !_isRoleAssignable) {
-            throw new AppError('You can only remove roles to this user within your channel.', 403);
+        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be deleted: they either belong to a different channel or have a level equal to or higher than your own', 403);
+
+        if(Array.isArray(req.body.role_ids)){
+            await targetUser.removeRoles(req.body.role_ids);
+        }
+        else{
+            await targetUser.removeRole(req.body.role_ids);
         }
 
-        await user.removeRoles(customReq.body.role_ids);
+        const remainingRoles = await targetUser.getRoles();
 
         res.json({
             status: 1,
-            message: 'User role successfully deleted'
+            message: 'User role successfully deleted',
+            data: remainingRoles
         });
     } catch (error: unknown) {
         next(error);
