@@ -9,6 +9,7 @@ import { IAuthenticatedRequest } from '../types';
 const generateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = await User.findOne({
+            attributes: { include: ['password'] },
             where: {
                 email: req.body.email
             }

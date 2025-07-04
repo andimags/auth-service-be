@@ -18,6 +18,7 @@ import {
     CreatedAt,
     DataType,
     Default,
+    DefaultScope,
     DeletedAt,
     Model,
     PrimaryKey,
@@ -36,6 +37,11 @@ import UserRole from './UserRole';
 @Scopes(() => ({
     withRoles: {
         include: [Role]
+    }
+}))
+@DefaultScope(() => ({
+    attributes: {
+        exclude: ['password']
     }
 }))
 @Table({
