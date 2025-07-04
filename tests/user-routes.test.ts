@@ -85,19 +85,35 @@ describe('User Routes', () => {
 
     describe('POST /api/users/', () => {
         it('should return 200 with newly created user data', async () => {
+            const payload = generateUserData();
+
             const response = await request(app)
                 .post(`${API_BASE_URL}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.token}`,
                     'x-api-key': 'global'
                 })
-                .send(await generateUserData())
+                .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body).toHaveProperty('data');
-            expect(response.body).toHaveProperty('status');
-            expect(response.body.status).toEqual(1);
+            expect(response.body).toMatchObject({
+                status: 1,
+                data: {
+                    status: payload.status,
+                    id: expect.any(Number),
+                    username: payload.username,
+                    email: payload.email,
+                    first_name: payload.first_name,
+                    last_name: payload.last_name,
+                    updated_at: expect.any(String),
+                    created_at: expect.any(String),
+                    deleted_at: null
+                }
+            });
+
+            const createdUser = await User.findByPk(response.body.data.id);
+            await forceDeleteInstances([createdUser!]);
         });
 
         it("should return 403 when authorized user doesn't have necessary permissions", async () => {
