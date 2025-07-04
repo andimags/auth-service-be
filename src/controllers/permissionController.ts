@@ -27,15 +27,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const targetPermission = await Permission.findByPk(req.params.permission_id);
-
-        if (!targetPermission) {
-            res.status(404).json({
-                status: 0,
-                message: 'Permission not found'
-            });
-
-            return;
-        }
+        if (!targetPermission) throw new AppError('Permission not found', 404)
 
         const hasAccessToPermission = await (req.authorizedUser as User).hasAccessToPermission(
             targetPermission.id,

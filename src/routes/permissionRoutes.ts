@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import permissionController from '../controllers/permissionController';
-import { blockIfGlobalPermission } from '../middlewares/blockIfGlobalPermission';
 import checkPermission from '../middlewares/checkPermission';
 
 const permissionRoutes = Router();
@@ -26,13 +25,11 @@ permissionRoutes.post(
 permissionRoutes.put(
     '/:permission_id',
     checkPermission(['update:permission', 'admin:permission'], false),
-    blockIfGlobalPermission,
     permissionController.update
 );
 permissionRoutes.delete(
     '/:permission_id',
     checkPermission(['delete:permission', 'admin:permission']),
-    blockIfGlobalPermission,
     permissionController.destroy
 );
 

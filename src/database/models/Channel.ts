@@ -2,7 +2,6 @@ import generateApiKey from 'generate-api-key';
 import {
     AllowNull,
     AutoIncrement,
-    BeforeDestroy,
     BeforeValidate,
     Column,
     CreatedAt,
@@ -14,7 +13,6 @@ import {
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
-import Permission from './Permission';
 
 @DefaultScope(() => ({
     attributes: {
@@ -61,17 +59,17 @@ export default class Channel extends Model {
         instance.api_key = generateApiKey() as string;
     }
 
-    @BeforeDestroy
-    static async softDeletePermissions(channel: Channel) {
-        await Permission.update(
-            {
-                deleted_at: new Date()
-            },
-            {
-                where: {
-                    id: channel.id
-                }
-            }
-        );
-    }
+    // @BeforeDestroy
+    // static async softDeletePermissions(channel: Channel) {
+    //     await Permission.update(
+    //         {
+    //             deleted_at: new Date()
+    //         },
+    //         {
+    //             where: {
+    //                 id: channel.id
+    //             }
+    //         }
+    //     );
+    // }
 }

@@ -7,9 +7,10 @@ import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
 import {
-    cleanupUserRoles,
     createAuthHeaders,
+    createAuthUser,
     createRole,
+    forceDeleteInstances,
     generateChannelData,
     generatePermissionData,
     generateToken,
@@ -59,7 +60,7 @@ describe('Permission Routes', () => {
     });
 
     afterAll(async () => {
-        await superadminAuth.user?.destroy({ force: true });
+        await forceDeleteInstances([superadminAuth.user!, userWithNoPermissionsAuth.user!]);
         await sequelize.close();
     });
 
@@ -92,17 +93,9 @@ describe('Permission Routes', () => {
     });
 
     describe('GET /api/permissions/:permission_id', () => {
-        let targetPermission: Permission;
-
-        beforeAll( async () => {
-            targetPermission = await Permission.create(await generatePermissionData());
-        })
-
-        afterAll(async () => {
-            await targetPermission?.destroy({ force: true });
-        })
-
         it('should return 200 with permissions data for authorized user', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
+
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(superadminAuth.token!))
@@ -113,6 +106,8 @@ describe('Permission Routes', () => {
                 status: 1,
                 data: expect.any(Object)
             });
+
+            await forceDeleteInstances([targetPermission]);
         });
 
         it('should return 404 with non-existent permission ID', async () => {
@@ -128,6 +123,8 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
+
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
@@ -137,16 +134,12 @@ describe('Permission Routes', () => {
             expect(response.body).toMatchObject({
                 message: 'You do not have the required permissions to perform this action'
             });
+
+            await forceDeleteInstances([targetPermission]);
         });
     });
     
     describe('POST /api/permissions', () => {
-        let createdPermission: Permission | null; // If the creation of permission is successful, assign here to delete later
-
-        afterEach(async () => {
-            await createdPermission?.destroy({ force: true });
-        })
-
         it('should return 200 with permissions data for authorized user', async () => {
             const payload = await generatePermissionData();
 
@@ -162,7 +155,8 @@ describe('Permission Routes', () => {
                 data: expect.any(Object)
             });
 
-            createdPermission = await Permission.findByPk(response.body.data.id);
+            const createdPermission = await Permission.findByPk(response.body.data.id);
+            await forceDeleteInstances([createdPermission!]);
         });
 
         it('should return 403 when authorized user does not have required permissions', async () => {
@@ -182,33 +176,8 @@ describe('Permission Routes', () => {
     });
 
     describe('PUT /api/permissions/:permission_id', () => {
-        let targetPermission: Permission | null;
-        let role: Role | null; // Global role
-        let channel: Channel | null;
-        // For testing of different roles & permissions scenario. Attach roles & permissions for every it function
-        let authorizedUserAuth: IAuth = {
-            token: null,
-            user: null
-        };
-
-        beforeAll(async () => {
-            targetPermission = await Permission.create(await generatePermissionData());
-            authorizedUserAuth.user = await User.create(await generateUserData());
-            channel = await Channel.create(await generateChannelData());
-            authorizedUserAuth.token = await generateToken(
-                authorizedUserAuth.user.email,
-                DEFAULT_PASSWORD
-            );
-        })
-
-        afterAll(async () => {
-            await targetPermission?.destroy({ force: true });
-            await role?.destroy({ force: true });
-            await channel?.destroy({ force: true });
-            await cleanupUserRoles(authorizedUserAuth.user!);
-        })
-
         it('should return 200 with permissions data for authorized user', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
             const payload = await generatePermissionData();
 
             const response = await request(app)
@@ -234,28 +203,53 @@ describe('Permission Routes', () => {
                     deleted_at: null
                 }
             });
+
+            await forceDeleteInstances([targetPermission]);
+        });
+
+        it('should return 404 with non-existent permission ID', async () => {
+            const payload = await generatePermissionData();
+
+            const response = await request(app)
+                .put(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
+                .set(createAuthHeaders(superadminAuth.token!))
+                .send(payload)
+                .expect('Content-Type', /json/)
+                .expect(404);
+
+            expect(response.body).toMatchObject({
+                message: 'Permission not found'
+            });
         });
 
         it('should return 403 when authorized user does not have required permissions', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
+            const payload = await generatePermissionData();
+
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
-                .send(await generatePermissionData())
+                .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
 
             expect(response.body).toEqual({
                 message: 'You do not have the required permissions to perform this action'
             });
+
+            await forceDeleteInstances([targetPermission]);
         });
 
         it('should return 403 when authorized user has required permissions but attached to a channel-based role, the target permission is also not assigned to any of her roles', async () => {
-            role = await createRole(['admin:permission', 'update:permission'], channel!.id); // Global role
-            await authorizedUserAuth.user!.setRoles(role!);
+            const targetPermission = await Permission.create(generatePermissionData());
+            const customAuthUser: IAuth = await createAuthUser();
+            const channel = await Channel.create(generateChannelData());
+            const customAuthUserRole = await createRole(['admin:permission', 'update:permission'], channel!.id); // Global role
+            await customAuthUser.user!.setRoles(customAuthUserRole);
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
-                .set(createAuthHeaders(authorizedUserAuth.token!, channel?.api_key))
+                .set(createAuthHeaders(customAuthUser.token!, channel?.api_key))
                 .send(await generatePermissionData())
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -263,41 +257,15 @@ describe('Permission Routes', () => {
             expect(response.body).toEqual({
                 message: 'You are not authorized to update this permission, as it is not assigned to any of your roles'
             });
+
+            await forceDeleteInstances([targetPermission, customAuthUser.user!, channel, customAuthUserRole]);
         });
     });
 
     describe('DELETE /api/permissions/:permission_id', () => {
-        let targetPermission: Permission | null;
-        let channel: Channel | null;
-        // For testing of different roles & permissions scenario. Attach roles & permissions for every it function
-        let authorizedUserAuth: IAuth = {
-            token: null,
-            user: null
-        };
-
-        beforeAll(async () => {
-            targetPermission = await Permission.create(await generatePermissionData());
-            authorizedUserAuth.user = await User.create(await generateUserData());
-            channel = await Channel.create(await generateChannelData());
-            authorizedUserAuth.token = await generateToken(
-                authorizedUserAuth.user.email,
-                DEFAULT_PASSWORD
-            );
-        })
-
-        afterAll(async () => {
-            await targetPermission?.destroy({ force: true });
-            await channel?.destroy({ force: true });
-        })
-
-        afterEach(async () => {
-            await cleanupUserRoles(authorizedUserAuth.user!);
-
-            // Restore permission if soft-deleted
-            if(targetPermission) await targetPermission.restore();
-        });
-
         it('should return 200 with permissions data for authorized user', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
+
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(superadminAuth.token!))
@@ -308,9 +276,25 @@ describe('Permission Routes', () => {
                 status: 1,
                 message: 'Permission successfully soft-deleted'
             });
+
+            await forceDeleteInstances([targetPermission]);
+        });
+
+        it('should return 404 with non-existent permission ID', async () => {
+            const response = await request(app)
+                .delete(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
+                .set(createAuthHeaders(superadminAuth.token!))
+                .expect('Content-Type', /json/)
+                .expect(404);
+
+            expect(response.body).toMatchObject({
+                message: 'Permission not found'
+            });
         });
 
         it('should return 403 when authorized user does not have required permissions', async () => {
+            const targetPermission = await Permission.create(generatePermissionData());
+
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
@@ -320,6 +304,8 @@ describe('Permission Routes', () => {
             expect(response.body).toEqual({
                 message: 'You do not have the required permissions to perform this action'
             });
+
+            await forceDeleteInstances([targetPermission]);
         });
     });
 });

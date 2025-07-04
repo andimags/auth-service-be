@@ -133,7 +133,7 @@ export const createRole = async (permissionRefNames: string[], channelId?: numbe
 export async function forceDeleteInstances(instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>) {
     for (const instance of instances) {
         if(instance instanceof Permission && instance.scope == 'global'){
-            return;
+            continue;
         }
 
         if (instance?.destroy) {

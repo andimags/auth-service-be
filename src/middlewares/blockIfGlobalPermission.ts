@@ -11,7 +11,7 @@ export const blockIfGlobalPermission = async (
     try {
         const permission = await Permission.findByPk(req.params.permission_id);
 
-        if (!permission) throw new AppError('Permission not found');
+        if (!permission) throw new AppError('Permission not found', 404);
 
         const belongsToGlobalRole = await isPermissionOnGlobalRole(permission.ref_name);
 
