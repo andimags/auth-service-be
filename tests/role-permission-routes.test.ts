@@ -19,8 +19,8 @@ import {
 
 describe('Role Permission Routes', () => {
     interface IAuth {
-        token: string | null,
-        user: User | null
+        token: string | null;
+        user: User | null;
     }
 
     let superadminAuth: IAuth = {
@@ -78,7 +78,7 @@ describe('Role Permission Routes', () => {
                 status: 1
             });
 
-            await targetRole?.destroy({force: true});
+            await targetRole?.destroy({ force: true });
         });
 
         it('should return 404 when role is non-existent', async () => {
@@ -94,7 +94,7 @@ describe('Role Permission Routes', () => {
                 message: 'Role not found'
             });
 
-            await targetRole?.destroy({force: true});
+            await targetRole?.destroy({ force: true });
         });
 
         it('should return 403 when user lacks required permissions', async () => {
@@ -110,10 +110,10 @@ describe('Role Permission Routes', () => {
                 message: 'You do not have the required permissions to perform this action'
             });
 
-            await targetRole?.destroy({force: true});
+            await targetRole?.destroy({ force: true });
         });
 
-        it("should return 403 when authorized user is viewing a role outside their channel ", async () => {
+        it('should return 403 when authorized user is viewing a role outside their channel ', async () => {
             const customAuth: IAuth = await createAuthUser();
             const correctChannel = await Channel.create(await generateChannelData());
             const wrongChannel = await Channel.create(await generateChannelData());
@@ -134,7 +134,13 @@ describe('Role Permission Routes', () => {
                 message: "Unauthorized to view this role's permissions"
             });
 
-            await forceDeleteInstances([targetRole, role, correctChannel, wrongChannel, customAuth.user!]);
+            await forceDeleteInstances([
+                targetRole,
+                role,
+                correctChannel,
+                wrongChannel,
+                customAuth.user!
+            ]);
         });
     });
 
@@ -142,8 +148,8 @@ describe('Role Permission Routes', () => {
         it(`should return 200 with permissions attached to the role`, async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -158,14 +164,14 @@ describe('Role Permission Routes', () => {
                 status: 1
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 with non-existent role", async () => {
+        it('should return 404 with non-existent role', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -179,18 +185,18 @@ describe('Role Permission Routes', () => {
                 message: 'Role not found'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 when the payload for permission_ids does not exist", async () => {
+        it('should return 404 when the payload for permission_ids does not exist', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const authUserRole = await createRole(['admin:role_permission'], undefined, 3);
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const payload = {
-                "permission_ids": NON_EXISTENT_PERMISSION_ID
-            }
+                permission_ids: NON_EXISTENT_PERMISSION_ID
+            };
 
             // Role level is lower than the authUserRole level so they are able to edit this until the validation of non-existent permission IDs
             const targetRole = await createRole(['admin:role_permission'], undefined, 5);
@@ -206,10 +212,10 @@ describe('Role Permission Routes', () => {
                 message: `Permission IDs ${NON_EXISTENT_PERMISSION_ID} do not exist`
             });
 
-            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole])
+            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole]);
         });
 
-        it("should return 403 when authorized user is adding permissions to a role with higher or equal level to theirs", async () => {
+        it('should return 403 when authorized user is adding permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const lowLevelRole = await createRole(['admin:role_permission'], undefined, 5);
 
@@ -217,8 +223,8 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
             const response = await request(app)
@@ -229,10 +235,16 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You cannot add permissions from a role with the higher or same level as your role'
+                message:
+                    'You cannot add permissions from a role with the higher or same level as your role'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole, customAuthUser.user!, lowLevelRole])
+            await forceDeleteInstances([
+                permissionForPayload,
+                targetRole,
+                customAuthUser.user!,
+                lowLevelRole
+            ]);
         });
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
@@ -245,12 +257,12 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id,5);
+            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id, 5);
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetRole!.id}`)
@@ -263,15 +275,22 @@ describe('Role Permission Routes', () => {
                 message: 'Unauthorized to add permissions to this role'
             });
 
-            await forceDeleteInstances([customAuthUser.user!, correctChannel, wrongChannel, authUserRole, permissionForPayload, targetRole])
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                correctChannel,
+                wrongChannel,
+                authUserRole,
+                permissionForPayload,
+                targetRole
+            ]);
         });
 
-        it("should return 403 when authorized user lacks required permissions", async () => {
+        it('should return 403 when authorized user lacks required permissions', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have highest role level as possible
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
@@ -286,7 +305,7 @@ describe('Role Permission Routes', () => {
                 message: 'You do not have the required permissions to perform this action'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
     });
 
@@ -294,8 +313,8 @@ describe('Role Permission Routes', () => {
         it(`should return 200 with new permissions attached to the role`, async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -310,14 +329,14 @@ describe('Role Permission Routes', () => {
                 status: 1
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 with non-existent role", async () => {
+        it('should return 404 with non-existent role', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -331,18 +350,18 @@ describe('Role Permission Routes', () => {
                 message: 'Role not found'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 when the payload for permission_ids does not exist", async () => {
+        it('should return 404 when the payload for permission_ids does not exist', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const authUserRole = await createRole(['admin:role_permission'], undefined, 3);
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const payload = {
-                "permission_ids": NON_EXISTENT_PERMISSION_ID
-            }
+                permission_ids: NON_EXISTENT_PERMISSION_ID
+            };
 
             // Role level is lower than the authUserRole level so they are able to edit this until the validation of non-existent permission IDs
             const targetRole = await createRole(['admin:role_permission'], undefined, 5);
@@ -358,10 +377,10 @@ describe('Role Permission Routes', () => {
                 message: `Permission IDs ${NON_EXISTENT_PERMISSION_ID} do not exist`
             });
 
-            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole])
+            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole]);
         });
 
-        it("should return 403 when authorized user is replacing permissions to a role with higher or equal level to theirs", async () => {
+        it('should return 403 when authorized user is replacing permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const lowLevelRole = await createRole(['admin:role_permission'], undefined, 5);
 
@@ -369,8 +388,8 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
             const response = await request(app)
@@ -381,10 +400,16 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You cannot replace permissions from a role with the higher or same level as your role'
+                message:
+                    'You cannot replace permissions from a role with the higher or same level as your role'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole, customAuthUser.user!, lowLevelRole])
+            await forceDeleteInstances([
+                permissionForPayload,
+                targetRole,
+                customAuthUser.user!,
+                lowLevelRole
+            ]);
         });
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
@@ -397,12 +422,12 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id,5);
+            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id, 5);
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
@@ -415,15 +440,22 @@ describe('Role Permission Routes', () => {
                 message: 'Unauthorized to replace permissions to this role'
             });
 
-            await forceDeleteInstances([customAuthUser.user!, correctChannel, wrongChannel, authUserRole, permissionForPayload, targetRole])
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                correctChannel,
+                wrongChannel,
+                authUserRole,
+                permissionForPayload,
+                targetRole
+            ]);
         });
 
-        it("should return 403 when authorized user lacks required permissions", async () => {
+        it('should return 403 when authorized user lacks required permissions', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have highest role level as possible
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
@@ -438,7 +470,7 @@ describe('Role Permission Routes', () => {
                 message: 'You do not have the required permissions to perform this action'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
     });
 
@@ -446,8 +478,8 @@ describe('Role Permission Routes', () => {
         it(`should return 200 with status == 1`, async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -462,14 +494,14 @@ describe('Role Permission Routes', () => {
                 status: 1
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 with non-existent role", async () => {
+        it('should return 404 with non-existent role', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission']);
 
             const response = await request(app)
@@ -483,18 +515,18 @@ describe('Role Permission Routes', () => {
                 message: 'Role not found'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
 
-        it("should return 404 when the payload for permission_ids does not exist", async () => {
+        it('should return 404 when the payload for permission_ids does not exist', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const authUserRole = await createRole(['admin:role_permission'], undefined, 3);
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const payload = {
-                "permission_ids": NON_EXISTENT_PERMISSION_ID
-            }
+                permission_ids: NON_EXISTENT_PERMISSION_ID
+            };
 
             // Role level is lower than the authUserRole level so they are able to edit this until the validation of non-existent permission IDs
             const targetRole = await createRole(['admin:role_permission'], undefined, 5);
@@ -510,10 +542,10 @@ describe('Role Permission Routes', () => {
                 message: `Permission IDs ${NON_EXISTENT_PERMISSION_ID} do not exist`
             });
 
-            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole])
+            await forceDeleteInstances([customAuthUser.user!, authUserRole, targetRole]);
         });
 
-        it("should return 403 when authorized user is deleting permissions to a role with higher or equal level to theirs", async () => {
+        it('should return 403 when authorized user is deleting permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
             const lowLevelRole = await createRole(['admin:role_permission'], undefined, 5);
 
@@ -521,8 +553,8 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
+                permission_ids: permissionForPayload.id
+            };
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
             const response = await request(app)
@@ -533,10 +565,16 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You cannot delete permissions from a role with the higher or same level as your role'
+                message:
+                    'You cannot delete permissions from a role with the higher or same level as your role'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole, customAuthUser.user!, lowLevelRole])
+            await forceDeleteInstances([
+                permissionForPayload,
+                targetRole,
+                customAuthUser.user!,
+                lowLevelRole
+            ]);
         });
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
@@ -549,12 +587,12 @@ describe('Role Permission Routes', () => {
 
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id,5);
+            const targetRole = await createRole(['admin:role_permission'], wrongChannel.id, 5);
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
@@ -567,15 +605,22 @@ describe('Role Permission Routes', () => {
                 message: 'Unauthorized to delete permissions to this role'
             });
 
-            await forceDeleteInstances([customAuthUser.user!, correctChannel, wrongChannel, authUserRole, permissionForPayload, targetRole])
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                correctChannel,
+                wrongChannel,
+                authUserRole,
+                permissionForPayload,
+                targetRole
+            ]);
         });
 
-        it("should return 403 when authorized user lacks required permissions", async () => {
+        it('should return 403 when authorized user lacks required permissions', async () => {
             const permissionForPayload = await Permission.create(await generatePermissionData());
             const payload = {
-                "permission_ids": permissionForPayload.id
-            }
-            
+                permission_ids: permissionForPayload.id
+            };
+
             // Make target role to have highest role level as possible
             const targetRole = await createRole(['admin:role_permission'], undefined, 1);
 
@@ -590,8 +635,7 @@ describe('Role Permission Routes', () => {
                 message: 'You do not have the required permissions to perform this action'
             });
 
-            await forceDeleteInstances([permissionForPayload, targetRole])
+            await forceDeleteInstances([permissionForPayload, targetRole]);
         });
     });
-
 });

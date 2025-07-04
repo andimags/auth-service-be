@@ -44,7 +44,7 @@ import { isRoleHigher } from '../../services/roleService';
 })
 export default class Role extends Model {
     // Custom functions
-    async isRoleHighter(otherRole: Role){
+    async isRoleHighter(otherRole: Role) {
         return await isRoleHigher(this, otherRole);
     }
 

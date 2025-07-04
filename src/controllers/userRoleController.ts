@@ -52,15 +52,18 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
             authUserRoleLevel!,
             req.channel?.id,
             req.isGlobalRole
-        )
+        );
 
         // If the request is made by a channel-based role, it ensures that they can only attach role ids within their channel
-        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be added: they either belong to a different channel or have a level equal to or higher than your own', 403);
+        if (!authUserCanAssignRoles)
+            throw new AppError(
+                'One or more roles cannot be added: they either belong to a different channel or have a level equal to or higher than your own',
+                403
+            );
 
-        if(Array.isArray(req.body.role_ids)){
+        if (Array.isArray(req.body.role_ids)) {
             await targetUser.addRoles(req.body.role_ids);
-        }
-        else{
+        } else {
             await targetUser.addRole(req.body.role_ids);
         }
 
@@ -80,10 +83,12 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
-        if (targetUser.username == 'superadmin') throw new AppError("Superadmin's roles cannot be updated", 403);
+        if (targetUser.username == 'superadmin')
+            throw new AppError("Superadmin's roles cannot be updated", 403);
 
         const missingRoles = await findMissingRoles(req.body.role_ids);
-        if (missingRoles.length > 0) throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
+        if (missingRoles.length > 0)
+            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
         const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
@@ -95,9 +100,13 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
             authUserRoleLevel!,
             req.channel?.id,
             req.isGlobalRole
-        )
+        );
 
-        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be replaced: they either belong to a different channel or have a level equal to or higher than your own', 403);
+        if (!authUserCanAssignRoles)
+            throw new AppError(
+                'One or more roles cannot be replaced: they either belong to a different channel or have a level equal to or higher than your own',
+                403
+            );
 
         await targetUser.setRoles(req.body.role_ids);
 
@@ -117,10 +126,12 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
-        if (targetUser.username == 'superadmin') throw new AppError("Superadmin's roles cannot be deleted", 403);
+        if (targetUser.username == 'superadmin')
+            throw new AppError("Superadmin's roles cannot be deleted", 403);
 
         const missingRoles = await findMissingRoles(req.body.role_ids);
-        if (missingRoles.length > 0) throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
+        if (missingRoles.length > 0)
+            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
         const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
@@ -131,14 +142,17 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
             authUserRoleLevel!,
             req.channel?.id,
             req.isGlobalRole
-        )
+        );
 
-        if (!authUserCanAssignRoles) throw new AppError('One or more roles cannot be deleted: they either belong to a different channel or have a level equal to or higher than your own', 403);
+        if (!authUserCanAssignRoles)
+            throw new AppError(
+                'One or more roles cannot be deleted: they either belong to a different channel or have a level equal to or higher than your own',
+                403
+            );
 
-        if(Array.isArray(req.body.role_ids)){
+        if (Array.isArray(req.body.role_ids)) {
             await targetUser.removeRoles(req.body.role_ids);
-        }
-        else{
+        } else {
             await targetUser.removeRole(req.body.role_ids);
         }
 

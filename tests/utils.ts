@@ -31,7 +31,7 @@ export function generateChannelData() {
     };
 }
 
-export function generatePermissionData(){
+export function generatePermissionData() {
     const accesLevelValues = Object.values(PermissionAccessLevelType); // ['read', 'write', admin]
 
     const randomAccessLevel = accesLevelValues[Math.floor(Math.random() * accesLevelValues.length)];
@@ -42,17 +42,17 @@ export function generatePermissionData(){
         module: 'Test Module',
         scope: 'channel', // Global scopes can only be seeded
         access_level: randomAccessLevel
-    }
+    };
 }
 
-export function generateRoleData(channelId?: number, level?: number){
+export function generateRoleData(channelId?: number, level?: number) {
     return {
         name: `Role Test ${Date.now()}`,
         ref_name: `role_test_${Date.now()}`,
         level: level ?? 5,
         channel_id: channelId ?? null,
         scope: channelId ? 'channel' : 'global'
-    }
+    };
 }
 
 export async function generateToken(email: string, password: string) {
@@ -76,9 +76,9 @@ export const createAuthUser = async () => {
 
     return {
         user: user,
-        token: await generateToken(user.email, DEFAULT_PASSWORD),
+        token: await generateToken(user.email, DEFAULT_PASSWORD)
     };
-}
+};
 
 // Helper function to clean up user roles and permissions
 export const cleanupUserRoles = async (user: User) => {
@@ -86,7 +86,7 @@ export const cleanupUserRoles = async (user: User) => {
 
     for (const role of roles) {
         // Avoid deleting global permissions
-        const permissions = await role.getPermissions({where: {scope: 'channel'}});
+        const permissions = await role.getPermissions({ where: { scope: 'channel' } });
         console.log('xxx', permissions);
 
         for (const permission of permissions) {
@@ -100,7 +100,11 @@ export const cleanupUserRoles = async (user: User) => {
 };
 
 // Helper function to create channel-scoped role with existing global permissions
-export const createRole = async (permissionRefNames: string[], channelId?: number, roleLevel: number = 5) => {
+export const createRole = async (
+    permissionRefNames: string[],
+    channelId?: number,
+    roleLevel: number = 5
+) => {
     const role = await Role.create({
         name: 'Test Channel Role',
         ref_name: `test_channel_role_${Date.now()}`,
@@ -122,17 +126,19 @@ export const createRole = async (permissionRefNames: string[], channelId?: numbe
 };
 
 /**
- * 
- * @param instances 
- * 
+ *
+ * @param instances
+ *
  * You are passing an array of objects.
  * Each object must have a .destroy() method.
  * The .destroy() method must accept an object like { force: true } and return a Promise.
  * In other words: it's describing Sequelize model instances.
  */
-export async function forceDeleteInstances(instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>) {
+export async function forceDeleteInstances(
+    instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>
+) {
     for (const instance of instances) {
-        if(instance instanceof Permission && instance.scope == 'global'){
+        if (instance instanceof Permission && instance.scope == 'global') {
             continue;
         }
 

@@ -24,7 +24,7 @@ describe('Auth Routes', () => {
     });
 
     afterAll(async () => {
-        await forceDeleteInstances([authUser!])
+        await forceDeleteInstances([authUser!]);
         await sequelize.close();
     });
 
@@ -101,8 +101,7 @@ describe('Auth Routes', () => {
 
     describe('GET /api/auth/refresh-token', () => {
         it('should return 200 with refreshed token', async () => {
-            const response = await AGENT
-                .get('/api/auth/refresh-token')
+            const response = await AGENT.get('/api/auth/refresh-token')
                 .expect('Content-Type', /json/)
                 .expect(200);
 
@@ -120,5 +119,4 @@ describe('Auth Routes', () => {
             expect(response.body).toEqual({ message: 'Token not found' });
         });
     });
-
-})
+});

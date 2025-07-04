@@ -45,9 +45,9 @@ import RolePermission from './RolePermission';
     tableName: 'permissions',
     indexes: [
         {
-        name: 'unique_ref_name_scope', // optional name
-        unique: true,
-        fields: ['ref_name', 'scope']
+            name: 'unique_ref_name_scope', // optional name
+            unique: true,
+            fields: ['ref_name', 'scope']
         }
     ]
 })

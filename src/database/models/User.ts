@@ -29,7 +29,12 @@ import {
 import { UserStatusType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
 import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
-import { checkPermissionLevel, getUserPermissions, userHasAccessToPermission, userHasPermissions } from '../../services/permissionService';
+import {
+    checkPermissionLevel,
+    getUserPermissions,
+    userHasAccessToPermission,
+    userHasPermissions
+} from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
 import UserRole from './UserRole';
@@ -73,36 +78,20 @@ export default class User extends Model {
         await hasAccessToChannel(this.id, channelId);
     }
 
-    async getPermissions(channelId?: number){
-        await getUserPermissions(
-            this.id,
-            channelId
-        );
+    async getPermissions(channelId?: number) {
+        await getUserPermissions(this.id, channelId);
     }
 
     async checkPermissionLevel(
-        permissionRefNames: string | string[], 
-        permissionsScope: 'global' | 'channel', 
+        permissionRefNames: string | string[],
+        permissionsScope: 'global' | 'channel',
         channelId?: number
-    ): Promise<number | null>
-    {
-        return await checkPermissionLevel(
-            this,
-            permissionRefNames,
-            permissionsScope,
-            channelId
-        )
+    ): Promise<number | null> {
+        return await checkPermissionLevel(this, permissionRefNames, permissionsScope, channelId);
     }
 
-    async hasAccessToPermission(    
-        permissionId: number,
-        channelId?: number
-    ): Promise<boolean>{
-        return await userHasAccessToPermission(
-            this,
-            permissionId,
-            channelId
-        )
+    async hasAccessToPermission(permissionId: number, channelId?: number): Promise<boolean> {
+        return await userHasAccessToPermission(this, permissionId, channelId);
     }
 
     // Columns
@@ -177,8 +166,8 @@ export default class User extends Model {
 
     @BeforeDestroy
     static preventDeletingUserWithUsernameAsSuperadmin(instance: User) {
-        if(instance.username == 'superadmin'){
-            throw new AppError("User with username as superadmin cannot be deleted", 403)
+        if (instance.username == 'superadmin') {
+            throw new AppError('User with username as superadmin cannot be deleted', 403);
         }
     }
 }

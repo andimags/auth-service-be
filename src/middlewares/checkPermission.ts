@@ -15,7 +15,9 @@ export default function checkPermission(
             const apiKey = req.header('x-api-key');
 
             // Check for global permissions first
-            const userHasPermissionsOnGlobalRoles = await (req.authorizedUser as User).hasPermissions(permissionRefNames)
+            const userHasPermissionsOnGlobalRoles = await (
+                req.authorizedUser as User
+            ).hasPermissions(permissionRefNames);
 
             if (userHasPermissionsOnGlobalRoles) {
                 req.isGlobalRole = true;
@@ -40,11 +42,9 @@ export default function checkPermission(
             // Check for channel-based roles (only if roleScope is 'channel')
             const channelId = req.channel!.id;
 
-            const userHasPermissionsOnChannelBasedRoles = await (req.authorizedUser as User).hasPermissions(
-                permissionRefNames, 
-                'global', 
-                channelId
-            )
+            const userHasPermissionsOnChannelBasedRoles = await (
+                req.authorizedUser as User
+            ).hasPermissions(permissionRefNames, 'global', channelId);
 
             if (userHasPermissionsOnChannelBasedRoles) {
                 req.isGlobalRole = false;

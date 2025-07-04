@@ -119,13 +119,13 @@ async function rolesHasPermissions(
 }
 
 /**
- * 
- * @param user 
- * @param permissionRefNames 
- * @param permissionsScope 
- * @param channelId 
+ *
+ * @param user
+ * @param permissionRefNames
+ * @param permissionsScope
+ * @param channelId
  * If provided, will check only channel-based roles, if not, it will check all roles
- * 
+ *
  * @returns Promise<number | null>
  */
 export async function checkPermissionLevel(
@@ -139,13 +139,12 @@ export async function checkPermissionLevel(
     let roles: Role[] | null = null;
 
     if (channelId) {
-        roles = await user.getRoles({ where: {channel_id: {[Op.in]: [channelId, null]}}});
-    }
-    else{
-        roles = await user.getRoles({ where: {channel_id: {[Op.eq]: null}}});
+        roles = await user.getRoles({ where: { channel_id: { [Op.in]: [channelId, null] } } });
+    } else {
+        roles = await user.getRoles({ where: { channel_id: { [Op.eq]: null } } });
     }
 
-    if(!roles) return null;
+    if (!roles) return null;
 
     for (const role of roles) {
         const permissions = await role.getPermissions({

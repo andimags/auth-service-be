@@ -9,20 +9,21 @@ export async function userCanManageRoles(
     userChannelId: number | null,
     userHasGlobalRole: boolean = false
 ): Promise<boolean> {
-    if(!userHasGlobalRole && !userChannelId) throw new AppError('authUserChannelId is required if authUserIsGlobalRole is false',400);
+    if (!userHasGlobalRole && !userChannelId)
+        throw new AppError('authUserChannelId is required if authUserIsGlobalRole is false', 400);
 
-    const roles = await Role.findAll({where: {id: roleIds}});
-    if(!roles) throw new AppError('Roles not found',404);
+    const roles = await Role.findAll({ where: { id: roleIds } });
+    if (!roles) throw new AppError('Roles not found', 404);
 
     const roleIdsLength = Array.isArray(roleIds) ? roleIds.length : 1;
-    if(roleIdsLength != roles.length) throw new AppError('Some roles not found',404)
-        
+    if (roleIdsLength != roles.length) throw new AppError('Some roles not found', 404);
+
     let unassignableRoleIds = [];
 
-    roles.forEach(r => {
-        console.log('userRoleLevel >= r.level', userRoleLevel >= r.level)
-        if(r.channel_id != userChannelId || userRoleLevel >= r.level){
-            unassignableRoleIds.push(r.id)
+    roles.forEach((r) => {
+        console.log('userRoleLevel >= r.level', userRoleLevel >= r.level);
+        if (r.channel_id != userChannelId || userRoleLevel >= r.level) {
+            unassignableRoleIds.push(r.id);
         }
     });
 
@@ -111,7 +112,7 @@ export async function isUserMorePrivilegedThan(
     return isRoleHigher(firstRole, secondRole);
 }
 
-export async function isRoleHigher(firstRole: Role, secondRole: Role){
+export async function isRoleHigher(firstRole: Role, secondRole: Role) {
     // Handle cases for different role scopes
     if (firstRole.scope == 'global' && secondRole.scope == 'channel') return true;
     if (firstRole.scope == 'channel' && secondRole.scope == 'global') return false;

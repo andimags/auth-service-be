@@ -18,8 +18,8 @@ import {
 
 describe('Role Routes', () => {
     interface IAuth {
-        token: string | null,
-        user: User | null
+        token: string | null;
+        user: User | null;
     }
 
     let superadminAuth: IAuth = {
@@ -95,7 +95,7 @@ describe('Role Routes', () => {
                 expect(item.channel_id).toBe(channel!.id);
             });
 
-            forceDeleteInstances([customAuthUser.user!, channel, customAuthUserRole])
+            forceDeleteInstances([customAuthUser.user!, channel, customAuthUserRole]);
         });
 
         it('should return 403 when user lacks required permissions', async () => {
@@ -157,7 +157,7 @@ describe('Role Routes', () => {
             forceDeleteInstances([targetRole]);
         });
     });
-    
+
     describe('POST /api/roles', () => {
         it('should return 200 with permissions data for authorized user', async () => {
             const payload = generateRoleData();
@@ -211,10 +211,13 @@ describe('Role Routes', () => {
             const customAuthUser: IAuth = await createAuthUser();
             const wrongChannel = await Channel.create(await generateChannelData());
             const correctChannel = await Channel.create(await generateChannelData());
-            const customAuthUserRole = await createRole(['admin:role', 'add:role'], correctChannel.id);
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'add:role'],
+                correctChannel.id
+            );
 
             await customAuthUser.user?.setRoles(customAuthUserRole);
-            
+
             // Mocking authorized user creating a role not within their channel
             payload.channel_id = wrongChannel.id;
 
@@ -229,7 +232,12 @@ describe('Role Routes', () => {
                 message: 'You can only add roles within your channel'
             });
 
-            await forceDeleteInstances([customAuthUser.user!, wrongChannel, correctChannel, customAuthUserRole]);
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                wrongChannel,
+                correctChannel,
+                customAuthUserRole
+            ]);
         });
 
         it(`should return 403 when authorized user is adding role equal or higher than his role level`, async () => {
@@ -324,8 +332,11 @@ describe('Role Routes', () => {
             const customAuthUser: IAuth = await createAuthUser();
             const wrongChannel = await Channel.create(await generateChannelData());
             const correctChannel = await Channel.create(await generateChannelData());
-            const customAuthUserRole = await createRole(['admin:role', 'add:role'], correctChannel.id);
-            
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'add:role'],
+                correctChannel.id
+            );
+
             // Mocking authorized user update a role not within their channel
             payload.channel_id = wrongChannel.id;
 
@@ -342,7 +353,13 @@ describe('Role Routes', () => {
                 message: 'You can only update roles within your channel'
             });
 
-            forceDeleteInstances([targetRole, customAuthUser.user!, wrongChannel, correctChannel, customAuthUserRole])
+            forceDeleteInstances([
+                targetRole,
+                customAuthUser.user!,
+                wrongChannel,
+                correctChannel,
+                customAuthUserRole
+            ]);
         });
 
         it(`should return 403 when authorized user's role level is lower than the target role level`, async () => {
@@ -366,7 +383,7 @@ describe('Role Routes', () => {
             expect(response.body).toEqual({
                 message: `You can't update role level field with a higher level than yours`
             });
-            
+
             await forceDeleteInstances([targetRole, customAuthUser.user!, customAuthUserRole]);
         });
 
@@ -454,10 +471,13 @@ describe('Role Routes', () => {
 
             // Target role to delete that is not within the authorized user's roles (uses wrongChannel.id)
             const targetRole = await Role.create(await generateRoleData(wrongChannel.id));
-            
+
             // Auth user's role being in the correct channel
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:role', 'add:role'], correctChannel.id);
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'add:role'],
+                correctChannel.id
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -470,13 +490,19 @@ describe('Role Routes', () => {
                 message: 'You can only delete roles within your channel'
             });
 
-            await forceDeleteInstances([wrongChannel, correctChannel, targetRole, customAuthUser.user!, customAuthUserRole]);
+            await forceDeleteInstances([
+                wrongChannel,
+                correctChannel,
+                targetRole,
+                customAuthUser.user!,
+                customAuthUserRole
+            ]);
         });
 
         it(`should return 403 when the authorized user's role level is equal or lower than the target role`, async () => {
             // Target role's level must be higher than the auth user's role level
             const targetRole = await Role.create(await generateRoleData(undefined, 3));
-            
+
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole(['admin:role', 'add:role'], undefined, 5);
             await customAuthUser.user?.setRoles(customAuthUserRole);

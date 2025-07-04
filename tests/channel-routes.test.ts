@@ -17,8 +17,8 @@ import {
 
 describe('Channel Routes', () => {
     interface IAuth {
-        token: string | null,
-        user: User | null
+        token: string | null;
+        user: User | null;
     }
 
     let superadminAuth: IAuth = {
@@ -162,7 +162,12 @@ describe('Channel Routes', () => {
                     message: 'You can only view channels associated to your roles'
                 });
 
-            await forceDeleteInstances([targetChannel, customAuthUser.user!, wrongChannel, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetChannel,
+                customAuthUser.user!,
+                wrongChannel,
+                customAuthUserRole
+            ]);
         });
     });
 
@@ -275,7 +280,12 @@ describe('Channel Routes', () => {
                     message: "You can only update channels you're associated to"
                 });
 
-            await forceDeleteInstances([targetChannel, customAuthUser.user!, wrongChannel, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetChannel,
+                customAuthUser.user!,
+                wrongChannel,
+                customAuthUserRole
+            ]);
         });
     });
 

@@ -72,7 +72,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
-        if (!targetRole) throw new AppError('Role not found',404)
+        if (!targetRole) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalRole && req.channel?.id != targetRole.channel_id) {
             throw new AppError('You can only update roles within your channel', 403);
@@ -84,12 +84,18 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         );
 
         if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
-            throw new AppError("You can't update role level field with a higher level than yours", 403);
+            throw new AppError(
+                "You can't update role level field with a higher level than yours",
+                403
+            );
         }
 
         // Level with value 1 is the highest
         if (authorizeUserRoleLevel && req.body.level <= authorizeUserRoleLevel) {
-            throw new AppError('New value for role level field must be lower level than yours', 403);
+            throw new AppError(
+                'New value for role level field must be lower level than yours',
+                403
+            );
         }
 
         await targetRole?.update(req.body);

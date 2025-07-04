@@ -34,11 +34,11 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'],
             'global'
-        )
+        );
 
         if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
             throw new AppError(
-                "You cannot add permissions from a role with the higher or same level as your role",
+                'You cannot add permissions from a role with the higher or same level as your role',
                 403
             );
         }
@@ -48,12 +48,12 @@ const addRolePermissions = async (req: Request, res: Response, next: NextFunctio
         }
 
         const missingPermissions = await findMissingPermissions(req.body.permission_ids);
-        if (missingPermissions.length > 0) throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
+        if (missingPermissions.length > 0)
+            throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
 
-        if(Array.isArray(req.body.permission_ids)){
+        if (Array.isArray(req.body.permission_ids)) {
             await targetRole.addPermissions(req.body.permission_ids);
-        }
-        else{
+        } else {
             await targetRole.addPermission(req.body.permission_ids);
         }
 
@@ -77,11 +77,11 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['replace:role_permission', 'admin:role_permission'],
             'global'
-        )
+        );
 
         if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
             throw new AppError(
-                "You cannot replace permissions from a role with the higher or same level as your role",
+                'You cannot replace permissions from a role with the higher or same level as your role',
                 403
             );
         }
@@ -91,7 +91,8 @@ const replaceRolePermissions = async (req: Request, res: Response, next: NextFun
         }
 
         const missingPermissions = await findMissingPermissions(req.body.permission_ids);
-        if (missingPermissions.length > 0) throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
+        if (missingPermissions.length > 0)
+            throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
 
         await targetRole.setPermissions(req.body.permission_ids);
 
@@ -115,11 +116,11 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
             ['remove:role_permission', 'admin:role_permission'],
             'global'
-        )
+        );
 
         if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
             throw new AppError(
-                "You cannot delete permissions from a role with the higher or same level as your role",
+                'You cannot delete permissions from a role with the higher or same level as your role',
                 403
             );
         }
@@ -129,12 +130,12 @@ const destroyRolePermission = async (req: Request, res: Response, next: NextFunc
         }
 
         const missingPermissions = await findMissingPermissions(req.body.permission_ids);
-        if (missingPermissions.length > 0) throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
+        if (missingPermissions.length > 0)
+            throw new AppError(`Permission IDs ${missingPermissions} do not exist`, 404);
 
-        if(Array.isArray(req.body.permission_ids)){
+        if (Array.isArray(req.body.permission_ids)) {
             await targetRole.removePermissions(req.body.permission_ids);
-        }
-        else{
+        } else {
             await targetRole.removePermission(req.body.permission_ids);
         }
 

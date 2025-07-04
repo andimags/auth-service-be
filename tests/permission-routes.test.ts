@@ -19,8 +19,8 @@ import {
 
 describe('Permission Routes', () => {
     interface IAuth {
-        token: string | null,
-        user: User | null
+        token: string | null;
+        user: User | null;
     }
 
     let superadminAuth: IAuth = {
@@ -56,7 +56,7 @@ describe('Permission Routes', () => {
             DEFAULT_PASSWORD
         );
 
-        console.log('superadminAuth',superadminAuth);
+        console.log('superadminAuth', superadminAuth);
     });
 
     afterAll(async () => {
@@ -65,7 +65,6 @@ describe('Permission Routes', () => {
     });
 
     describe('GET /api/permissions', () => {
-
         it('should return 200 with permissions data for authorized user', async () => {
             const response = await request(app)
                 .get(API_BASE_URL)
@@ -138,7 +137,7 @@ describe('Permission Routes', () => {
             await forceDeleteInstances([targetPermission]);
         });
     });
-    
+
     describe('POST /api/permissions', () => {
         it('should return 200 with permissions data for authorized user', async () => {
             const payload = await generatePermissionData();
@@ -244,7 +243,10 @@ describe('Permission Routes', () => {
             const targetPermission = await Permission.create(generatePermissionData());
             const customAuthUser: IAuth = await createAuthUser();
             const channel = await Channel.create(generateChannelData());
-            const customAuthUserRole = await createRole(['admin:permission', 'update:permission'], channel!.id); // Global role
+            const customAuthUserRole = await createRole(
+                ['admin:permission', 'update:permission'],
+                channel!.id
+            ); // Global role
             await customAuthUser.user!.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -255,10 +257,16 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You are not authorized to update this permission, as it is not assigned to any of your roles'
+                message:
+                    'You are not authorized to update this permission, as it is not assigned to any of your roles'
             });
 
-            await forceDeleteInstances([targetPermission, customAuthUser.user!, channel, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetPermission,
+                customAuthUser.user!,
+                channel,
+                customAuthUserRole
+            ]);
         });
     });
 

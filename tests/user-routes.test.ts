@@ -4,12 +4,18 @@ import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
-import { createAuthUser, createRole, forceDeleteInstances, generateToken, generateUserData } from './utils';
+import {
+    createAuthUser,
+    createRole,
+    forceDeleteInstances,
+    generateToken,
+    generateUserData
+} from './utils';
 
 describe('User Routes', () => {
     interface IAuth {
-        token: string | null,
-        user: User | null
+        token: string | null;
+        user: User | null;
     }
 
     let superadminAuth: IAuth = {
@@ -161,7 +167,7 @@ describe('User Routes', () => {
                     updated_at: expect.any(String),
                     deleted_at: null
                 }
-            })
+            });
 
             await forceDeleteInstances([targetUser]);
         });
@@ -210,7 +216,11 @@ describe('User Routes', () => {
 
             // Auth user must have lower level of role than the target user
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:user', 'update:user'], undefined, 5);
+            const customAuthUserRole = await createRole(
+                ['admin:user', 'update:user'],
+                undefined,
+                5
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const payload = generateUserData();
@@ -230,7 +240,12 @@ describe('User Routes', () => {
                     "You can't update a user with the same or higher privilege / role level than you"
             });
 
-            await forceDeleteInstances([targetUser, targetUserRole, customAuthUser.user!, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetUser,
+                targetUserRole,
+                customAuthUser.user!,
+                customAuthUserRole
+            ]);
         });
     });
 
@@ -307,7 +322,7 @@ describe('User Routes', () => {
 
         it('should return 403 when deleting the main superadmin', async () => {
             // Do not delete
-            const targetUser = await User.findOne({where: {username: 'superadmin'}});
+            const targetUser = await User.findOne({ where: { username: 'superadmin' } });
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser?.id}`) // Deleting the main superadmin
@@ -328,7 +343,11 @@ describe('User Routes', () => {
 
             // Auth user must have lower level of role than the target user
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:user', 'delete:user'], undefined, 5);
+            const customAuthUserRole = await createRole(
+                ['admin:user', 'delete:user'],
+                undefined,
+                5
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -345,8 +364,12 @@ describe('User Routes', () => {
                     "You can't delete a user with the same or higher privilege / role level than you"
             });
 
-            await forceDeleteInstances([targetUser, targetUserRole, customAuthUser.user!, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetUser,
+                targetUserRole,
+                customAuthUser.user!,
+                customAuthUserRole
+            ]);
         });
     });
-
 });
