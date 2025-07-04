@@ -59,6 +59,7 @@ describe('Role Permission Routes', () => {
 
     afterAll(async () => {
         await superadminAuth.user?.destroy({ force: true });
+        await userWithNoPermissionsAuth.user?.destroy({ force: true });
         await sequelize.close();
     });
 
