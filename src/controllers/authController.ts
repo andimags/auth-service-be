@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { IAuthenticatedRequest } from '../types';
 
 const generateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -77,8 +76,7 @@ const checkPermission = async (req: Request, res: Response, next: NextFunction):
         // 2. If GLOBAL, loop through user's roles that have null channel_id, check each if the specific permission is attached to it.
         // 3, If Channel based, loop through user's roles that have the appropriate channel id of channel_id, check each if the specific permission is attached to it.
         const apiKey = req.header('x-api-key');
-        const decoded = (req as IAuthenticatedRequest).user;
-        const user = await User.findByPk(decoded.id);
+        const user = await req.authorizedUser;
         let isAuthorized = false;
         let roles = null;
 

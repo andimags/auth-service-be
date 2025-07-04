@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
-import { IRequestWithChannel } from '../types';
 import { AppError } from './errorHandler';
 
 export const checkApiKeyMiddleware = async (
@@ -23,7 +22,7 @@ export const checkApiKeyMiddleware = async (
 
         if (!channel) throw new AppError('Invalid API key', 401);
 
-        (req as IRequestWithChannel).channel = channel;
+        req.channel = channel;
 
         next();
     } catch (error: any) {

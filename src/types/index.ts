@@ -1,20 +1,3 @@
-import { Request } from 'express';
-
-export interface IAuthenticatedRequest extends Request {
-    user: IUser;
-    isGlobalRole: boolean;
-}
-
-export interface IRequestWithChannel extends Request {
-    channel?: IChannel;
-}
-
-export interface IRequestWithUserAndChannel extends IAuthenticatedRequest, IRequestWithChannel {}
-
-export interface ICustomRequest extends Request {
-    user: IUser;
-}
-
 export interface IRole {
     id: number;
     name: string;
