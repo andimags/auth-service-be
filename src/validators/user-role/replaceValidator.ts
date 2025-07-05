@@ -1,4 +1,5 @@
 import { body, param } from 'express-validator';
+import { isIntegerOrArrayOfIntegers } from '../custom/isIntegerOrArrayOfIntegers';
 
 export const replaceValidator = [
     param('user_id')
@@ -12,15 +13,5 @@ export const replaceValidator = [
         .notEmpty()
         .withMessage('Role IDs are required')
         .bail()
-        .custom((value) => {
-            // If it's a single value, convert it to an array
-            const values = Array.isArray(value) ? value : [value];
-
-            // Validate all are integers
-            if (!values.every((v) => Number.isInteger(Number(v)))) {
-                throw new Error('All role IDs must be integers');
-            }
-
-            return true;
-        })
+        .custom(isIntegerOrArrayOfIntegers('role IDs'))
 ];
