@@ -51,8 +51,8 @@ export function generateRoleData(channelId?: number, level?: number) {
         name: `Role Test ${Date.now()}`,
         ref_name: `role_test_${Date.now()}`,
         level: level ?? 5,
-        channel_id: channelId ?? null,
-        scope: channelId ? 'channel' : 'global'
+        scope: channelId ? 'channel' : 'global',
+        ...(channelId ? { channel_id: channelId } : {})
     };
 }
 
