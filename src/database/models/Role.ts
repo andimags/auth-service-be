@@ -60,6 +60,7 @@ export default class Role extends Model {
     @Column(DataType.STRING)
     description: string;
 
+    @AllowNull(false)
     @Column(DataType.STRING)
     ref_name: string;
 
