@@ -18,12 +18,13 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const authorizedUser = req.authorizedUser;
-        const authorizedUserHasPermissions = await authorizedUser!.hasPermissions([
-            'view:user',
-            'admin:user'
-        ]);
+        const authorizedUserHasPermissions =
+            await authorizedUser!.hasPermissions(['view:user', 'admin:user']);
 
-        if (!authorizedUserHasPermissions && req.authorizedUser.id != parseInt(req.params.user_id)) {
+        if (
+            !authorizedUserHasPermissions &&
+            req.authorizedUser.id != parseInt(req.params.user_id)
+        ) {
             throw new AppError(
                 'You do not have the required permissions to perform this action',
                 403
@@ -68,10 +69,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizedUser = req.authorizedUser;
 
-        const authorizedUserHasPermissions = await authorizedUser!.hasPermissions([
-            'update:user',
-            'admin:user'
-        ]);
+        const authorizedUserHasPermissions =
+            await authorizedUser!.hasPermissions(['update:user', 'admin:user']);
 
         // Skip these validations if user is updating herself
         if (targetUser.id != authorizedUser!.id) {
@@ -82,9 +81,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 );
             }
 
-            const isAuthorizedUserMorePrivileged = await authorizedUser?.isMorePrivilegedThan(
-                targetUser.id
-            );
+            const isAuthorizedUserMorePrivileged =
+                await authorizedUser?.isMorePrivilegedThan(targetUser.id);
 
             if (!isAuthorizedUserMorePrivileged) {
                 throw new AppError(
@@ -112,16 +110,17 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
 
-        const targetUser = await User.findByPk(req.params.user_id, { paranoid: false });
+        const targetUser = await User.findByPk(req.params.user_id, {
+            paranoid: false
+        });
         if (!targetUser) throw new AppError('User not found', 404);
 
         if (targetUser?.username == 'superadmin')
             throw new AppError('Cannot delete superadmin user', 403);
 
         const authorizedUser = req.authorizedUser;
-        const isAuthorizedUserMorePrivileged = await authorizedUser?.isMorePrivilegedThan(
-            targetUser.id
-        );
+        const isAuthorizedUserMorePrivileged =
+            await authorizedUser?.isMorePrivilegedThan(targetUser.id);
 
         if (!isAuthorizedUserMorePrivileged) {
             throw new AppError(

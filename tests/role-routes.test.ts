@@ -40,16 +40,23 @@ describe('Role Routes', () => {
         await sequelize.sync();
 
         superadminAuth.user = await User.create(await generateUserData());
-        const superadminRole = await Role.findOne({ where: { ref_name: 'superadmin' } });
+        const superadminRole = await Role.findOne({
+            where: { ref_name: 'superadmin' }
+        });
 
         if (!superadminRole) {
             throw new AppError('Superadmin role not found');
         }
 
         await superadminAuth.user.addRoles([superadminRole]);
-        superadminAuth.token = await generateToken(superadminAuth.user.email, DEFAULT_PASSWORD);
+        superadminAuth.token = await generateToken(
+            superadminAuth.user.email,
+            DEFAULT_PASSWORD
+        );
 
-        userWithNoPermissionsAuth.user = await User.create(await generateUserData());
+        userWithNoPermissionsAuth.user = await User.create(
+            await generateUserData()
+        );
         userWithNoPermissionsAuth.token = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
@@ -80,7 +87,11 @@ describe('Role Routes', () => {
             // Auth user must have lower level of role than the target user
             const customAuthUser: IAuth = await createAuthUser();
             const channel = await Channel.create(generateChannelData());
-            const customAuthUserRole = await createRole(['admin:role', 'view:role'], channel.id, 5);
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'view:role'],
+                channel.id,
+                5
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -95,7 +106,11 @@ describe('Role Routes', () => {
                 expect(item.channel_id).toBe(channel!.id);
             });
 
-            forceDeleteInstances([customAuthUser.user!, channel, customAuthUserRole]);
+            forceDeleteInstances([
+                customAuthUser.user!,
+                channel,
+                customAuthUserRole
+            ]);
         });
 
         it('should return 403 when user lacks required permissions', async () => {
@@ -106,7 +121,8 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
@@ -151,7 +167,8 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toMatchObject({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             forceDeleteInstances([targetRole]);
@@ -202,15 +219,20 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
 
         it(`should return 403 when authorized user's required permissions are attached to a wrong channel`, async () => {
             const payload = generateRoleData();
             const customAuthUser: IAuth = await createAuthUser();
-            const wrongChannel = await Channel.create(await generateChannelData());
-            const correctChannel = await Channel.create(await generateChannelData());
+            const wrongChannel = await Channel.create(
+                await generateChannelData()
+            );
+            const correctChannel = await Channel.create(
+                await generateChannelData()
+            );
             const customAuthUserRole = await createRole(
                 ['admin:role', 'add:role'],
                 correctChannel.id
@@ -223,7 +245,12 @@ describe('Role Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -244,7 +271,11 @@ describe('Role Routes', () => {
             const payload = generateRoleData(undefined, 1); // Generate role data with highest role level possible
             const customAuthUser: IAuth = await createAuthUser();
             // Making role with the lowest possible role-level
-            const customAuthRole = await createRole(['admin:role', 'add:role'], undefined, 5);
+            const customAuthRole = await createRole(
+                ['admin:role', 'add:role'],
+                undefined,
+                5
+            );
             await customAuthUser.user?.setRoles(customAuthRole);
 
             const response = await request(app)
@@ -305,7 +336,8 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetRole]);
@@ -330,8 +362,12 @@ describe('Role Routes', () => {
             const payload = generateRoleData();
             const targetRole = await Role.create(generateRoleData());
             const customAuthUser: IAuth = await createAuthUser();
-            const wrongChannel = await Channel.create(await generateChannelData());
-            const correctChannel = await Channel.create(await generateChannelData());
+            const wrongChannel = await Channel.create(
+                await generateChannelData()
+            );
+            const correctChannel = await Channel.create(
+                await generateChannelData()
+            );
             const customAuthUserRole = await createRole(
                 ['admin:role', 'add:role'],
                 correctChannel.id
@@ -344,7 +380,12 @@ describe('Role Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -366,11 +407,18 @@ describe('Role Routes', () => {
             const payload = generateRoleData();
 
             // Target role must be higher than the auth user's role
-            const targetRole = await createRole(['admin:role', 'add:role'], undefined, 3);
+            const targetRole = await createRole(
+                ['admin:role', 'add:role'],
+                undefined,
+                3
+            );
 
             // Low level role to be attach to the custom auth user (level value defaults to 5)
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:role', 'add:role']);
+            const customAuthUserRole = await createRole([
+                'admin:role',
+                'add:role'
+            ]);
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -384,7 +432,11 @@ describe('Role Routes', () => {
                 message: `You can't update role level field with a higher level than yours`
             });
 
-            await forceDeleteInstances([targetRole, customAuthUser.user!, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetRole,
+                customAuthUser.user!,
+                customAuthUserRole
+            ]);
         });
 
         it(`should return 403 when the payload level property is higher than the authorized user's role level`, async () => {
@@ -393,11 +445,17 @@ describe('Role Routes', () => {
             payload.level = 1;
 
             // Create low level target role, making sure that the auth user has the ability to update this
-            const targetRole = await Role.create(await generateRoleData(undefined, 5));
+            const targetRole = await Role.create(
+                await generateRoleData(undefined, 5)
+            );
 
             // Low level role to be attach to the custom auth user, set role level to 4 so it's still able to update the targetRole
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:role', 'add:role'], undefined, 4);
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'add:role'],
+                undefined,
+                4
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -411,7 +469,11 @@ describe('Role Routes', () => {
                 message: `New value for role level field must be lower level than yours`
             });
 
-            await forceDeleteInstances([customAuthUser.user!, targetRole, customAuthUserRole]);
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                targetRole,
+                customAuthUserRole
+            ]);
         });
     });
 
@@ -459,18 +521,25 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetRole]);
         });
 
         it(`should return 403 when the authorized user's required permissions are tied to a channel-based role that belongs to a different channel`, async () => {
-            const wrongChannel = await Channel.create(await generateChannelData());
-            const correctChannel = await Channel.create(await generateChannelData());
+            const wrongChannel = await Channel.create(
+                await generateChannelData()
+            );
+            const correctChannel = await Channel.create(
+                await generateChannelData()
+            );
 
             // Target role to delete that is not within the authorized user's roles (uses wrongChannel.id)
-            const targetRole = await Role.create(await generateRoleData(wrongChannel.id));
+            const targetRole = await Role.create(
+                await generateRoleData(wrongChannel.id)
+            );
 
             // Auth user's role being in the correct channel
             const customAuthUser: IAuth = await createAuthUser();
@@ -482,7 +551,12 @@ describe('Role Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -501,10 +575,16 @@ describe('Role Routes', () => {
 
         it(`should return 403 when the authorized user's role level is equal or lower than the target role`, async () => {
             // Target role's level must be higher than the auth user's role level
-            const targetRole = await Role.create(await generateRoleData(undefined, 3));
+            const targetRole = await Role.create(
+                await generateRoleData(undefined, 3)
+            );
 
             const customAuthUser: IAuth = await createAuthUser();
-            const customAuthUserRole = await createRole(['admin:role', 'add:role'], undefined, 5);
+            const customAuthUserRole = await createRole(
+                ['admin:role', 'add:role'],
+                undefined,
+                5
+            );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const response = await request(app)
@@ -514,10 +594,15 @@ describe('Role Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You can only delete roles with a lower level than yours'
+                message:
+                    'You can only delete roles with a lower level than yours'
             });
 
-            await forceDeleteInstances([targetRole, customAuthUser.user!, customAuthUserRole]);
+            await forceDeleteInstances([
+                targetRole,
+                customAuthUser.user!,
+                customAuthUserRole
+            ]);
         });
     });
 });

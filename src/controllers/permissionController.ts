@@ -26,13 +26,14 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetPermission = await Permission.findByPk(req.params.permission_id);
+        const targetPermission = await Permission.findByPk(
+            req.params.permission_id
+        );
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
-        const hasAccessToPermission = await (req.authorizedUser as User).hasAccessToPermission(
-            targetPermission.id,
-            req.channel?.id ?? null
-        );
+        const hasAccessToPermission = await (
+            req.authorizedUser as User
+        ).hasAccessToPermission(targetPermission.id, req.channel?.id ?? null);
 
         if (!req.isGlobalRole && !hasAccessToPermission) {
             throw new AppError(
@@ -65,10 +66,14 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetPermission = await Permission.findByPk(req.params.permission_id);
+        const targetPermission = await Permission.findByPk(
+            req.params.permission_id
+        );
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
-        const hasAccessToPermission = await (req.authorizedUser as User).hasAccessToPermission(
+        const hasAccessToPermission = await (
+            req.authorizedUser as User
+        ).hasAccessToPermission(
             targetPermission.id,
             req.channel?.id ?? undefined
         );
@@ -94,9 +99,12 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
-        const targetPermission = await Permission.findByPk(req.params.permission_id, {
-            paranoid: false
-        });
+        const targetPermission = await Permission.findByPk(
+            req.params.permission_id,
+            {
+                paranoid: false
+            }
+        );
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
         await targetPermission?.destroy({ force: shouldForce });

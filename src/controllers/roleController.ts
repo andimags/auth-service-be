@@ -30,7 +30,10 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         if (!targetRole) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalRole && targetRole?.channel_id != req?.channel?.id) {
-            throw new AppError('Unauthorized to access roles outside your channel', 403);
+            throw new AppError(
+                'Unauthorized to access roles outside your channel',
+                403
+            );
         }
 
         res.json({
@@ -45,17 +48,22 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.isGlobalRole && req.channel?.id != req.body.channel_id) {
-            throw new AppError('You can only add roles within your channel', 403);
+            throw new AppError(
+                'You can only add roles within your channel',
+                403
+            );
         }
 
-        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
-            ['add:role', 'admin:role'],
-            'global'
-        );
+        const authorizeUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(['add:role', 'admin:role'], 'global');
 
         // Level with value 1 is the highest
         if (authorizeUserRoleLevel && authorizeUserRoleLevel > req.body.level) {
-            throw new AppError(`You can only add roles with a lower level than yours`, 403);
+            throw new AppError(
+                `You can only add roles with a lower level than yours`,
+                403
+            );
         }
 
         const newRole = await Role.create(req.body);
@@ -75,15 +83,20 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         if (!targetRole) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalRole && req.channel?.id != targetRole.channel_id) {
-            throw new AppError('You can only update roles within your channel', 403);
+            throw new AppError(
+                'You can only update roles within your channel',
+                403
+            );
         }
 
-        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
-            ['update:role', 'admin:role'],
-            'global'
-        );
+        const authorizeUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(['update:role', 'admin:role'], 'global');
 
-        if (authorizeUserRoleLevel && targetRole.level <= authorizeUserRoleLevel) {
+        if (
+            authorizeUserRoleLevel &&
+            targetRole.level <= authorizeUserRoleLevel
+        ) {
             throw new AppError(
                 "You can't update role level field with a higher level than yours",
                 403
@@ -91,7 +104,10 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         // Level with value 1 is the highest
-        if (authorizeUserRoleLevel && req.body.level <= authorizeUserRoleLevel) {
+        if (
+            authorizeUserRoleLevel &&
+            req.body.level <= authorizeUserRoleLevel
+        ) {
             throw new AppError(
                 'New value for role level field must be lower level than yours',
                 403
@@ -116,17 +132,22 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         if (!role) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalRole && req.channel?.id != role.channel_id) {
-            throw new AppError('You can only delete roles within your channel', 403);
+            throw new AppError(
+                'You can only delete roles within your channel',
+                403
+            );
         }
 
-        const authorizeUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
-            ['delete:role', 'admin:role'],
-            'global'
-        );
+        const authorizeUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(['delete:role', 'admin:role'], 'global');
 
         // Level with value 1 is the highest
         if (authorizeUserRoleLevel && role.level <= authorizeUserRoleLevel) {
-            throw new AppError('You can only delete roles with a lower level than yours', 403);
+            throw new AppError(
+                'You can only delete roles with a lower level than yours',
+                403
+            );
         }
 
         const shouldForce = req.query.force === 'true';

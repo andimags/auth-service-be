@@ -16,7 +16,11 @@ channelRoutes.get(
     channelController.find
 );
 
-channelRoutes.post('/', checkPermission(['add:channel', 'admin:channel']), channelController.add);
+channelRoutes.post(
+    '/',
+    checkPermission(['add:channel', 'admin:channel']),
+    channelController.add
+);
 
 channelRoutes.put(
     '/:id',

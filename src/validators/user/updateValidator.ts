@@ -6,24 +6,25 @@ export const updateValidator = [
         .isLength({ min: 3 })
         .withMessage('Username must have minimum of 3 characters'),
 
-    body('email')
-        .optional()
-        .isEmail()
-        .withMessage('Email has invalid format'),
+    body('email').optional().isEmail().withMessage('Email has invalid format'),
 
     body('first_name')
         .optional()
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('First name can only contain letters, spaces, apostrophes, and hyphens'),
+        .withMessage(
+            'First name can only contain letters, spaces, apostrophes, and hyphens'
+        ),
 
     body('last_name')
         .optional()
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('First name can only contain letters, spaces, apostrophes, and hyphens'),
+        .withMessage(
+            'First name can only contain letters, spaces, apostrophes, and hyphens'
+        ),
 
     body('status')
         .optional()

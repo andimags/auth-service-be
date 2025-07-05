@@ -42,7 +42,9 @@ describe('Role Permission Routes', () => {
         await sequelize.sync();
 
         superadminAuth = await createAuthUser();
-        const superadminRole = await Role.findOne({ where: { ref_name: 'superadmin' } });
+        const superadminRole = await Role.findOne({
+            where: { ref_name: 'superadmin' }
+        });
 
         if (!superadminRole) {
             throw new AppError('Superadmin role not found');
@@ -50,7 +52,9 @@ describe('Role Permission Routes', () => {
 
         await superadminAuth.user!.addRoles([superadminRole]);
 
-        userWithNoPermissionsAuth.user = await User.create(await generateUserData());
+        userWithNoPermissionsAuth.user = await User.create(
+            await generateUserData()
+        );
         userWithNoPermissionsAuth.token = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
@@ -108,7 +112,8 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetUser]);
@@ -183,13 +188,21 @@ describe('Role Permission Routes', () => {
 
         it('should return 403 when authorized user is adding permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
-            const authUserRole = await createRole(['admin:user_role'], undefined, 5);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 3);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                3
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -218,21 +231,34 @@ describe('Role Permission Routes', () => {
             const customAuthUser: IAuth = await createAuthUser();
             const correctChannel = await Channel.create(generateChannelData());
             const wrongChannel = await Channel.create(generateChannelData());
-            const authUserRole = await createRole(['admin:user_role'], correctChannel.id, 3);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                correctChannel.id,
+                3
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], wrongChannel.id, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                wrongChannel.id,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -257,7 +283,11 @@ describe('Role Permission Routes', () => {
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -270,7 +300,8 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetUser, roleForPayload]);
@@ -345,13 +376,21 @@ describe('Role Permission Routes', () => {
 
         it('should return 403 when authorized user is adding permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
-            const authUserRole = await createRole(['admin:user_role'], undefined, 5);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 3);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                3
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -380,21 +419,34 @@ describe('Role Permission Routes', () => {
             const customAuthUser: IAuth = await createAuthUser();
             const correctChannel = await Channel.create(generateChannelData());
             const wrongChannel = await Channel.create(generateChannelData());
-            const authUserRole = await createRole(['admin:user_role'], correctChannel.id, 3);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                correctChannel.id,
+                3
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], wrongChannel.id, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                wrongChannel.id,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -415,10 +467,16 @@ describe('Role Permission Routes', () => {
         });
 
         it('should return 403 when trying to delete user with superadmin username', async () => {
-            const targetUser = await User.findOne({ where: { username: 'superadmin' } });
+            const targetUser = await User.findOne({
+                where: { username: 'superadmin' }
+            });
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -441,7 +499,11 @@ describe('Role Permission Routes', () => {
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -454,7 +516,8 @@ describe('Role Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetUser, roleForPayload]);
@@ -464,8 +527,12 @@ describe('Role Permission Routes', () => {
     describe('DELETE /api/user-role/user/:user_id', () => {
         it(`should return 200 with success message`, async () => {
             const targetUser = await User.create(await generateUserData());
-            const targetUserPermission = await Permission.create(await generatePermissionData());
-            const targetUserRole = await createRole([targetUserPermission.ref_name]);
+            const targetUserPermission = await Permission.create(
+                await generatePermissionData()
+            );
+            const targetUserRole = await createRole([
+                targetUserPermission.ref_name
+            ]);
 
             await targetUser.setRoles(targetUserRole);
 
@@ -486,7 +553,11 @@ describe('Role Permission Routes', () => {
                 message: 'User role successfully deleted'
             });
 
-            await forceDeleteInstances([targetUser, targetUserPermission, targetUserRole]);
+            await forceDeleteInstances([
+                targetUser,
+                targetUserPermission,
+                targetUserRole
+            ]);
         });
 
         it('should return 404 with non-existent user ID', async () => {
@@ -510,7 +581,9 @@ describe('Role Permission Routes', () => {
         });
 
         it('should return 403 when trying to delete user with username superadmin', async () => {
-            const targetUser = await User.findOne({ where: { username: 'superadmin' } });
+            const targetUser = await User.findOne({
+                where: { username: 'superadmin' }
+            });
             const roleForPayload = await createRole(['admin:role_permission']);
             const payload = {
                 role_ids: roleForPayload.id
@@ -552,13 +625,21 @@ describe('Role Permission Routes', () => {
 
         it('should return 403 when authorized user is adding permissions to a role with higher or equal level to theirs', async () => {
             const customAuthUser: IAuth = await createAuthUser();
-            const authUserRole = await createRole(['admin:user_role'], undefined, 5);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                undefined,
+                5
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
-            const roleForPayload = await createRole(['admin:user_role'], undefined, 3);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                undefined,
+                3
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
@@ -587,21 +668,34 @@ describe('Role Permission Routes', () => {
             const customAuthUser: IAuth = await createAuthUser();
             const correctChannel = await Channel.create(generateChannelData());
             const wrongChannel = await Channel.create(generateChannelData());
-            const authUserRole = await createRole(['admin:user_role'], correctChannel.id, 3);
+            const authUserRole = await createRole(
+                ['admin:user_role'],
+                correctChannel.id,
+                3
+            );
 
             await customAuthUser.user?.setRoles(authUserRole);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
             // targetRole will be in wrong channel to mock error
-            const roleForPayload = await createRole(['admin:user_role'], wrongChannel.id, 5);
+            const roleForPayload = await createRole(
+                ['admin:user_role'],
+                wrongChannel.id,
+                5
+            );
             const payload = {
                 role_ids: roleForPayload.id
             };
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, correctChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        correctChannel.api_key
+                    )
+                )
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);

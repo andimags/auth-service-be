@@ -36,7 +36,9 @@ describe('User Routes', () => {
         await sequelize.sync();
 
         superadminAuth = await createAuthUser();
-        const superadminRole = await Role.findOne({ where: { ref_name: 'superadmin' } });
+        const superadminRole = await Role.findOne({
+            where: { ref_name: 'superadmin' }
+        });
 
         if (!superadminRole) {
             throw new AppError('Superadmin role not found');
@@ -44,7 +46,9 @@ describe('User Routes', () => {
 
         await superadminAuth.user!.addRoles([superadminRole]);
 
-        userWithNoPermissionsAuth.user = await User.create(await generateUserData());
+        userWithNoPermissionsAuth.user = await User.create(
+            await generateUserData()
+        );
         userWithNoPermissionsAuth.token = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
@@ -84,7 +88,8 @@ describe('User Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
@@ -134,7 +139,8 @@ describe('User Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
@@ -203,7 +209,8 @@ describe('User Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetUser]);
@@ -211,7 +218,11 @@ describe('User Routes', () => {
 
         it('should return 403 with authorized user having low level role compared to the target user', async () => {
             const targetUser = await User.create(generateUserData());
-            const targetUserRole = await createRole(['admin:user', 'update:user'], undefined, 3);
+            const targetUserRole = await createRole(
+                ['admin:user', 'update:user'],
+                undefined,
+                3
+            );
             await targetUser.setRoles(targetUserRole);
 
             // Auth user must have lower level of role than the target user
@@ -314,7 +325,8 @@ describe('User Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             forceDeleteInstances([targetUser]);
@@ -322,7 +334,9 @@ describe('User Routes', () => {
 
         it('should return 403 when deleting the main superadmin', async () => {
             // Do not delete
-            const targetUser = await User.findOne({ where: { username: 'superadmin' } });
+            const targetUser = await User.findOne({
+                where: { username: 'superadmin' }
+            });
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser?.id}`) // Deleting the main superadmin
@@ -333,12 +347,18 @@ describe('User Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403);
 
-            expect(response.body).toEqual({ message: 'Cannot delete superadmin user' });
+            expect(response.body).toEqual({
+                message: 'Cannot delete superadmin user'
+            });
         });
 
         it('should return 403 when deleting a user with higher privilege than you', async () => {
             const targetUser = await User.create(generateUserData());
-            const targetUserRole = await createRole(['admin:user', 'delete:user'], undefined, 3);
+            const targetUserRole = await createRole(
+                ['admin:user', 'delete:user'],
+                undefined,
+                3
+            );
             await targetUser.setRoles(targetUserRole);
 
             // Auth user must have lower level of role than the target user

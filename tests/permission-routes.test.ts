@@ -41,16 +41,23 @@ describe('Permission Routes', () => {
         await sequelize.sync();
 
         superadminAuth.user = await User.create(await generateUserData());
-        const superadminRole = await Role.findOne({ where: { ref_name: 'superadmin' } });
+        const superadminRole = await Role.findOne({
+            where: { ref_name: 'superadmin' }
+        });
 
         if (!superadminRole) {
             throw new AppError('Superadmin role not found');
         }
 
         await superadminAuth.user.addRoles([superadminRole]);
-        superadminAuth.token = await generateToken(superadminAuth.user.email, DEFAULT_PASSWORD);
+        superadminAuth.token = await generateToken(
+            superadminAuth.user.email,
+            DEFAULT_PASSWORD
+        );
 
-        userWithNoPermissionsAuth.user = await User.create(await generateUserData());
+        userWithNoPermissionsAuth.user = await User.create(
+            await generateUserData()
+        );
         userWithNoPermissionsAuth.token = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
@@ -60,7 +67,10 @@ describe('Permission Routes', () => {
     });
 
     afterAll(async () => {
-        await forceDeleteInstances([superadminAuth.user!, userWithNoPermissionsAuth.user!]);
+        await forceDeleteInstances([
+            superadminAuth.user!,
+            userWithNoPermissionsAuth.user!
+        ]);
         await sequelize.close();
     });
 
@@ -86,14 +96,17 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
 
     describe('GET /api/permissions/:permission_id', () => {
         it('should return 200 with permissions data for authorized user', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
 
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
@@ -122,7 +135,9 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
 
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
@@ -131,7 +146,8 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toMatchObject({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetPermission]);
@@ -154,7 +170,9 @@ describe('Permission Routes', () => {
                 data: expect.any(Object)
             });
 
-            const createdPermission = await Permission.findByPk(response.body.data.id);
+            const createdPermission = await Permission.findByPk(
+                response.body.data.id
+            );
             await forceDeleteInstances([createdPermission!]);
         });
 
@@ -169,14 +187,17 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
 
     describe('PUT /api/permissions/:permission_id', () => {
         it('should return 200 with permissions data for authorized user', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
             const payload = await generatePermissionData();
 
             const response = await request(app)
@@ -222,7 +243,9 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when authorized user does not have required permissions', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
             const payload = await generatePermissionData();
 
             const response = await request(app)
@@ -233,14 +256,17 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetPermission]);
         });
 
         it('should return 403 when authorized user has required permissions but attached to a channel-based role, the target permission is also not assigned to any of her roles', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
             const customAuthUser: IAuth = await createAuthUser();
             const channel = await Channel.create(generateChannelData());
             const customAuthUserRole = await createRole(
@@ -272,7 +298,9 @@ describe('Permission Routes', () => {
 
     describe('DELETE /api/permissions/:permission_id', () => {
         it('should return 200 with permissions data for authorized user', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
@@ -301,7 +329,9 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when authorized user does not have required permissions', async () => {
-            const targetPermission = await Permission.create(generatePermissionData());
+            const targetPermission = await Permission.create(
+                generatePermissionData()
+            );
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
@@ -310,7 +340,8 @@ describe('Permission Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
 
             await forceDeleteInstances([targetPermission]);

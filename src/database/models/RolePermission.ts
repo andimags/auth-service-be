@@ -1,4 +1,10 @@
-import { Column, CreatedAt, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+    Column,
+    CreatedAt,
+    ForeignKey,
+    Model,
+    Table
+} from 'sequelize-typescript';
 
 import Permission from './Permission';
 import Role from './Role';

@@ -30,7 +30,9 @@ export async function getUserChannels(userId: number) {
 
     if (!user) throw new AppError('User not found.', 404);
 
-    const roles = await user.getRoles({ where: { channel_id: { [Op.ne]: null } } });
+    const roles = await user.getRoles({
+        where: { channel_id: { [Op.ne]: null } }
+    });
     const channelIds = roles.map((role) => {
         return role.channel_id;
     });

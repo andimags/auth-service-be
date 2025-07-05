@@ -39,20 +39,28 @@ describe('Channel Routes', () => {
         await sequelize.sync();
 
         superadminAuth = await createAuthUser();
-        const superadminRole = await Role.findOne({ where: { ref_name: 'superadmin' } });
+        const superadminRole = await Role.findOne({
+            where: { ref_name: 'superadmin' }
+        });
 
         if (!superadminRole) {
             throw new AppError('Superadmin role not found');
         }
 
         await superadminAuth.user!.addRoles([superadminRole]);
-        superadminAuth.token = await generateToken(superadminAuth.user!.email, DEFAULT_PASSWORD);
+        superadminAuth.token = await generateToken(
+            superadminAuth.user!.email,
+            DEFAULT_PASSWORD
+        );
 
         userWithNoPermissionsAuth = await createAuthUser();
     });
 
     afterAll(async () => {
-        await forceDeleteInstances([superadminAuth.user!, userWithNoPermissionsAuth.user!]);
+        await forceDeleteInstances([
+            superadminAuth.user!,
+            userWithNoPermissionsAuth.user!
+        ]);
         await sequelize.close();
     });
 
@@ -93,7 +101,8 @@ describe('Channel Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'You do not have the required permissions to perform this action'
+                message:
+                    'You do not have the required permissions to perform this action'
             });
         });
     });
@@ -138,7 +147,8 @@ describe('Channel Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
-                    message: 'You do not have the required permissions to perform this action'
+                    message:
+                        'You do not have the required permissions to perform this action'
                 });
 
             await forceDeleteInstances([targetChannel]);
@@ -149,17 +159,28 @@ describe('Channel Routes', () => {
 
             // Auth user will have correct permissions but attached to a role with diff channel
             const customAuthUser: IAuth = await createAuthUser();
-            const wrongChannel = await Channel.create(await generateChannelData());
-            const customAuthUserRole = await createRole(['admin:channel'], wrongChannel.id);
+            const wrongChannel = await Channel.create(
+                await generateChannelData()
+            );
+            const customAuthUserRole = await createRole(
+                ['admin:channel'],
+                wrongChannel.id
+            );
             await customAuthUser.user!.setRoles(customAuthUserRole);
 
             await request(app)
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, wrongChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        wrongChannel.api_key
+                    )
+                )
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
-                    message: 'You can only view channels associated to your roles'
+                    message:
+                        'You can only view channels associated to your roles'
                 });
 
             await forceDeleteInstances([
@@ -191,7 +212,9 @@ describe('Channel Routes', () => {
                 status: 1
             });
 
-            const createdChannel = await Channel.findByPk(response.body.data.id);
+            const createdChannel = await Channel.findByPk(
+                response.body.data.id
+            );
             await forceDeleteInstances([createdChannel!]);
         });
 
@@ -203,7 +226,8 @@ describe('Channel Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
-                    message: 'You do not have the required permissions to perform this action'
+                    message:
+                        'You do not have the required permissions to perform this action'
                 });
         });
     });
@@ -254,7 +278,8 @@ describe('Channel Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
-                    message: 'You do not have the required permissions to perform this action'
+                    message:
+                        'You do not have the required permissions to perform this action'
                 });
 
             await forceDeleteInstances([targetChannel]);
@@ -265,14 +290,24 @@ describe('Channel Routes', () => {
 
             // Auth usr will have the correct permissions but in wrong channel
             const customAuthUser: IAuth = await createAuthUser();
-            const wrongChannel = await Channel.create(await generateChannelData());
-            const customAuthUserRole = await createRole(['admin:channel'], wrongChannel.id);
+            const wrongChannel = await Channel.create(
+                await generateChannelData()
+            );
+            const customAuthUserRole = await createRole(
+                ['admin:channel'],
+                wrongChannel.id
+            );
 
             await customAuthUser.user!.setRoles(customAuthUserRole);
 
             await request(app)
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(customAuthUser.token!, wrongChannel.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.token!,
+                        wrongChannel.api_key
+                    )
+                )
                 .send(await generateChannelData())
                 .expect('Content-Type', /json/)
                 .expect(403)
@@ -340,7 +375,8 @@ describe('Channel Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
-                    message: 'You do not have the required permissions to perform this action'
+                    message:
+                        'You do not have the required permissions to perform this action'
                 });
 
             await forceDeleteInstances([targetChannel]);

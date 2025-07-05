@@ -2,7 +2,8 @@ import { NextFunction, Request, RequestHandler, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from './errorHandler';
 
-const errorMsg = 'You do not have the required permissions to perform this action';
+const errorMsg =
+    'You do not have the required permissions to perform this action';
 
 // Checks permission on GLOBAL scope only
 // If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
@@ -25,14 +26,19 @@ export default function checkPermission(
             }
 
             // Special handling for global API key
-            if (apiKey?.toLowerCase() === 'global' && !userHasPermissionsOnGlobalRoles) {
+            if (
+                apiKey?.toLowerCase() === 'global' &&
+                !userHasPermissionsOnGlobalRoles
+            ) {
                 console.warn('No global roles attached to this user');
                 throw new AppError(errorMsg, 403);
             }
 
             // If roleScope is 'global', only global permissions are allowed
             if (requireGlobalRole) {
-                console.warn('Only users with global role for this permission must be allowed');
+                console.warn(
+                    'Only users with global role for this permission must be allowed'
+                );
                 throw new AppError(
                     'Only users with global role for this permission must be allowed',
                     403

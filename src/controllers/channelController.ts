@@ -26,12 +26,14 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const channel = await Channel.findByPk(req.params.id);
         if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(
-            channel.id
-        );
+        const authorizedUserHasAccessToChannel =
+            await req.authorizedUser.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
-            throw new AppError('You can only view channels associated to your roles', 403);
+            throw new AppError(
+                'You can only view channels associated to your roles',
+                403
+            );
         }
 
         res.json({
@@ -61,12 +63,14 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const channel = await Channel.findByPk(req.params.id);
         if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel = await req.authorizedUser.hasAccessToChannel(
-            channel.id
-        );
+        const authorizedUserHasAccessToChannel =
+            await req.authorizedUser.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
-            throw new AppError("You can only update channels you're associated to", 403);
+            throw new AppError(
+                "You can only update channels you're associated to",
+                403
+            );
         }
 
         await channel?.update(req.body);
@@ -83,7 +87,9 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
-        const channel = await Channel.findByPk(req.params.id, { paranoid: false });
+        const channel = await Channel.findByPk(req.params.id, {
+            paranoid: false
+        });
         if (!channel) throw new AppError('Channel not found', 404);
 
         await channel?.destroy({ force: shouldForce });

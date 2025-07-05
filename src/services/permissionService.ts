@@ -34,9 +34,15 @@ export async function isPermissionAssignable(
     return true;
 }
 
-export async function findMissingPermissions(permissionIds: number | number[]): Promise<number[]> {
-    permissionIds = Array.isArray(permissionIds) ? permissionIds : [permissionIds];
-    const existingPermissions = await Permission.findAll({ where: { id: permissionIds } });
+export async function findMissingPermissions(
+    permissionIds: number | number[]
+): Promise<number[]> {
+    permissionIds = Array.isArray(permissionIds)
+        ? permissionIds
+        : [permissionIds];
+    const existingPermissions = await Permission.findAll({
+        where: { id: permissionIds }
+    });
     const existingIds = existingPermissions.map((permission) => permission.id);
 
     return permissionIds.filter((id) => !existingIds.includes(id));
@@ -69,7 +75,9 @@ export async function userHasPermissions(
     if (!user) throw new AppError('User not found', 404);
 
     if (permissionScope === 'channel' && !channelId) {
-        throw new Error("channelId must be provided when permissionScope is 'channel'");
+        throw new Error(
+            "channelId must be provided when permissionScope is 'channel'"
+        );
     }
 
     // Check global roles
@@ -79,7 +87,11 @@ export async function userHasPermissions(
 
     if (
         globalRoles &&
-        (await rolesHasPermissions(globalRoles, permissionRefNames, permissionScope))
+        (await rolesHasPermissions(
+            globalRoles,
+            permissionRefNames,
+            permissionScope
+        ))
     ) {
         return true;
     }
@@ -93,7 +105,11 @@ export async function userHasPermissions(
         where: { channel_id: channelId }
     });
 
-    return await rolesHasPermissions(channelRoles, permissionRefNames, permissionScope);
+    return await rolesHasPermissions(
+        channelRoles,
+        permissionRefNames,
+        permissionScope
+    );
 }
 
 async function rolesHasPermissions(
@@ -139,9 +155,13 @@ export async function checkPermissionLevel(
     let roles: Role[] | null = null;
 
     if (channelId) {
-        roles = await user.getRoles({ where: { channel_id: { [Op.in]: [channelId, null] } } });
+        roles = await user.getRoles({
+            where: { channel_id: { [Op.in]: [channelId, null] } }
+        });
     } else {
-        roles = await user.getRoles({ where: { channel_id: { [Op.eq]: null } } });
+        roles = await user.getRoles({
+            where: { channel_id: { [Op.eq]: null } }
+        });
     }
 
     if (!roles) return null;
@@ -186,11 +206,15 @@ export async function getUserPermissions(
         }
     });
 
-    const permissionsNested = await Promise.all(roles.map((role) => role.getPermissions()));
+    const permissionsNested = await Promise.all(
+        roles.map((role) => role.getPermissions())
+    );
     const permissions = permissionsNested.flat();
 
     // Remove duplicate permissions
-    const uniquePermissions = Array.from(new Map(permissions.map((p) => [p.id, p])).values());
+    const uniquePermissions = Array.from(
+        new Map(permissions.map((p) => [p.id, p])).values()
+    );
 
     return uniquePermissions;
 }
@@ -212,12 +236,16 @@ export async function userHasAccessToPermission(
     channelId?: number
 ): Promise<boolean> {
     const roles = await user?.getRoles({
-        where: { channel_id: { [Op.in]: channelId ? [null, channelId] : [null] } }
+        where: {
+            channel_id: { [Op.in]: channelId ? [null, channelId] : [null] }
+        }
     });
     if (!roles) return false;
 
     for (const role of roles) {
-        const [permission] = await role.getPermissions({ where: { id: permissionId } });
+        const [permission] = await role.getPermissions({
+            where: { id: permissionId }
+        });
 
         if (permission) {
             return true;

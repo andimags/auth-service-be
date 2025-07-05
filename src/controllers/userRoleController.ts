@@ -4,7 +4,11 @@ import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, userCanManageRoles } from '../services/roleService';
 
 // Fetch all roles assigned to a user
-const getUserRoles = async (req: Request, res: Response, next: NextFunction) => {
+const getUserRoles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
@@ -32,7 +36,11 @@ const getUserRoles = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Assign one or more roles to a user
-const addUserRoles = async (req: Request, res: Response, next: NextFunction) => {
+const addUserRoles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
@@ -43,7 +51,9 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
         }
 
-        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+        const authUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );
@@ -79,7 +89,11 @@ const addUserRoles = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Replace all roles of a user
-const replaceUserRoles = async (req: Request, res: Response, next: NextFunction) => {
+const replaceUserRoles = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
@@ -90,7 +104,9 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
         if (missingRoles.length > 0)
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+        const authUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );
@@ -122,7 +138,11 @@ const replaceUserRoles = async (req: Request, res: Response, next: NextFunction)
 };
 
 // Remove a specific role from a user
-const destroyUserRole = async (req: Request, res: Response, next: NextFunction) => {
+const destroyUserRole = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
@@ -133,7 +153,9 @@ const destroyUserRole = async (req: Request, res: Response, next: NextFunction) 
         if (missingRoles.length > 0)
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        const authUserRoleLevel = await (req.authorizedUser as User).checkPermissionLevel(
+        const authUserRoleLevel = await (
+            req.authorizedUser as User
+        ).checkPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );

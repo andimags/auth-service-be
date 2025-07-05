@@ -28,7 +28,10 @@ import {
 } from 'sequelize-typescript';
 import { UserStatusType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
-import { getUserChannels, hasAccessToChannel } from '../../services/channelService';
+import {
+    getUserChannels,
+    hasAccessToChannel
+} from '../../services/channelService';
 import {
     checkPermissionLevel,
     getUserPermissions,
@@ -63,7 +66,12 @@ export default class User extends Model {
         permissionScope: 'channel' | 'global' = 'global',
         channelId?: number
     ) {
-        return await userHasPermissions(this, permissionRefNames, permissionScope, channelId);
+        return await userHasPermissions(
+            this,
+            permissionRefNames,
+            permissionScope,
+            channelId
+        );
     }
 
     async isMorePrivilegedThan(userId: number) {
@@ -87,10 +95,18 @@ export default class User extends Model {
         permissionsScope: 'global' | 'channel',
         channelId?: number
     ): Promise<number | null> {
-        return await checkPermissionLevel(this, permissionRefNames, permissionsScope, channelId);
+        return await checkPermissionLevel(
+            this,
+            permissionRefNames,
+            permissionsScope,
+            channelId
+        );
     }
 
-    async hasAccessToPermission(permissionId: number, channelId?: number): Promise<boolean> {
+    async hasAccessToPermission(
+        permissionId: number,
+        channelId?: number
+    ): Promise<boolean> {
         return await userHasAccessToPermission(this, permissionId, channelId);
     }
 
@@ -159,7 +175,10 @@ export default class User extends Model {
     static preventUsernameUpdateForSuperadmin(instance: User) {
         const originalUsername = instance.previous('username');
 
-        if (originalUsername === 'superadmin' && instance.username !== originalUsername) {
+        if (
+            originalUsername === 'superadmin' &&
+            instance.username !== originalUsername
+        ) {
             instance.username = originalUsername;
         }
     }
@@ -167,7 +186,10 @@ export default class User extends Model {
     @BeforeDestroy
     static preventDeletingUserWithUsernameAsSuperadmin(instance: User) {
         if (instance.username == 'superadmin') {
-            throw new AppError('User with username as superadmin cannot be deleted', 403);
+            throw new AppError(
+                'User with username as superadmin cannot be deleted',
+                403
+            );
         }
     }
 }

@@ -22,7 +22,9 @@ export const addValidator = [
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('First name can only contain letters, spaces, apostrophes, and hyphens'),
+        .withMessage(
+            'First name can only contain letters, spaces, apostrophes, and hyphens'
+        ),
 
     body('last_name')
         .notEmpty()
@@ -31,7 +33,9 @@ export const addValidator = [
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('First name can only contain letters, spaces, apostrophes, and hyphens'),
+        .withMessage(
+            'First name can only contain letters, spaces, apostrophes, and hyphens'
+        ),
 
     body('status')
         .optional()

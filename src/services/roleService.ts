@@ -10,13 +10,17 @@ export async function userCanManageRoles(
     userHasGlobalRole: boolean = false
 ): Promise<boolean> {
     if (!userHasGlobalRole && !userChannelId)
-        throw new AppError('authUserChannelId is required if authUserIsGlobalRole is false', 400);
+        throw new AppError(
+            'authUserChannelId is required if authUserIsGlobalRole is false',
+            400
+        );
 
     const roles = await Role.findAll({ where: { id: roleIds } });
     if (!roles) throw new AppError('Roles not found', 404);
 
     const roleIdsLength = Array.isArray(roleIds) ? roleIds.length : 1;
-    if (roleIdsLength != roles.length) throw new AppError('Some roles not found', 404);
+    if (roleIdsLength != roles.length)
+        throw new AppError('Some roles not found', 404);
 
     let unassignableRoleIds = [];
 
@@ -30,7 +34,9 @@ export async function userCanManageRoles(
     return unassignableRoleIds.length == 0;
 }
 
-export async function findMissingRoles(roleIds: number | number[]): Promise<number[]> {
+export async function findMissingRoles(
+    roleIds: number | number[]
+): Promise<number[]> {
     // Returns array of role IDs that don't exist
     roleIds = Array.isArray(roleIds) ? roleIds : [roleIds];
     const existingRoles = await Role.findAll({ where: { id: roleIds } });
@@ -49,7 +55,10 @@ export async function findMissingRoles(roleIds: number | number[]): Promise<numb
  * - If `channelId` is provided, global roles and roles for the specified channel are considered.
  * - Prioritize global roles when finding the highest level
  */
-export async function getUsersHigestRoleLevel(userId: number, channelId?: number) {
+export async function getUsersHigestRoleLevel(
+    userId: number,
+    channelId?: number
+) {
     const user = await User.findByPk(userId);
     if (!user) throw new AppError('User not found', 404);
 
@@ -114,8 +123,10 @@ export async function isUserMorePrivilegedThan(
 
 export async function isRoleHigher(firstRole: Role, secondRole: Role) {
     // Handle cases for different role scopes
-    if (firstRole.scope == 'global' && secondRole.scope == 'channel') return true;
-    if (firstRole.scope == 'channel' && secondRole.scope == 'global') return false;
+    if (firstRole.scope == 'global' && secondRole.scope == 'channel')
+        return true;
+    if (firstRole.scope == 'channel' && secondRole.scope == 'global')
+        return false;
 
     // Now TypeScript knows both roles are same value
     if (firstRole.level < secondRole.level) return true;

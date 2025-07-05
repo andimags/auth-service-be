@@ -4,7 +4,11 @@ import checkPermission from '../middlewares/checkPermission';
 
 const roleRoutes = Router();
 
-roleRoutes.get('/', checkPermission(['view:role', 'admin:role'], false), roleController.getAll);
+roleRoutes.get(
+    '/',
+    checkPermission(['view:role', 'admin:role'], false),
+    roleController.getAll
+);
 
 roleRoutes.get(
     '/:role_id',
@@ -12,7 +16,11 @@ roleRoutes.get(
     roleController.find
 );
 
-roleRoutes.post('/', checkPermission(['add:role', 'admin:role'], false), roleController.add);
+roleRoutes.post(
+    '/',
+    checkPermission(['add:role', 'admin:role'], false),
+    roleController.add
+);
 
 roleRoutes.put(
     '/:role_id',

@@ -9,14 +9,36 @@ import { deleteValidator } from '../validators/user/deleteValidator';
 
 const userRoutes = Router();
 
-userRoutes.get('/', checkPermission(['view:user', 'admin:user'], false), userController.getAll);
+userRoutes.get(
+    '/',
+    checkPermission(['view:user', 'admin:user'], false),
+    userController.getAll
+);
 
-userRoutes.get('/:user_id', validationMiddleware(findValidator), userController.find);
+userRoutes.get(
+    '/:user_id',
+    validationMiddleware(findValidator),
+    userController.find
+);
 
-userRoutes.post('/', checkPermission(['add:user', 'admin:user'], false), validationMiddleware(addValidator), userController.add);
+userRoutes.post(
+    '/',
+    checkPermission(['add:user', 'admin:user'], false),
+    validationMiddleware(addValidator),
+    userController.add
+);
 
-userRoutes.put('/:user_id', validationMiddleware(updateValidator), userController.update);
+userRoutes.put(
+    '/:user_id',
+    validationMiddleware(updateValidator),
+    userController.update
+);
 
-userRoutes.delete('/:user_id', checkPermission(['delete:user', 'admin:user']), validationMiddleware(deleteValidator), userController.destroy);
+userRoutes.delete(
+    '/:user_id',
+    checkPermission(['delete:user', 'admin:user']),
+    validationMiddleware(deleteValidator),
+    userController.destroy
+);
 
 export default userRoutes;

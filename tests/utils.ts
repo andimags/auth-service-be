@@ -34,7 +34,8 @@ export function generateChannelData() {
 export function generatePermissionData() {
     const accesLevelValues = Object.values(PermissionAccessLevelType); // ['read', 'write', admin]
 
-    const randomAccessLevel = accesLevelValues[Math.floor(Math.random() * accesLevelValues.length)];
+    const randomAccessLevel =
+        accesLevelValues[Math.floor(Math.random() * accesLevelValues.length)];
 
     return {
         name: `Permission Test ${Date.now()}`,
@@ -65,7 +66,10 @@ export async function generateToken(email: string, password: string) {
 }
 
 // Helper function to create authenticated headers
-export const createAuthHeaders = (token: string, apiKey: string = 'global') => ({
+export const createAuthHeaders = (
+    token: string,
+    apiKey: string = 'global'
+) => ({
     Authorization: `Bearer ${token}`,
     'x-api-key': apiKey,
     'Content-Type': 'application/json'
@@ -86,7 +90,9 @@ export const cleanupUserRoles = async (user: User) => {
 
     for (const role of roles) {
         // Avoid deleting global permissions
-        const permissions = await role.getPermissions({ where: { scope: 'channel' } });
+        const permissions = await role.getPermissions({
+            where: { scope: 'channel' }
+        });
         console.log('xxx', permissions);
 
         for (const permission of permissions) {
@@ -135,7 +141,9 @@ export const createRole = async (
  * In other words: it's describing Sequelize model instances.
  */
 export async function forceDeleteInstances(
-    instances: Array<{ destroy: (options: { force: boolean }) => Promise<void> }>
+    instances: Array<{
+        destroy: (options: { force: boolean }) => Promise<void>;
+    }>
 ) {
     for (const instance of instances) {
         if (instance instanceof Permission && instance.scope == 'global') {

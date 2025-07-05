@@ -5,7 +5,11 @@ import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 
-const generateToken = async (req: Request, res: Response, next: NextFunction) => {
+const generateToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const user = await User.findOne({
             attributes: { include: ['password'] },
@@ -20,7 +24,10 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
 
         if (!match) throw new AppError('Invalid email or password', 401);
 
-        const token = jwt.sign(JSON.parse(JSON.stringify(user)), process.env.API_KEY!);
+        const token = jwt.sign(
+            JSON.parse(JSON.stringify(user)),
+            process.env.API_KEY!
+        );
 
         res.cookie('refresh_token', token, {
             httpOnly: true,
@@ -38,7 +45,11 @@ const generateToken = async (req: Request, res: Response, next: NextFunction) =>
     }
 };
 
-const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+const refreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const token = req.cookies['refresh_token'];
 
@@ -53,7 +64,11 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
-const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+const verifyToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
 
@@ -70,7 +85,11 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction): Pro
     }
 };
 
-const checkPermission = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+const checkPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
     try {
         // 1. Check if x-api-key is GLOBAL or channel-based
         // 2. If GLOBAL, loop through user's roles that have null channel_id, check each if the specific permission is attached to it.

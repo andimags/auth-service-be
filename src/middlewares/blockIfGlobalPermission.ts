@@ -13,12 +13,17 @@ export const blockIfGlobalPermission = async (
 
         if (!permission) throw new AppError('Permission not found', 404);
 
-        const belongsToGlobalRole = await isPermissionOnGlobalRole(permission.ref_name);
+        const belongsToGlobalRole = await isPermissionOnGlobalRole(
+            permission.ref_name
+        );
 
         if (!belongsToGlobalRole) {
             next();
         } else {
-            throw new AppError('Permission attached to a global role cannot be modified', 404);
+            throw new AppError(
+                'Permission attached to a global role cannot be modified',
+                404
+            );
         }
     } catch (error: any) {
         console.error('Something went wrong:', error.message ?? error);

@@ -11,7 +11,8 @@ export const authMiddleware = async (
 ): Promise<void> => {
     try {
         const authHeader = req.header('Authorization');
-        if (!authHeader) return next(new AppError('Unauthorized: No token provided', 401));
+        if (!authHeader)
+            return next(new AppError('Unauthorized: No token provided', 401));
 
         const token = authHeader?.split(' ')[1];
         if (authHeader?.split(' ')[0] != 'Bearer' || !token)
@@ -19,7 +20,9 @@ export const authMiddleware = async (
 
         const secret = process.env.API_KEY;
         if (!secret) {
-            console.error('JWT secret (API_KEY) is not set in environment variables');
+            console.error(
+                'JWT secret (API_KEY) is not set in environment variables'
+            );
             return next(new AppError('Server configuration error', 500));
         }
 

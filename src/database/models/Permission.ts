@@ -18,7 +18,10 @@ import {
     Table,
     UpdatedAt
 } from 'sequelize-typescript';
-import { PermissionAccessLevelType, PermissionScopeType } from '../../constants/enums';
+import {
+    PermissionAccessLevelType,
+    PermissionScopeType
+} from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
 import Channel from './Channel';
 import Role from './Role';
@@ -101,7 +104,10 @@ export default class Permission extends Model {
     @BeforeUpdate
     static preventGlobalScopeSoftDeletion(permission: Permission) {
         if (permission.scope === 'global' && permission.changed('deleted_at')) {
-            throw new AppError('Global scope permissions cannot be deleted', 403);
+            throw new AppError(
+                'Global scope permissions cannot be deleted',
+                403
+            );
         }
     }
 
@@ -119,7 +125,10 @@ export default class Permission extends Model {
     @BeforeDestroy
     static preventGlobalScopeDeletion(permission: Permission) {
         if (permission.scope === 'global') {
-            throw new AppError('Global scope permissions cannot be deleted', 403);
+            throw new AppError(
+                'Global scope permissions cannot be deleted',
+                403
+            );
         }
     }
 }

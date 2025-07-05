@@ -102,13 +102,25 @@ export default class Role extends Model {
     // Mixins
     declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
 
-    declare setPermissions: BelongsToManySetAssociationsMixin<Permission, number>;
+    declare setPermissions: BelongsToManySetAssociationsMixin<
+        Permission,
+        number
+    >;
 
-    declare addPermissions: BelongsToManyAddAssociationsMixin<Permission, number>;
+    declare addPermissions: BelongsToManyAddAssociationsMixin<
+        Permission,
+        number
+    >;
     declare addPermission: BelongsToManyAddAssociationMixin<Permission, number>;
 
-    declare removePermissions: BelongsToManyRemoveAssociationsMixin<Permission, number>;
-    declare removePermission: BelongsToManyRemoveAssociationMixin<Permission, number>;
+    declare removePermissions: BelongsToManyRemoveAssociationsMixin<
+        Permission,
+        number
+    >;
+    declare removePermission: BelongsToManyRemoveAssociationMixin<
+        Permission,
+        number
+    >;
 
     // Hooks
     @AfterCreate
