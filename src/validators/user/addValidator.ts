@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import User from '../../database/models/User';
 
 export const addValidator = [
     body('username')
@@ -6,14 +7,32 @@ export const addValidator = [
         .withMessage('Username is required')
         .bail()
         .isLength({ min: 3 })
-        .withMessage('Username must have minimum of 3 characters'),
+        .withMessage('Username must have minimum of 3 characters')
+        .custom(async (username) => {
+            const existingUser = await User.findOne({where: {username: username}});
+
+            if (existingUser) {
+                throw new Error('Username already exists');
+            }
+
+            return true;
+        }),
 
     body('email')
         .notEmpty()
         .withMessage('Username is required')
         .bail()
         .isEmail()
-        .withMessage('Email has invalid format'),
+        .withMessage('Email has invalid format')
+        .custom(async (email) => {
+            const existingUser = await User.findOne({where: {email: email}});
+
+            if (existingUser) {
+                throw new Error('Email already exists');
+            }
+
+            return true;
+        }),
 
     body('first_name')
         .notEmpty()

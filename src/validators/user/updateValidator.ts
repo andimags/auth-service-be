@@ -1,12 +1,45 @@
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
+import User from '../../database/models/User';
 
 export const updateValidator = [
+    param('user_id')
+        .notEmpty()
+        .withMessage('User ID is required')
+        .bail()
+        .isInt()
+        .withMessage('User ID must be integer'),
+
     body('username')
         .optional()
         .isLength({ min: 3 })
-        .withMessage('Username must have minimum of 3 characters'),
+        .withMessage('Username must have minimum of 3 characters')
+        .custom(async (username, { req }) => {
+            // Find user with the same username
+            const existingUser = await User.findOne({ where: { username } });
 
-    body('email').optional().isEmail().withMessage('Email has invalid format'),
+            // If user exists and is not the same as the one being updated
+            if (existingUser && existingUser.id !== Number(req.params?.user_id)) {
+                throw new Error('Username already exists');
+            }
+
+            return true;
+        }),
+
+    body('email')
+        .optional()
+        .isEmail()
+        .withMessage('Email has invalid format')
+        .custom(async (email, { req }) => {
+            // Find user with the same email
+            const existingUser = await User.findOne({ where: { email } });
+
+            // If user exists and is not the same as the one being updated
+            if (existingUser && existingUser.id !== Number(req.params?.user_id)) {
+                throw new Error('Email already exists');
+            }
+
+            return true;
+        }),
 
     body('first_name')
         .optional()
