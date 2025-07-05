@@ -23,14 +23,14 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             'admin:user'
         ]);
 
-        if (!authorizedUserHasPermissions && req.authorizedUser.id != parseInt(req.params.id)) {
+        if (!authorizedUserHasPermissions && req.authorizedUser.id != parseInt(req.params.user_id)) {
             throw new AppError(
                 'You do not have the required permissions to perform this action',
                 403
             );
         }
 
-        const targetUser = await User.findByPk(req.params.id);
+        const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
             throw new AppError('User not found', 404);
@@ -60,7 +60,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let targetUser = await User.findByPk(req.params.id);
+        let targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
             throw new AppError('User not found', 404);
@@ -112,7 +112,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
 
-        const targetUser = await User.findByPk(req.params.id, { paranoid: false });
+        const targetUser = await User.findByPk(req.params.user_id, { paranoid: false });
         if (!targetUser) throw new AppError('User not found', 404);
 
         if (targetUser?.username == 'superadmin')
