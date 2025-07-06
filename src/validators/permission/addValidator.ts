@@ -1,0 +1,49 @@
+import { body } from 'express-validator';
+import { checkUniqueRefNameScope } from '../role/checkUniqueRefNameScope';
+
+export const addValidator = [
+    body('name')
+        .notEmpty()
+        .withMessage('Name is required')
+        .bail()
+        .isLength({ min: 2 })
+        .withMessage('Name must have minimum of 2 characters'),
+
+    body('description')
+        .optional(),
+
+    body('ref_name')
+        .notEmpty()
+        .withMessage('Ref name is required')
+        .bail()
+        .matches(/^[a-zA-Z0-9:]+([_-][a-zA-Z0-9:]+)*$/)
+        .withMessage('Ref name may include letters, numbers, colons, underscores, or dashes between words')
+        .custom(checkUniqueRefNameScope),
+
+    body('module')
+        .notEmpty()
+        .withMessage('Module is required')
+        .bail()
+        .isLength({ min: 2 })
+        .withMessage('Module must have minimum of 2 characters'),
+
+    body('scope')
+        .notEmpty()
+        .withMessage('Scope is required')
+        .bail()
+        .isIn(['global', 'channel'])
+        .withMessage("Scope value must only be either 'channel' or 'global'"),
+
+    body('access_level')
+        .notEmpty()
+        .withMessage('Access level is required')
+        .bail()
+        .isIn(['read', 'write', 'admin'])
+        .withMessage("Access level value must only be either 'read', 'write', or 'admin"),
+
+    
+    body('sequence')
+        .optional()
+        .isInt({min: 1})
+        .withMessage("Sequence must be greater or equal to 1"),
+];

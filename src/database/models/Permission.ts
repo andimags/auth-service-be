@@ -76,7 +76,6 @@ export default class Permission extends Model {
     module: string;
 
     @AllowNull(false)
-    @Default('channel')
     @Column(DataType.ENUM(...Object.values(PermissionScopeType)))
     scope: string;
 
