@@ -1,12 +1,13 @@
 import { CustomValidator } from 'express-validator';
 
-export const isUniqueField = (instance: any, field: string): CustomValidator => {
+export const isUniqueField = (instance: any, field: string, label?: string): CustomValidator => {
     return async (value) => {
         const existing = await instance.findOne({ where: { [field]: value } });
-        const fieldTitleCase = field.charAt(0).toUpperCase() + field.slice(1).toLowerCase();
+        const _label = field ?? label;
+        const labelTitleCase = _label.charAt(0).toUpperCase() + _label.slice(1).toLowerCase();
         
         if (existing) {
-            throw new Error(`${fieldTitleCase} already exists`);
+            throw new Error(`${labelTitleCase} already exists`);
         }
 
         return true;

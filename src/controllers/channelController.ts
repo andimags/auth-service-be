@@ -23,7 +23,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const channel = await Channel.findByPk(req.params.id);
+        const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
@@ -60,7 +60,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const channel = await Channel.findByPk(req.params.id);
+        const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
@@ -87,7 +87,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const shouldForce = req.query.force === 'true';
-        const channel = await Channel.findByPk(req.params.id, {
+        const channel = await Channel.findByPk(req.params.channel_id, {
             paranoid: false
         });
         if (!channel) throw new AppError('Channel not found', 404);
