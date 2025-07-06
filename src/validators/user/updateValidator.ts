@@ -11,6 +11,8 @@ export const updateValidator = [
 
     body('username')
         .optional()
+        .notEmpty()
+        .withMessage('Username cannot be empty')
         .isLength({ min: 3 })
         .withMessage('Username must have minimum of 3 characters')
         .custom(async (username, { req }) => {
@@ -27,6 +29,8 @@ export const updateValidator = [
 
     body('email')
         .optional()
+        .notEmpty()
+        .withMessage('Email cannot be empty')
         .isEmail()
         .withMessage('Email has invalid format')
         .custom(async (email, { req }) => {
@@ -43,6 +47,8 @@ export const updateValidator = [
 
     body('first_name')
         .optional()
+        .notEmpty()
+        .withMessage('First name cannot be empty')
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
@@ -52,6 +58,8 @@ export const updateValidator = [
 
     body('last_name')
         .optional()
+        .notEmpty()
+        .withMessage('Last name cannot be empty')
         .isLength({ min: 2 })
         .withMessage('First name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
@@ -61,11 +69,15 @@ export const updateValidator = [
 
     body('status')
         .optional()
+        .notEmpty()
+        .withMessage('Status cannot be empty')
         .isIn(['active', 'inactive'])
         .withMessage('Status values must be either active or inactive only'),
 
     body('password')
         .optional()
+        .notEmpty()
+        .withMessage('Password cannot be empty')
         .isLength({ min: 8 })
         .withMessage('Password must have minimum of 8 characters')
 ];
