@@ -13,9 +13,11 @@ export const addValidator = [
         .optional(),
 
     body('ref_name')
-        .optional()
-        .matches(/^[a-zA-Z0-9]+([_-][a-zA-Z0-9]+)*$/)
-        .withMessage('Ref name must only contain letters, numbers, underscores, or dashes between words')
+        .notEmpty()
+        .withMessage('Ref name is required')
+        .bail()
+        .matches(/^[a-zA-Z0-9:]+([_-][a-zA-Z0-9:]+)*$/)
+        .withMessage('Ref name may include letters, numbers, colons, underscores, or dashes between words')
         .custom(checkUniqueRefNameScope),
 
     body('channel_id')
