@@ -69,12 +69,12 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizedUser = req.authorizedUser;
 
-        const authorizedUserHasPermissions =
-            await authorizedUser!.hasPermissions(['update:user', 'admin:user']);
+        const authorizedUserHasAnyPermission =
+            await authorizedUser!.hasAnyPermission(['update:user', 'admin:user']);
 
         // Skip these validations if user is updating herself
         if (targetUser.id != authorizedUser!.id) {
-            if (!authorizedUserHasPermissions) {
+            if (!authorizedUserHasAnyPermission) {
                 throw new AppError(
                     'You do not have the required permissions to perform this action',
                     403

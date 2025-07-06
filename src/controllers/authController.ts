@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import Channel from '../database/models/Channel';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 
@@ -85,62 +84,24 @@ const verifyToken = async (
     }
 };
 
-const checkPermission = async (
+const hasAnyPermission = async (
     req: Request,
     res: Response,
     next: NextFunction
 ): Promise<any> => {
     try {
-        // 1. Check if x-api-key is GLOBAL or channel-based
-        // 2. If GLOBAL, loop through user's roles that have null channel_id, check each if the specific permission is attached to it.
-        // 3, If Channel based, loop through user's roles that have the appropriate channel id of channel_id, check each if the specific permission is attached to it.
-        const apiKey = req.header('x-api-key');
-        const user = await req.authorizedUser;
-        let isAuthorized = false;
-        let roles = null;
+        const hasPermissions = await (req.authorizedUser as User).hasAnyPermission(
+            req.body.permission_ref_names,
+            req.body.permission_scope
+        )
 
-        if (!user) throw new AppError('User not found', 404);
-
-        if (apiKey == 'GLOBAL') {
-            // Global roles to check
-            roles = await user.getRoles({
-                where: {
-                    channel_id: null
-                }
-            });
-        } else {
-            const channel = await Channel.findOne({
-                where: {
-                    api_key: apiKey
-                }
-            });
-
-            if (!channel) throw new AppError('Channel not found', 404);
-
-            roles = await user.getRoles({
-                where: {
-                    channel_id: channel.id
-                }
-            });
+        if(hasPermissions){
+            res.json({
+                status: 1
+            })
         }
-
-        for (const role of roles) {
-            const permissions = await role.getPermissions();
-
-            for (const permission of permissions) {
-                if (permission.ref_name === req.params.permission_ref_name) {
-                    isAuthorized = true;
-                    break;
-                }
-            }
-
-            if (isAuthorized) break;
-        }
-
-        if (isAuthorized) {
-            return res.json({ status: 1 });
-        } else {
-            throw new AppError('Unauthorized', 401);
+        else{
+            throw new AppError('Unauthorized', 403);
         }
     } catch (error: unknown) {
         next(error);
@@ -151,5 +112,5 @@ export default {
     generateToken,
     refreshToken,
     verifyToken,
-    checkPermission
+    hasAnyPermission
 };

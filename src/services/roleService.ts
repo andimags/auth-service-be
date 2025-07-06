@@ -25,7 +25,6 @@ export async function userCanManageRoles(
     let unassignableRoleIds = [];
 
     roles.forEach((r) => {
-        console.log('userRoleLevel >= r.level', userRoleLevel >= r.level);
         if (r.channel_id != userChannelId || userRoleLevel >= r.level) {
             unassignableRoleIds.push(r.id);
         }

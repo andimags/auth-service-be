@@ -66,7 +66,7 @@ export async function findMissingPermissions(
  * @returns boolean
  * True if the user has at least one of the requested permissions in the applicable scope(s), false otherwise.
  */
-export async function userHasPermissions(
+export async function userHasAnyPermission (
     user: User,
     permissionRefNames: string | string[],
     permissionScope: 'channel' | 'global' = 'global',
@@ -144,7 +144,7 @@ async function rolesHasPermissions(
  *
  * @returns Promise<number | null>
  */
-export async function checkPermissionLevel(
+export async function hasAnyPermissionLevel(
     user: User,
     permissionRefNames: string | string[],
     permissionsScope: 'global' | 'channel',

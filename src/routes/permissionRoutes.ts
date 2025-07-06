@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import permissionController from '../controllers/permissionController';
-import checkPermission from '../middlewares/checkPermission';
+import hasAnyPermission from '../middlewares/hasAnyPermission';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { addValidator } from '../validators/permission/addValidator';
 import { deleteValidator } from '../validators/permission/deleteValidator';
@@ -11,33 +11,33 @@ const permissionRoutes = Router();
 
 permissionRoutes.get(
     '/',
-    checkPermission(['view:permission', 'admin:permission'], false),
+    hasAnyPermission(['view:permission', 'admin:permission'], false),
     permissionController.getAll
 );
 
 permissionRoutes.get(
     '/:permission_id',
-    checkPermission(['view:permission', 'admin:permission'], false),
+    hasAnyPermission(['view:permission', 'admin:permission'], false),
     validationMiddleware(findValidator),
     permissionController.find
 );
 
 permissionRoutes.post(
     '/',
-    checkPermission(['add:permission', 'admin:permission'], false),
+    hasAnyPermission(['add:permission', 'admin:permission'], false),
     validationMiddleware(addValidator),
     permissionController.add
 );
 
 permissionRoutes.put(
     '/:permission_id',
-    checkPermission(['update:permission', 'admin:permission'], false),
+    hasAnyPermission(['update:permission', 'admin:permission'], false),
     validationMiddleware(updateValidator),
     permissionController.update
 );
 permissionRoutes.delete(
     '/:permission_id',
-    checkPermission(['delete:permission', 'admin:permission']),
+    hasAnyPermission(['delete:permission', 'admin:permission']),
     validationMiddleware(deleteValidator),
     permissionController.destroy
 );

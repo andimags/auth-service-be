@@ -33,10 +33,10 @@ import {
     hasAccessToChannel
 } from '../../services/channelService';
 import {
-    checkPermissionLevel,
     getUserPermissions,
+    hasAnyPermissionLevel,
     userHasAccessToPermission,
-    userHasPermissions
+    userHasAnyPermission
 } from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
@@ -61,12 +61,12 @@ export default class User extends Model {
         return [this.first_name, this.last_name].join(' ');
     }
 
-    async hasPermissions(
+    async hasAnyPermission(
         permissionRefNames: string | string[],
         permissionScope: 'channel' | 'global' = 'global',
         channelId?: number
     ) {
-        return await userHasPermissions(
+        return await userHasAnyPermission(
             this,
             permissionRefNames,
             permissionScope,
@@ -90,12 +90,12 @@ export default class User extends Model {
         await getUserPermissions(this.id, channelId);
     }
 
-    async checkPermissionLevel(
+    async hasAnyPermissionLevel(
         permissionRefNames: string | string[],
         permissionsScope: 'global' | 'channel',
         channelId?: number
     ): Promise<number | null> {
-        return await checkPermissionLevel(
+        return await hasAnyPermissionLevel(
             this,
             permissionRefNames,
             permissionsScope,

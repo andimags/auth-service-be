@@ -1,17 +1,17 @@
 import { Router } from 'express';
 import userController from '../controllers/userController';
-import checkPermission from '../middlewares/checkPermission';
+import hasAnyPermission from '../middlewares/hasAnyPermission';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { addValidator } from '../validators/user/addValidator';
+import { deleteValidator } from '../validators/user/deleteValidator';
 import { findValidator } from '../validators/user/findValidator';
 import { updateValidator } from '../validators/user/updateValidator';
-import { deleteValidator } from '../validators/user/deleteValidator';
 
 const userRoutes = Router();
 
 userRoutes.get(
     '/',
-    checkPermission(['view:user', 'admin:user'], false),
+    hasAnyPermission(['view:user', 'admin:user'], false),
     userController.getAll
 );
 
@@ -23,7 +23,7 @@ userRoutes.get(
 
 userRoutes.post(
     '/',
-    checkPermission(['add:user', 'admin:user'], false),
+    hasAnyPermission(['add:user', 'admin:user'], false),
     validationMiddleware(addValidator),
     userController.add
 );
@@ -36,7 +36,7 @@ userRoutes.put(
 
 userRoutes.delete(
     '/:user_id',
-    checkPermission(['delete:user', 'admin:user']),
+    hasAnyPermission(['delete:user', 'admin:user']),
     validationMiddleware(deleteValidator),
     userController.destroy
 );

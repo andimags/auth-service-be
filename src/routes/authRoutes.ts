@@ -11,9 +11,9 @@ authRoutes.get('/refresh-token', authController.refreshToken);
 authRoutes.get('/verify-token', authMiddleware, authController.verifyToken);
 
 authRoutes.get(
-    '/check-permission/:permission_ref_name',
+    '/has-any-permission',
     authMiddleware,
-    authController.checkPermission
+    authController.hasAnyPermission
 );
 
 export default authRoutes;

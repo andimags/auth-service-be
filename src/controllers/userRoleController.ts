@@ -53,7 +53,7 @@ const addUserRoles = async (
 
         const authUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(
+        ).hasAnyPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );
@@ -106,7 +106,7 @@ const replaceUserRoles = async (
 
         const authUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(
+        ).hasAnyPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );
@@ -155,7 +155,7 @@ const destroyUserRole = async (
 
         const authUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(
+        ).hasAnyPermissionLevel(
             ['assign:user_role', 'admin:user_role'],
             'global'
         );

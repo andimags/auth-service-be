@@ -56,7 +56,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizeUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(['add:role', 'admin:role'], 'global');
+        ).hasAnyPermissionLevel(['add:role', 'admin:role'], 'global');
 
         // Level with value 1 is the highest
         if (authorizeUserRoleLevel && authorizeUserRoleLevel > req.body.level) {
@@ -91,7 +91,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizeUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(['update:role', 'admin:role'], 'global');
+        ).hasAnyPermissionLevel(['update:role', 'admin:role'], 'global');
 
         if (
             authorizeUserRoleLevel &&
@@ -140,7 +140,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizeUserRoleLevel = await (
             req.authorizedUser as User
-        ).checkPermissionLevel(['delete:role', 'admin:role'], 'global');
+        ).hasAnyPermissionLevel(['delete:role', 'admin:role'], 'global');
 
         // Level with value 1 is the highest
         if (authorizeUserRoleLevel && role.level <= authorizeUserRoleLevel) {

@@ -7,7 +7,7 @@ const errorMsg =
 
 // Checks permission on GLOBAL scope only
 // If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
-export default function checkPermission(
+export default function hasAnyPermission(
     permissionRefNames: string | string[],
     requireGlobalRole: boolean = true
 ): RequestHandler {
@@ -16,11 +16,11 @@ export default function checkPermission(
             const apiKey = req.header('x-api-key');
 
             // Check for global permissions first
-            const userHasPermissionsOnGlobalRoles = await (
+            const userHasAnyPermissionOnGlobalRoles = await (
                 req.authorizedUser as User
-            ).hasPermissions(permissionRefNames);
+            ).hasAnyPermission(permissionRefNames);
 
-            if (userHasPermissionsOnGlobalRoles) {
+            if (userHasAnyPermissionOnGlobalRoles) {
                 req.isGlobalRole = true;
                 return next(); // Continue to next middleware/route handler
             }
@@ -28,7 +28,7 @@ export default function checkPermission(
             // Special handling for global API key
             if (
                 apiKey?.toLowerCase() === 'global' &&
-                !userHasPermissionsOnGlobalRoles
+                !userHasAnyPermissionOnGlobalRoles
             ) {
                 console.warn('No global roles attached to this user');
                 throw new AppError(errorMsg, 403);
@@ -48,11 +48,11 @@ export default function checkPermission(
             // Check for channel-based roles (only if roleScope is 'channel')
             const channelId = req.channel!.id;
 
-            const userHasPermissionsOnChannelBasedRoles = await (
+            const userHasAnyPermissionOnChannelBasedRoles = await (
                 req.authorizedUser as User
-            ).hasPermissions(permissionRefNames, 'global', channelId);
+            ).hasAnyPermission(permissionRefNames, 'global', channelId);
 
-            if (userHasPermissionsOnChannelBasedRoles) {
+            if (userHasAnyPermissionOnChannelBasedRoles) {
                 req.isGlobalRole = false;
                 return next(); // Continue to next middleware/route handler
             }
