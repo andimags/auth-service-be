@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import {
     BelongsToManyAddAssociationMixin,
     BelongsToManyAddAssociationsMixin,
@@ -39,6 +38,7 @@ import {
     userHasAnyPermission
 } from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
+import hashPassowrd from '../../utils/hashPassword';
 import Role from './Role';
 import UserRole from './UserRole';
 
@@ -168,7 +168,7 @@ export default class User extends Model {
     // Hooks
     @BeforeValidate
     static generateApiKey(instance: User) {
-        instance.password = bcrypt.hashSync(instance.password, 10);
+        instance.password = hashPassowrd(instance.password);
     }
 
     @BeforeUpdate

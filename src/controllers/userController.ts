@@ -1,14 +1,26 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import paginate from '../utils/paginate';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const allUsers = await User.findAll();
+        const page = parseInt(req.query.page as string) || 1;
+        const size = parseInt(req.query.size as string) || 10;
+
+        const where: any = {};
+        const {username, email, first_name, last_name, status} = req.query;
+        if (username) where.username = username;
+        if (email) where.email = email;
+        if (first_name) where.first_name = first_name;
+        if (last_name) where.last_name = last_name;
+        if (status) where.status = status;
+
+        const paginatedUsers = await paginate(User, page - 1, size, {where: where});
 
         res.json({
             status: 1,
-            data: allUsers
+            ...paginatedUsers
         });
     } catch (error: unknown) {
         next(error);
