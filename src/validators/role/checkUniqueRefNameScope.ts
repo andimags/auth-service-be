@@ -1,6 +1,6 @@
-import { CustomValidator } from "express-validator";
-import { Op } from "sequelize";
-import Role from "../../database/models/Role";
+import { CustomValidator } from 'express-validator';
+import { Op } from 'sequelize';
+import Role from '../../database/models/Role';
 
 export const checkUniqueRefNameScope: CustomValidator = async (_, { req }) => {
     const { ref_name, scope } = req.body;

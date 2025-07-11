@@ -20,7 +20,10 @@ export const updateValidator = [
             const existingUser = await User.findOne({ where: { username } });
 
             // If user exists and is not the same as the one being updated
-            if (existingUser && existingUser.id !== Number(req.params?.user_id)) {
+            if (
+                existingUser &&
+                existingUser.id !== Number(req.params?.user_id)
+            ) {
                 throw new Error('Username already exists');
             }
 
@@ -38,7 +41,10 @@ export const updateValidator = [
             const existingUser = await User.findOne({ where: { email } });
 
             // If user exists and is not the same as the one being updated
-            if (existingUser && existingUser.id !== Number(req.params?.user_id)) {
+            if (
+                existingUser &&
+                existingUser.id !== Number(req.params?.user_id)
+            ) {
                 throw new Error('Email already exists');
             }
 

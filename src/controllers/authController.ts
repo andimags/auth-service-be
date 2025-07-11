@@ -90,17 +90,18 @@ const hasAnyPermission = async (
     next: NextFunction
 ): Promise<any> => {
     try {
-        const hasPermissions = await (req.authorizedUser as User).hasAnyPermission(
+        const hasPermissions = await (
+            req.authorizedUser as User
+        ).hasAnyPermission(
             req.body.permission_ref_names,
             req.body.permission_scope
-        )
+        );
 
-        if(hasPermissions){
+        if (hasPermissions) {
             res.json({
                 status: 1
-            })
-        }
-        else{
+            });
+        } else {
             throw new AppError('Unauthorized', 403);
         }
     } catch (error: unknown) {

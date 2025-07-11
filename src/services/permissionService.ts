@@ -66,7 +66,7 @@ export async function findMissingPermissions(
  * @returns boolean
  * True if the user has at least one of the requested permissions in the applicable scope(s), false otherwise.
  */
-export async function userHasAnyPermission (
+export async function userHasAnyPermission(
     user: User,
     permissionRefNames: string | string[],
     permissionScope: 'channel' | 'global' = 'global',

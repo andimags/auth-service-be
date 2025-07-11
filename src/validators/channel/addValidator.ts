@@ -10,14 +10,15 @@ export const addValidator = [
         .isLength({ min: 2 })
         .withMessage('Name must have minimum of 2 characters'),
 
-    body('description')
-        .optional(),
+    body('description').optional(),
 
     body('ref_name')
         .notEmpty()
         .withMessage('Ref name is required')
         .bail()
         .matches(/^[a-zA-Z0-9:]+([_-][a-zA-Z0-9:]+)*$/)
-        .withMessage('Ref name may include letters, numbers, colons, underscores, or dashes between words')
+        .withMessage(
+            'Ref name may include letters, numbers, colons, underscores, or dashes between words'
+        )
         .custom(isUniqueField(Channel, 'ref_name', 'ref name'))
 ];

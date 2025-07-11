@@ -9,15 +9,16 @@ export const updateValidator = [
         .isLength({ min: 2 })
         .withMessage('Name must have minimum of 2 characters'),
 
-    body('description')
-        .optional(),
+    body('description').optional(),
 
     body('ref_name')
         .optional()
         .notEmpty()
         .withMessage('Ref name cannot be empty')
         .matches(/^[a-zA-Z0-9:]+([_-][a-zA-Z0-9:]+)*$/)
-        .withMessage('Ref name may include letters, numbers, colons, underscores, or dashes between words')
+        .withMessage(
+            'Ref name may include letters, numbers, colons, underscores, or dashes between words'
+        )
         .custom(checkUniqueRefNameScope),
 
     body('module')
@@ -39,11 +40,12 @@ export const updateValidator = [
         .notEmpty()
         .withMessage('Access level cannot be empty')
         .isIn(['read', 'write', 'admin'])
-        .withMessage("Access level value must only be either 'read', 'write', or 'admin"),
+        .withMessage(
+            "Access level value must only be either 'read', 'write', or 'admin"
+        ),
 
-    
     body('sequence')
         .optional()
-        .isInt({min: 1})
-        .withMessage("Sequence must be greater or equal to 1"),
+        .isInt({ min: 1 })
+        .withMessage('Sequence must be greater or equal to 1')
 ];

@@ -18,21 +18,30 @@ rolePermissionRoutes.get(
 
 rolePermissionRoutes.post(
     '/role/:role_id',
-    hasAnyPermission(['assign:role_permission', 'admin:role_permission'], false),
+    hasAnyPermission(
+        ['assign:role_permission', 'admin:role_permission'],
+        false
+    ),
     validationMiddleware(addValidator),
     rolePermissionController.addRolePermissions
 );
 
 rolePermissionRoutes.put(
     '/role/:role_id',
-    hasAnyPermission(['update:role_permission', 'admin:role_permission'], false),
+    hasAnyPermission(
+        ['update:role_permission', 'admin:role_permission'],
+        false
+    ),
     validationMiddleware(replaceValidator),
     rolePermissionController.replaceRolePermissions
 );
 
 rolePermissionRoutes.delete(
     '/role/:role_id',
-    hasAnyPermission(['remove:role_permission', 'admin:role_permission'], false),
+    hasAnyPermission(
+        ['remove:role_permission', 'admin:role_permission'],
+        false
+    ),
     validationMiddleware(deleteValidator),
     rolePermissionController.destroyRolePermission
 );

@@ -350,8 +350,8 @@ describe('Role Routes', () => {
                 .put(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
                 .set(createAuthHeaders(superadminAuth.token!))
                 .send(payload)
-                .expect('Content-Type', /json/)
-                // .expect(404);
+                .expect('Content-Type', /json/);
+            // .expect(404);
 
             expect(response.body).toEqual({
                 message: 'Role not found'

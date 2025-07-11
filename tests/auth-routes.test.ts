@@ -2,7 +2,13 @@ import request from 'supertest';
 import app from '../src/app';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
-import { createAuthHeaders, createAuthUser, createRole, forceDeleteInstances, generateUserData } from './utils';
+import {
+    createAuthHeaders,
+    createAuthUser,
+    createRole,
+    forceDeleteInstances,
+    generateUserData
+} from './utils';
 
 describe('Auth Routes', () => {
     interface IAuth {
@@ -133,10 +139,10 @@ describe('Auth Routes', () => {
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
             const payload = {
-                permission_ref_names: "view:user",
-                permission_scope: "global"
-            }
-            
+                permission_ref_names: 'view:user',
+                permission_scope: 'global'
+            };
+
             const response = await request(app)
                 .get(`${API_BASE_URL}/has-any-permission`)
                 .set(createAuthHeaders(customAuthUser.token!))
@@ -148,17 +154,17 @@ describe('Auth Routes', () => {
                 status: 1
             });
 
-            await forceDeleteInstances([customAuthUser.user!])
+            await forceDeleteInstances([customAuthUser.user!]);
         });
 
         it('should return 403 when authorized user has no permissions or permissions does not exist', async () => {
             const customAuthUser: IAuth = await createAuthUser();
 
             const payload = {
-                permission_ref_names: "view:user",
-                permission_scope: "global"
-            }
-            
+                permission_ref_names: 'view:user',
+                permission_scope: 'global'
+            };
+
             const response = await request(app)
                 .get(`${API_BASE_URL}/has-any-permission`)
                 .set(createAuthHeaders(customAuthUser.token!))
@@ -167,10 +173,10 @@ describe('Auth Routes', () => {
                 .expect(403);
 
             expect(response.body).toMatchObject({
-                message: "Unauthorized"
+                message: 'Unauthorized'
             });
 
-            await forceDeleteInstances([customAuthUser.user!])
+            await forceDeleteInstances([customAuthUser.user!]);
         });
     });
 });

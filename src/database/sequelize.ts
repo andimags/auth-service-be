@@ -15,7 +15,7 @@ const sequelize = new Sequelize({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     models: [Role, Channel, Permission, User, UserRole, RolePermission],
-    logging: false
+    logging: true
 });
 
 export default sequelize;
