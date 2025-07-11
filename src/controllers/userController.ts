@@ -7,16 +7,26 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const size = parseInt(req.query.size as string) || 10;
+        const searchTerm = (req.query.search as string) || undefined;
+        const statusFilter = (req.query.status as string) || undefined;
 
-        const where: any = {};
-        const {username, email, first_name, last_name, status} = req.query;
-        if (username) where.username = username;
-        if (email) where.email = email;
-        if (first_name) where.first_name = first_name;
-        if (last_name) where.last_name = last_name;
-        if (status) where.status = status;
-
-        const paginatedUsers = await paginate(User, page - 1, size, {where: where});
+        const paginatedUsers = await paginate(User, page - 1, size, {
+            searchTerm: searchTerm,
+            stringFields: [
+                'username',
+                'email',
+                'first_name',
+                'last_name'            
+            ],
+            enumFilter: statusFilter
+            ? [
+                {
+                    field: 'status',
+                    value: statusFilter
+                }
+                ]
+            : []
+        });
 
         res.json({
             status: 1,
@@ -29,9 +39,10 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const authorizedUser = req.authorizedUser;
-        const authorizedUserHasPermissions =
-            await authorizedUser!.hasPermissions(['view:user', 'admin:user']);
+        console.log('hello world');
+        const authorizedUserHasPermissions = await (
+            req.authorizedUser as User
+        ).hasAnyPermission(['view:user', 'admin:user']);
 
         if (
             !authorizedUserHasPermissions &&
@@ -82,7 +93,10 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const authorizedUser = req.authorizedUser;
 
         const authorizedUserHasAnyPermission =
-            await authorizedUser!.hasAnyPermission(['update:user', 'admin:user']);
+            await authorizedUser!.hasAnyPermission([
+                'update:user',
+                'admin:user'
+            ]);
 
         // Skip these validations if user is updating herself
         if (targetUser.id != authorizedUser!.id) {
