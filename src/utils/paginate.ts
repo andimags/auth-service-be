@@ -20,11 +20,17 @@ interface SearchOptions {
     dateRangeFilter?: DateRangeFilter[];
 }
 
+interface SortOptions {
+    field?: string,
+    desc?: boolean
+}
+
 export default async function paginate(
     instance: any,
     _page: number = 0,
     _limit: number = 10,
-    searchOptions: SearchOptions = {}
+    searchOptions: SearchOptions = {},
+    sortOptions: SortOptions = {}
 ) {
     let where: any = {};
     let filters: any[] = [];
@@ -53,7 +59,7 @@ export default async function paginate(
 
                 return {
                     [field]: {
-                        [Op.eq]: value
+                        [Op.in]: value?.split(',')
                     }
                 }
             })
@@ -71,10 +77,18 @@ export default async function paginate(
         page = Math.max(totalPages - 1, 0);
     }
 
+    let order: any;
+    const allowedFields = Object.keys(instance.rawAttributes); // ['id', 'name', ...]
+
+    if (sortOptions.field && allowedFields.includes(sortOptions.field)) {
+        order = [[sortOptions.field, sortOptions?.desc ? 'DESC' : 'ASC']];
+    }
+
     const { count, rows } = await instance.findAndCountAll({
         limit: size,
         offset: page * size,
-        where
+        where,
+        order,
     });
 
     return {
