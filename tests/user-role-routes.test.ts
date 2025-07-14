@@ -6,6 +6,7 @@ import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
+import { IAuth } from './types';
 import {
     createAuthHeaders,
     createAuthUser,
@@ -18,18 +19,13 @@ import {
 } from './utils';
 
 describe('Role Permission Routes', () => {
-    interface IAuth {
-        token: string | null;
-        user: User | null;
-    }
-
     let superadminAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
@@ -55,7 +51,7 @@ describe('Role Permission Routes', () => {
         userWithNoPermissionsAuth.user = await User.create(
             await generateUserData()
         );
-        userWithNoPermissionsAuth.token = await generateToken(
+        userWithNoPermissionsAuth.accessToken = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
         );
@@ -76,7 +72,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetUser.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
@@ -93,7 +89,7 @@ describe('Role Permission Routes', () => {
         it('should return 404 when role is non-existent', async () => {
             const response = await request(app)
                 .get(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(404);
 
@@ -107,7 +103,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -130,7 +126,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/);
             // .expect(200);
@@ -154,7 +150,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -174,7 +170,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -209,7 +205,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!))
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/);
             // .expect(403);
@@ -255,7 +251,7 @@ describe('Role Permission Routes', () => {
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.token!,
+                        customAuthUser.accessToken!,
                         correctChannel.api_key
                     )
                 )
@@ -294,7 +290,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -318,7 +314,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -342,7 +338,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -362,7 +358,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -397,7 +393,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!))
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/);
             // .expect(403);
@@ -443,7 +439,7 @@ describe('Role Permission Routes', () => {
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.token!,
+                        customAuthUser.accessToken!,
                         correctChannel.api_key
                     )
                 )
@@ -483,7 +479,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -510,7 +506,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -542,7 +538,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -568,7 +564,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -591,7 +587,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser?.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -611,7 +607,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -646,7 +642,7 @@ describe('Role Permission Routes', () => {
 
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(createAuthHeaders(customAuthUser.token!))
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -692,7 +688,7 @@ describe('Role Permission Routes', () => {
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.token!,
+                        customAuthUser.accessToken!,
                         correctChannel.api_key
                     )
                 )

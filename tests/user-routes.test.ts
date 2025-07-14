@@ -4,6 +4,7 @@ import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
+import { IAuth } from './types';
 import {
     createAuthUser,
     createRole,
@@ -13,18 +14,13 @@ import {
 } from './utils';
 
 describe('User Routes', () => {
-    interface IAuth {
-        token: string | null;
-        user: User | null;
-    }
-
     let superadminAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
@@ -49,7 +45,7 @@ describe('User Routes', () => {
         userWithNoPermissionsAuth.user = await User.create(
             await generateUserData()
         );
-        userWithNoPermissionsAuth.token = await generateToken(
+        userWithNoPermissionsAuth.accessToken = await generateToken(
             userWithNoPermissionsAuth.user.email,
             DEFAULT_PASSWORD
         );
@@ -66,22 +62,42 @@ describe('User Routes', () => {
             const response = await request(app)
                 .get(`${API_BASE_URL}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body).toHaveProperty('data');
-            expect(response.body).toHaveProperty('status');
-            expect(response.body.status).toEqual(1);
+            expect(response.body).toMatchObject({
+                status: expect.any(Number),
+                count: expect.any(Number),
+                rows: expect.any(Array),
+                totalPages: expect.any(Number),
+                currentPage: expect.any(Number)
+            })
+
+            response.body.rows.forEach((row: any) => {
+                expect(row).toEqual(
+                    expect.objectContaining({
+                    id: expect.any(Number),
+                    username: expect.any(String),
+                    email: expect.any(String),
+                    first_name: expect.any(String),
+                    last_name: expect.any(String),
+                    status: expect.any(String),
+                    created_at: expect.any(String),
+                    updated_at: expect.any(String),
+                    deleted_at: null
+                    })
+                );
+            });
         });
 
         it("should return 403 when user doesn't have necessary permissions ['view:user', 'admin:user]", async () => {
             const response = await request(app)
                 .get(`${API_BASE_URL}`)
                 .set({
-                    Authorization: `Bearer ${userWithNoPermissionsAuth.token}`,
+                    Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -101,7 +117,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .post(`${API_BASE_URL}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(payload)
@@ -131,7 +147,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .post(`${API_BASE_URL}`)
                 .set({
-                    Authorization: `Bearer ${userWithNoPermissionsAuth.token}`,
+                    Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(await generateUserData())
@@ -153,7 +169,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(payload)
@@ -182,7 +198,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .put(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(await generateUserData())
@@ -201,7 +217,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
-                    Authorization: `Bearer ${userWithNoPermissionsAuth.token}`,
+                    Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(payload)
@@ -239,7 +255,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetUser.id}`)
                 .set({
-                    Authorization: `Bearer ${customAuthUser.token}`,
+                    Authorization: `Bearer ${customAuthUser.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .send(payload)
@@ -267,7 +283,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -287,7 +303,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}?force=true`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -303,7 +319,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -318,7 +334,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser.id}`)
                 .set({
-                    Authorization: `Bearer ${userWithNoPermissionsAuth.token}`,
+                    Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -341,7 +357,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser?.id}`) // Deleting the main superadmin
                 .set({
-                    Authorization: `Bearer ${superadminAuth.token}`,
+                    Authorization: `Bearer ${superadminAuth.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)
@@ -373,7 +389,7 @@ describe('User Routes', () => {
             const response = await request(app)
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
-                    Authorization: `Bearer ${customAuthUser.token}`,
+                    Authorization: `Bearer ${customAuthUser.accessToken}`,
                     'x-api-key': 'global'
                 })
                 .expect('Content-Type', /json/)

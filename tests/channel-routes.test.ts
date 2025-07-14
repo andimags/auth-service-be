@@ -14,20 +14,16 @@ import {
     generateToken,
     generateUserData
 } from './utils';
+import { IAuth } from './types';
 
 describe('Channel Routes', () => {
-    interface IAuth {
-        token: string | null;
-        user: User | null;
-    }
-
     let superadminAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
-        token: null,
+        accessToken: null,
         user: null
     };
 
@@ -48,7 +44,7 @@ describe('Channel Routes', () => {
         }
 
         await superadminAuth.user!.addRoles([superadminRole]);
-        superadminAuth.token = await generateToken(
+        superadminAuth.accessToken = await generateToken(
             superadminAuth.user!.email,
             DEFAULT_PASSWORD
         );
@@ -83,7 +79,7 @@ describe('Channel Routes', () => {
         it('should return 200 with channels data for authorized user', async () => {
             const response = await request(app)
                 .get(API_BASE_URL)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
@@ -113,7 +109,7 @@ describe('Channel Routes', () => {
 
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
@@ -130,7 +126,7 @@ describe('Channel Routes', () => {
         it('should return 404 when channel does not exist', async () => {
             await request(app)
                 .get(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(404)
                 .expect({
@@ -143,7 +139,7 @@ describe('Channel Routes', () => {
 
             await request(app)
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({
@@ -172,7 +168,7 @@ describe('Channel Routes', () => {
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.token!,
+                        customAuthUser.accessToken!,
                         wrongChannel.api_key
                     )
                 )
@@ -198,7 +194,7 @@ describe('Channel Routes', () => {
 
             const response = await request(app)
                 .post(API_BASE_URL)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -221,7 +217,7 @@ describe('Channel Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             await request(app)
                 .post(API_BASE_URL)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(await generateChannelData())
                 .expect('Content-Type', /json/)
                 .expect(403)
@@ -239,7 +235,7 @@ describe('Channel Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -259,7 +255,7 @@ describe('Channel Routes', () => {
         it('should return 404 when channel does not exist', async () => {
             await request(app)
                 .put(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(await generateChannelData())
                 .expect('Content-Type', /json/)
                 .expect(404)
@@ -273,7 +269,7 @@ describe('Channel Routes', () => {
 
             await request(app)
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(await generateChannelData())
                 .expect('Content-Type', /json/)
                 .expect(403)
@@ -304,7 +300,7 @@ describe('Channel Routes', () => {
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.token!,
+                        customAuthUser.accessToken!,
                         wrongChannel.api_key
                     )
                 )
@@ -330,7 +326,7 @@ describe('Channel Routes', () => {
 
             await request(app)
                 .delete(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect({
@@ -346,7 +342,7 @@ describe('Channel Routes', () => {
 
             await request(app)
                 .delete(`${API_BASE_URL}/${targetChannel.id}?force=true`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200)
                 .expect({
@@ -358,7 +354,7 @@ describe('Channel Routes', () => {
         it('should return 404 when channel does not exist', async () => {
             await request(app)
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
-                .set(createAuthHeaders(superadminAuth.token!))
+                .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(404)
                 .expect({
@@ -371,7 +367,7 @@ describe('Channel Routes', () => {
 
             await request(app)
                 .delete(`${API_BASE_URL}/${targetChannel.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.token!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403)
                 .expect({

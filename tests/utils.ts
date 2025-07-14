@@ -62,7 +62,7 @@ export async function generateToken(email: string, password: string) {
         password: password
     });
 
-    return res.body.token;
+    return res.body.access_token;
 }
 
 // Helper function to create authenticated headers
@@ -80,7 +80,7 @@ export const createAuthUser = async () => {
 
     return {
         user: user,
-        token: await generateToken(user.email, DEFAULT_PASSWORD)
+        accessToken: await generateToken(user.email, DEFAULT_PASSWORD)
     };
 };
 
