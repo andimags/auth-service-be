@@ -15,7 +15,15 @@ const sequelize = new Sequelize({
     dialect: 'postgres',
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    models: [Role, Channel, Permission, User, UserRole, RolePermission, RefreshToken],
+    models: [
+        Role,
+        Channel,
+        Permission,
+        User,
+        UserRole,
+        RolePermission,
+        RefreshToken
+    ],
     logging: true
 });
 

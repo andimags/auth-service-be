@@ -48,6 +48,6 @@ export interface IPermission {
 }
 
 export interface IDecodedToken {
-    id: number,
-    jti?: string
+    id: number;
+    jti?: string;
 }

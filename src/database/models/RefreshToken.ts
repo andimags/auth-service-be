@@ -5,7 +5,7 @@ import {
     DataType,
     Model,
     PrimaryKey,
-    Table,
+    Table
 } from 'sequelize-typescript';
 
 @Table({
@@ -25,7 +25,7 @@ export default class RefreshToken extends Model {
     @AllowNull(false)
     @Column(DataType.STRING)
     jti: string;
-    
+
     @AllowNull(false)
     @Column(DataType.DATE)
     expires_at: string;

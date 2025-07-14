@@ -10,28 +10,26 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const searchTerm = (req.query.search as string) || undefined;
         const statusFilter = (req.query.status as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;
-        const sortDesc = typeof req.query.sort_desc === 'string' ? req.query.sort_desc === 'true' : undefined;
+        const sortDesc =
+            typeof req.query.sort_desc === 'string'
+                ? req.query.sort_desc === 'true'
+                : undefined;
 
         const paginatedUsers = await paginate(
-            User, 
-            page - 1, 
-            size, 
+            User,
+            page - 1,
+            size,
             {
                 searchTerm: searchTerm,
-                stringFields: [
-                    'username',
-                    'email',
-                    'first_name',
-                    'last_name'            
-                ],
+                stringFields: ['username', 'email', 'first_name', 'last_name'],
                 enumFilter: statusFilter
-                ? [
-                    {
-                        field: 'status',
-                        value: statusFilter
-                    }
-                    ]
-                : []
+                    ? [
+                          {
+                              field: 'status',
+                              value: statusFilter
+                          }
+                      ]
+                    : []
             },
             {
                 field: sortField,

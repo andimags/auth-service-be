@@ -9,8 +9,8 @@ interface DateRangeFilter {
 }
 
 interface EnumFilter {
-    field: string,
-    value: string
+    field: string;
+    value: string;
 }
 
 interface SearchOptions {
@@ -21,8 +21,8 @@ interface SearchOptions {
 }
 
 interface SortOptions {
-    field?: string,
-    desc?: boolean
+    field?: string;
+    desc?: boolean;
 }
 
 export default async function paginate(
@@ -42,9 +42,9 @@ export default async function paginate(
         filters.push({
             [Op.or]: stringFields.map((field) => ({
                 [field]: {
-                    [Op.iLike]: `%${searchTerm}%`,
-                },
-            })),
+                    [Op.iLike]: `%${searchTerm}%`
+                }
+            }))
         });
     }
 
@@ -52,18 +52,18 @@ export default async function paginate(
         const userStatusValues: string[] = Object.values(UserStatusType);
 
         filters.push(
-        ...enumFilter
-            .filter((filter) => userStatusValues.includes(filter.value))
-            .map((filter) => {
-                const {field, value} = filter;
+            ...enumFilter
+                .filter((filter) => userStatusValues.includes(filter.value))
+                .map((filter) => {
+                    const { field, value } = filter;
 
-                return {
-                    [field]: {
-                        [Op.in]: value?.split(',')
-                    }
-                }
-            })
-        )
+                    return {
+                        [field]: {
+                            [Op.in]: value?.split(',')
+                        }
+                    };
+                })
+        );
     }
 
     if (filters.length > 0) {
@@ -88,7 +88,7 @@ export default async function paginate(
         limit: size,
         offset: page * size,
         where,
-        order,
+        order
     });
 
     return {

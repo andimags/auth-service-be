@@ -27,7 +27,7 @@ const generateToken = async (
         const jti = uuidv4(); // generate unique ID
 
         const refreshToken = jwt.sign(
-            {id: user.id, jti},
+            { id: user.id, jti },
             process.env.REFRESH_SECRET!,
             { expiresIn: '7d' }
         );
@@ -36,7 +36,7 @@ const generateToken = async (
             user_id: user.id,
             jti,
             expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
+        });
 
         res.cookie('refresh_token', refreshToken, {
             httpOnly: true,
@@ -46,7 +46,7 @@ const generateToken = async (
         });
 
         const accessToken = jwt.sign(
-            {id: user.id},
+            { id: user.id },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
@@ -61,51 +61,51 @@ const generateToken = async (
 };
 
 const refreshToken = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) => {
-  try {
-    const refreshToken = req.cookies['refresh_token'];
-    if (!refreshToken) throw new AppError('Refresh token not found', 403);
+    try {
+        const refreshToken = req.cookies['refresh_token'];
+        if (!refreshToken) throw new AppError('Refresh token not found', 403);
 
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_SECRET!
-    ) as IDecodedToken;
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_SECRET!
+        ) as IDecodedToken;
 
-    // 🔍 Check if refresh token exists in DB
-    const tokenRecord = await RefreshToken.findOne({
-      where: {
-        user_id: decoded.id,
-        jti: decoded.jti
-      }
-    });
+        // 🔍 Check if refresh token exists in DB
+        const tokenRecord = await RefreshToken.findOne({
+            where: {
+                user_id: decoded.id,
+                jti: decoded.jti
+            }
+        });
 
-    if (!tokenRecord) {
-      throw new AppError('Refresh token invalid or revoked', 403);
+        if (!tokenRecord) {
+            throw new AppError('Refresh token invalid or revoked', 403);
+        }
+
+        const user = await User.findByPk(decoded.id);
+        if (!user) throw new AppError('User not found', 404);
+
+        const newAccessToken = jwt.sign(
+            { id: user.id },
+            process.env.ACCESS_SECRET!,
+            { expiresIn: '15m' }
+        );
+
+        res.json({
+            status: 1,
+            access_token: newAccessToken
+        });
+    } catch (error: any) {
+        if (error.name === 'TokenExpiredError') {
+            return next(new AppError('Refresh token expired', 403));
+        }
+
+        return next(new AppError('Invalid or expired refresh token', 403));
     }
-
-    const user = await User.findByPk(decoded.id);
-    if (!user) throw new AppError('User not found', 404);
-
-    const newAccessToken = jwt.sign(
-      { id: user.id },
-      process.env.ACCESS_SECRET!,
-      { expiresIn: '15m' }
-    );
-
-    res.json({
-      status: 1,
-      access_token: newAccessToken
-    });
-  } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
-      return next(new AppError('Refresh token expired', 403));
-    }
-
-    return next(new AppError('Invalid or expired refresh token', 403));
-  }
 };
 
 const verifyToken = async (
