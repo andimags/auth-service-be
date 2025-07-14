@@ -273,7 +273,12 @@ describe('Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!, channel?.api_key))
+                .set(
+                    createAuthHeaders(
+                        customAuthUser.accessToken!,
+                        channel?.api_key
+                    )
+                )
                 .send(await generatePermissionData())
                 .expect('Content-Type', /json/)
                 .expect(403);

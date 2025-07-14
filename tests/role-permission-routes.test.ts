@@ -138,7 +138,10 @@ describe('Role Permission Routes', () => {
             const response = await request(app)
                 .get(`${API_BASE_URL}/${targetRole!.id}`)
                 .set(
-                    createAuthHeaders(customAuth.accessToken!, correctChannel.api_key)
+                    createAuthHeaders(
+                        customAuth.accessToken!,
+                        correctChannel.api_key
+                    )
                 )
                 .expect('Content-Type', /json/)
                 .expect(403);

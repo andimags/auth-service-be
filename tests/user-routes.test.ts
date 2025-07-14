@@ -74,20 +74,20 @@ describe('User Routes', () => {
                 rows: expect.any(Array),
                 totalPages: expect.any(Number),
                 currentPage: expect.any(Number)
-            })
+            });
 
             response.body.rows.forEach((row: any) => {
                 expect(row).toEqual(
                     expect.objectContaining({
-                    id: expect.any(Number),
-                    username: expect.any(String),
-                    email: expect.any(String),
-                    first_name: expect.any(String),
-                    last_name: expect.any(String),
-                    status: expect.any(String),
-                    created_at: expect.any(String),
-                    updated_at: expect.any(String),
-                    deleted_at: null
+                        id: expect.any(Number),
+                        username: expect.any(String),
+                        email: expect.any(String),
+                        first_name: expect.any(String),
+                        last_name: expect.any(String),
+                        status: expect.any(String),
+                        created_at: expect.any(String),
+                        updated_at: expect.any(String),
+                        deleted_at: null
                     })
                 );
             });

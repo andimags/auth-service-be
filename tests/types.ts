@@ -1,4 +1,4 @@
-import User from "../src/database/models/User";
+import User from '../src/database/models/User';
 
 export interface IAuth {
     accessToken: string | null;
