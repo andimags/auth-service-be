@@ -3,30 +3,29 @@ import app from '../src/app';
 import Channel from '../src/database/models/Channel';
 import Permission from '../src/database/models/Permission';
 import Role from '../src/database/models/Role';
-import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
+import { IAuth } from './types';
 import {
     createAuthHeaders,
     createAuthUser,
     createRole,
     forceDeleteInstances,
     generateChannelData,
-    generatePermissionData,
-    generateToken,
-    generateUserData
+    generatePermissionData
 } from './utils';
-import { IAuth } from './types';
 
 describe('Permission Routes', () => {
     let superadminAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     const NON_EXISTENT_PERMISSION_ID = 999999;
@@ -36,7 +35,7 @@ describe('Permission Routes', () => {
     beforeAll(async () => {
         await sequelize.sync();
 
-        superadminAuth.user = await User.create(await generateUserData());
+        superadminAuth = await createAuthUser();
         const superadminRole = await Role.findOne({
             where: { ref_name: 'superadmin' }
         });
@@ -45,21 +44,8 @@ describe('Permission Routes', () => {
             throw new AppError('Superadmin role not found');
         }
 
-        await superadminAuth.user.addRoles([superadminRole]);
-        superadminAuth.accessToken = await generateToken(
-            superadminAuth.user.email,
-            DEFAULT_PASSWORD
-        );
-
-        userWithNoPermissionsAuth.user = await User.create(
-            await generateUserData()
-        );
-        userWithNoPermissionsAuth.accessToken = await generateToken(
-            userWithNoPermissionsAuth.user.email,
-            DEFAULT_PASSWORD
-        );
-
-        console.log('superadminAuth', superadminAuth);
+        await superadminAuth.user!.addRoles([superadminRole]);
+        userWithNoPermissionsAuth = await createAuthUser();
     });
 
     afterAll(async () => {
@@ -72,7 +58,7 @@ describe('Permission Routes', () => {
 
     describe('GET /api/permissions', () => {
         it('should return 200 with permissions data for authorized user', async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .get(API_BASE_URL)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -85,7 +71,7 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .get(API_BASE_URL)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -104,7 +90,7 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -119,7 +105,7 @@ describe('Permission Routes', () => {
         });
 
         it('should return 404 with non-existent permission ID', async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .get(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -135,7 +121,7 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -154,7 +140,7 @@ describe('Permission Routes', () => {
         it('should return 200 with permissions data for authorized user', async () => {
             const payload = await generatePermissionData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .post(`${API_BASE_URL}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
@@ -175,7 +161,7 @@ describe('Permission Routes', () => {
         it('should return 403 when authorized user does not have required permissions', async () => {
             const payload = await generatePermissionData();
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .post(`${API_BASE_URL}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
@@ -196,7 +182,7 @@ describe('Permission Routes', () => {
             );
             const payload = await generatePermissionData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
@@ -226,7 +212,7 @@ describe('Permission Routes', () => {
         it('should return 404 with non-existent permission ID', async () => {
             const payload = await generatePermissionData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .put(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
@@ -244,7 +230,7 @@ describe('Permission Routes', () => {
             );
             const payload = await generatePermissionData();
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
@@ -259,12 +245,12 @@ describe('Permission Routes', () => {
             await forceDeleteInstances([targetPermission]);
         });
 
-        it('should return 403 when authorized user has required permissions but attached to a channel-based role, the target permission is also not assigned to any of her roles', async () => {
+        it('should return 403 when authorized user has required permissions but attached to a channel-based role and the target permission is also not assigned to any of her roles', async () => {
             const targetPermission = await Permission.create(
                 generatePermissionData()
             );
-            const customAuthUser: IAuth = await createAuthUser();
             const channel = await Channel.create(generateChannelData());
+            const customAuthUser: IAuth = await createAuthUser(channel.api_key);
             const customAuthUserRole = await createRole(
                 ['admin:permission', 'update:permission'],
                 channel!.id
@@ -275,8 +261,7 @@ describe('Permission Routes', () => {
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.accessToken!,
-                        channel?.api_key
+                        customAuthUser.accessToken!
                     )
                 )
                 .send(await generatePermissionData())
@@ -303,7 +288,7 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -318,7 +303,7 @@ describe('Permission Routes', () => {
         });
 
         it('should return 404 with non-existent permission ID', async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -334,7 +319,7 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
