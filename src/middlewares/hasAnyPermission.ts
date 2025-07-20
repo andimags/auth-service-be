@@ -40,17 +40,19 @@ export default function hasAnyPermission(
                     'Only users with global role for this permission must be allowed'
                 );
                 throw new AppError(
-                    'Only users with global role for this permission must be allowed',
+                    errorMsg,
                     403
                 );
             }
 
             // Check for channel-based roles (only if roleScope is 'channel')
-            const channelId = req.channel!.id;
+            const channelId = req.channel?.id;
 
             const userHasAnyPermissionOnChannelBasedRoles = await (
                 req.authorizedUser as User
             ).hasAnyPermission(permissionRefNames, 'global', channelId);
+
+            // res.json({'userHasAnyPermissionOnChannelBasedRoles': userHasAnyPermissionOnChannelBasedRoles});
 
             if (userHasAnyPermissionOnChannelBasedRoles) {
                 req.isGlobalRole = false;

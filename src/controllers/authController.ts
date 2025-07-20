@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import Channel from '../database/models/Channel';
 import RefreshToken from '../database/models/RefreshToken';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
@@ -13,6 +14,7 @@ const generateToken = async (
     next: NextFunction
 ) => {
     try {
+        // Credentials checking
         const user = await User.findOne({
             attributes: { include: ['password'] },
             where: {
@@ -24,7 +26,24 @@ const generateToken = async (
         const match = await bcrypt.compare(req.body.password, user.password);
         if (!match) throw new AppError('Invalid email or password', 401);
 
-        const jti = uuidv4(); // generate unique ID
+        // Channel checking
+        const apiKey = req.header('x-api-key');
+        if (!apiKey) throw new AppError('API Key not found', 401);
+
+        let channel = null;
+
+        if (apiKey.toLowerCase() != 'global'){
+            channel = await Channel.findOne({
+                where: {
+                    api_key: apiKey
+                }
+            });
+
+            if (!channel) throw new AppError('Invalid API key', 401);
+        }
+
+        // Generating of refresh and access tokens
+        const jti = uuidv4();
 
         const refreshToken = jwt.sign(
             { id: user.id, jti },
@@ -46,7 +65,7 @@ const generateToken = async (
         });
 
         const accessToken = jwt.sign(
-            { id: user.id },
+            { id: user.id, channel_id: channel?.id ?? null },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
@@ -90,7 +109,7 @@ const refreshToken = async (
         if (!user) throw new AppError('User not found', 404);
 
         const newAccessToken = jwt.sign(
-            { id: user.id },
+            { id: user.id, channel: decoded.channel_id },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
@@ -115,7 +134,6 @@ const verifyToken = async (
 ): Promise<any> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
-
         if (!token) throw new AppError('Token not found', 404);
 
         const decoded = jwt.verify(token, process.env.ACCESS_SECRET!);
@@ -135,12 +153,19 @@ const hasAnyPermission = async (
     next: NextFunction
 ): Promise<any> => {
     try {
+        const token = req.header('Authorization')?.split(' ')[1];
+        if (!token) throw new AppError('Token not found', 404);
+
+        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as IDecodedToken;
         const hasPermissions = await (
             req.authorizedUser as User
         ).hasAnyPermission(
             req.body.permission_ref_names,
-            req.body.permission_scope
+            req.body.permission_scope,
+            decoded.channel_id ?? null
         );
+
+        console.log('hasPermissions', hasPermissions)
 
         if (hasPermissions) {
             res.json({

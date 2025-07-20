@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
 
-export default function hashPassowrd(password: string) {
+export default function hashPassword(password: string) {
     return bcrypt.hashSync(password, 10);
 }

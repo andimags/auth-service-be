@@ -11,7 +11,7 @@ export async function userCanManageRoles(
 ): Promise<boolean> {
     if (!userHasGlobalRole && !userChannelId)
         throw new AppError(
-            'authUserChannelId is required if authUserIsGlobalRole is false',
+            'userChannelId is required if userHasGlobalRole is false',
             400
         );
 
@@ -22,10 +22,10 @@ export async function userCanManageRoles(
     if (roleIdsLength != roles.length)
         throw new AppError('Some roles not found', 404);
 
-    let unassignableRoleIds = [];
+    let unassignableRoleIds: any[] = [];
 
     roles.forEach((r) => {
-        if (r.channel_id != userChannelId || userRoleLevel >= r.level) {
+        if ((userChannelId != null && r.channel_id != userChannelId) || userRoleLevel >= r.level) {
             unassignableRoleIds.push(r.id);
         }
     });

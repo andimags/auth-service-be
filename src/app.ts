@@ -1,5 +1,5 @@
 import cookieParser from 'cookie-parser';
-import 'dotenv/config';
+import 'dotenv/config'
 import express from 'express';
 import { errorHandler } from './middlewares/errorHandler';
 
@@ -16,6 +16,7 @@ import rolePermissionRoutes from './routes/rolePermissionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import userRoutes from './routes/userRoutes';
+import { channelMiddleware } from './middlewares/channelMiddleware';
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.get('/ping', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 app.use(authMiddleware);
-app.use(checkApiKeyMiddleware);
+app.use(channelMiddleware);
 
 app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);

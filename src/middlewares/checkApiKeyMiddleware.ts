@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import Channel from '../database/models/Channel';
 import { AppError } from './errorHandler';
+import { IDecodedToken } from '../types';
+import jwt from 'jsonwebtoken';
+import Channel from '../database/models/Channel';
 
 export const checkApiKeyMiddleware = async (
     req: Request,
@@ -8,19 +10,15 @@ export const checkApiKeyMiddleware = async (
     next: NextFunction
 ): Promise<any> => {
     try {
-        const apiKey = req.header('x-api-key');
+        const refreshToken = req.cookies['refresh_token'];
+        if (!refreshToken) throw new AppError('Refresh token not found', 403);
 
-        if (!apiKey) throw new AppError('API Key not found', 401);
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_SECRET!
+        ) as IDecodedToken;
 
-        if (apiKey.toLocaleLowerCase() == 'global') return next();
-
-        const channel = await Channel.findOne({
-            where: {
-                api_key: apiKey
-            }
-        });
-
-        if (!channel) throw new AppError('Invalid API key', 401);
+        let channel = await Channel.findByPk(decoded.channel_id);
 
         req.channel = channel;
 
