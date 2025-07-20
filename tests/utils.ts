@@ -56,31 +56,40 @@ export function generateRoleData(channelId?: number, level?: number) {
     };
 }
 
-export async function generateToken(email: string, password: string) {
-    const res = await request(app).post('/api/auth/generate-token').send({
-        email: email,
-        password: password
-    });
+export async function generateToken(email: string, password: string, apiKey='global') {
+    const AGENT = request.agent(app); // preserves cookies
 
-    return res.body.access_token;
+    const res = await AGENT.post('/api/auth/generate-token')
+        .set({
+            'x-api-key': apiKey
+        })
+        .send({
+            email: email,
+            password: password
+        });
+
+    return {
+        accessToken: res.body.access_token,
+        agent: AGENT
+    };
 }
 
 // Helper function to create authenticated headers
 export const createAuthHeaders = (
-    token: string,
-    apiKey: string = 'global'
+    accessToken: string
 ) => ({
-    Authorization: `Bearer ${token}`,
-    'x-api-key': apiKey,
+    Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json'
 });
 
-export const createAuthUser = async () => {
+export const createAuthUser = async (apiKey='global') => {
     const user = await User.create(await generateUserData());
+    const response = await generateToken(user.email, DEFAULT_PASSWORD, apiKey);
 
     return {
         user: user,
-        accessToken: await generateToken(user.email, DEFAULT_PASSWORD)
+        accessToken: response.accessToken,
+        agent: response.agent
     };
 };
 
