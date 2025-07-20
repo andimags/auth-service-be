@@ -29,7 +29,6 @@ describe('Permission Routes', () => {
     };
 
     const NON_EXISTENT_PERMISSION_ID = 999999;
-    const DEFAULT_PASSWORD = 'abcd1234';
     const API_BASE_URL = '/api/permissions';
 
     beforeAll(async () => {
