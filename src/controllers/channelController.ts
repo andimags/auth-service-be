@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import { AppError } from '../middlewares/errorHandler';
+import User from '../database/models/User';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -9,7 +10,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         if (req.isGlobalRole) {
             channels = await Channel.findAll();
         } else {
-            channels = await req.authorizedUser.getChannels();
+            channels = await (req.authorizedUser as User).getChannels();
         }
 
         res.json({

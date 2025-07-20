@@ -1,13 +1,12 @@
+import 'dotenv/config';
 import { Sequelize } from 'sequelize-typescript';
 import Channel from './models/Channel';
 import Permission from './models/Permission';
+import RefreshToken from './models/RefreshToken';
 import Role from './models/Role';
+import RolePermission from './models/RolePermission';
 import User from './models/User';
 import UserRole from './models/UserRole';
-import RolePermission from './models/RolePermission';
-import RefreshToken from './models/RefreshToken';
-
-console.log(process.env.NODE_ENV);
 
 const sequelize = new Sequelize({
     host: process.env.DB_HOST,
@@ -24,7 +23,7 @@ const sequelize = new Sequelize({
         RolePermission,
         RefreshToken
     ],
-    logging: true
+    logging: false
 });
 
 export default sequelize;

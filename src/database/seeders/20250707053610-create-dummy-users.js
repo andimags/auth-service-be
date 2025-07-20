@@ -1,22 +1,23 @@
 'use strict';
 
 const { faker } = require('@faker-js/faker');
-const { default: hashPassowrd } = require('../../utils/hashPassword');
+const bcrypt = require('bcrypt');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
+        const DEFAULT_PASSWORD = 'abcd1234';
+
         const usersToInsert = Array.from({ length: 50 }).map(() => {
             const FIRST_NAME = faker.person.firstName();
             const LAST_NAME = faker.person.lastName();
-            const DEFAULT_PASSWORD = hashPassowrd('abcd1234')
 
             return {
                 username: `${FIRST_NAME}_${LAST_NAME}`,
                 email: `${FIRST_NAME}_${LAST_NAME}@gmail.com`,
                 first_name: FIRST_NAME,
                 last_name: LAST_NAME,
-                password: DEFAULT_PASSWORD,
+                password:  bcrypt.hashSync(DEFAULT_PASSWORD, 10),
                 status: 'active',
                 created_at: new Date(),
                 updated_at: new Date()

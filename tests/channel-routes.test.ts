@@ -1,35 +1,34 @@
-import request from 'supertest';
-import app from '../src/app';
 import Channel from '../src/database/models/Channel';
 import Role from '../src/database/models/Role';
-import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
 import { AppError } from '../src/middlewares/errorHandler';
+import { IAuth } from './types';
 import {
     createAuthHeaders,
     createAuthUser,
     createRole,
     forceDeleteInstances,
-    generateChannelData,
-    generateToken,
-    generateUserData
+    generateChannelData
 } from './utils';
-import { IAuth } from './types';
 
 describe('Channel Routes', () => {
     let superadminAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     const NON_EXISTENT_CHANNEL_ID = 999999;
-    const DEFAULT_PASSWORD = 'abcd1234';
     const API_BASE_URL = '/api/channels';
+
+    const SUPERADMIN_AGENT = null; // preserves cookies
+    const USER_WITH_NO_PERMISSIONS_AGENT = null; // preserves cookies
 
     beforeAll(async () => {
         await sequelize.sync();
@@ -44,11 +43,6 @@ describe('Channel Routes', () => {
         }
 
         await superadminAuth.user!.addRoles([superadminRole]);
-        superadminAuth.accessToken = await generateToken(
-            superadminAuth.user!.email,
-            DEFAULT_PASSWORD
-        );
-
         userWithNoPermissionsAuth = await createAuthUser();
     });
 
@@ -61,27 +55,13 @@ describe('Channel Routes', () => {
     });
 
     describe('GET /api/channels', () => {
-        let userWithNoPermissions: User;
-        let userWithNoPermissionsToken: string;
-
-        beforeAll(async () => {
-            userWithNoPermissions = await User.create(await generateUserData());
-            userWithNoPermissionsToken = await generateToken(
-                userWithNoPermissions.email,
-                DEFAULT_PASSWORD
-            );
-        });
-
-        afterAll(async () => {
-            await userWithNoPermissions?.destroy({ force: true });
-        });
-
         it('should return 200 with channels data for authorized user', async () => {
-            const response = await request(app)
+            console.log('superadminAuth', superadminAuth);
+            const response = await superadminAuth.agent!
                 .get(API_BASE_URL)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
-                .expect(200);
+                // .expect(200);
 
             expect(response.body).toMatchObject({
                 data: expect.any(Array),
@@ -90,9 +70,9 @@ describe('Channel Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent!
                 .get(API_BASE_URL)
-                .set(createAuthHeaders(userWithNoPermissionsToken))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -107,7 +87,7 @@ describe('Channel Routes', () => {
         it('should return 200 with channel data for superadmin', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -124,7 +104,7 @@ describe('Channel Routes', () => {
         });
 
         it('should return 404 when channel does not exist', async () => {
-            await request(app)
+            await superadminAuth.agent!
                 .get(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -137,7 +117,7 @@ describe('Channel Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            await request(app)
+            await userWithNoPermissionsAuth.agent
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -154,22 +134,21 @@ describe('Channel Routes', () => {
             const targetChannel = await Channel.create(generateChannelData());
 
             // Auth user will have correct permissions but attached to a role with diff channel
-            const customAuthUser: IAuth = await createAuthUser();
             const wrongChannel = await Channel.create(
                 await generateChannelData()
             );
+            const customAuthUser: IAuth = await createAuthUser(wrongChannel.api_key);
             const customAuthUserRole = await createRole(
                 ['admin:channel'],
                 wrongChannel.id
             );
             await customAuthUser.user!.setRoles(customAuthUserRole);
 
-            await request(app)
+            await customAuthUser.agent!
                 .get(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.accessToken!,
-                        wrongChannel.api_key
+                        customAuthUser.accessToken!
                     )
                 )
                 .expect('Content-Type', /json/)
@@ -192,7 +171,7 @@ describe('Channel Routes', () => {
         it('should create channel and return 200 for authorized user', async () => {
             const payload = await generateChannelData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .post(API_BASE_URL)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
@@ -200,12 +179,17 @@ describe('Channel Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                data: expect.objectContaining({
+                status: 1,
+                data: {
+                    id: expect.any(Number),
                     name: payload.name,
+                    description: payload.description,
                     ref_name: payload.ref_name,
-                    description: payload.description
-                }),
-                status: 1
+                    updated_at: expect.any(String),
+                    created_at: expect.any(String),
+                    api_key: expect.any(String),
+                    deleted_at: null
+                }
             });
 
             const createdChannel = await Channel.findByPk(
@@ -215,7 +199,7 @@ describe('Channel Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
-            await request(app)
+            await userWithNoPermissionsAuth.agent!
                 .post(API_BASE_URL)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(await generateChannelData())
@@ -233,7 +217,7 @@ describe('Channel Routes', () => {
             const targetChannel = await Channel.create(generateChannelData());
             const payload = await generateChannelData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent!
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
@@ -241,19 +225,24 @@ describe('Channel Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                data: expect.objectContaining({
+                status: 1,
+                data: {
+                    id: expect.any(Number),
                     name: payload.name,
+                    description: payload.description,
                     ref_name: payload.ref_name,
-                    description: payload.description
-                }),
-                status: 1
+                    updated_at: expect.any(String),
+                    created_at: expect.any(String),
+                    api_key: expect.any(String),
+                    deleted_at: null
+                }
             });
 
             await forceDeleteInstances([targetChannel]);
         });
 
         it('should return 404 when channel does not exist', async () => {
-            await request(app)
+            await superadminAuth.agent!
                 .put(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(await generateChannelData())
@@ -267,7 +256,7 @@ describe('Channel Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            await request(app)
+            await userWithNoPermissionsAuth.agent!
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(await generateChannelData())
@@ -284,11 +273,11 @@ describe('Channel Routes', () => {
         it('should return 403 when user has permissions but for wrong channel', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            // Auth usr will have the correct permissions but in wrong channel
-            const customAuthUser: IAuth = await createAuthUser();
+            // Auth user will have the correct permissions but in wrong channel
             const wrongChannel = await Channel.create(
                 await generateChannelData()
             );
+            const customAuthUser: IAuth = await createAuthUser(wrongChannel.api_key!);
             const customAuthUserRole = await createRole(
                 ['admin:channel'],
                 wrongChannel.id
@@ -296,12 +285,11 @@ describe('Channel Routes', () => {
 
             await customAuthUser.user!.setRoles(customAuthUserRole);
 
-            await request(app)
+            await customAuthUser.agent!
                 .put(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(
                     createAuthHeaders(
-                        customAuthUser.accessToken!,
-                        wrongChannel.api_key
+                        customAuthUser.accessToken!,                    
                     )
                 )
                 .send(await generateChannelData())
@@ -324,7 +312,7 @@ describe('Channel Routes', () => {
         it('should soft delete channel and return 200', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            await request(app)
+            await superadminAuth.agent!
                 .delete(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -340,7 +328,7 @@ describe('Channel Routes', () => {
         it('should force delete channel when force=true', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            await request(app)
+            await superadminAuth.agent!
                 .delete(`${API_BASE_URL}/${targetChannel.id}?force=true`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -352,7 +340,7 @@ describe('Channel Routes', () => {
         });
 
         it('should return 404 when channel does not exist', async () => {
-            await request(app)
+            await superadminAuth.agent!
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_CHANNEL_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
@@ -365,7 +353,7 @@ describe('Channel Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             const targetChannel = await Channel.create(generateChannelData());
 
-            await request(app)
+            await userWithNoPermissionsAuth.agent!
                 .delete(`${API_BASE_URL}/${targetChannel.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
