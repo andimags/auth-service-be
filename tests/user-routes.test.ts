@@ -1,5 +1,3 @@
-import request from 'supertest';
-import app from '../src/app';
 import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
@@ -9,23 +7,23 @@ import {
     createAuthUser,
     createRole,
     forceDeleteInstances,
-    generateToken,
     generateUserData
 } from './utils';
 
 describe('User Routes', () => {
     let superadminAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
         accessToken: null,
-        user: null
+        user: null,
+        agent: null
     };
 
     const NON_EXISTENT_USER_ID = 999999;
-    const DEFAULT_PASSWORD = 'abcd1234';
     const API_BASE_URL = '/api/users';
 
     beforeAll(async () => {
@@ -41,14 +39,7 @@ describe('User Routes', () => {
         }
 
         await superadminAuth.user!.addRoles([superadminRole]);
-
-        userWithNoPermissionsAuth.user = await User.create(
-            await generateUserData()
-        );
-        userWithNoPermissionsAuth.accessToken = await generateToken(
-            userWithNoPermissionsAuth.user.email,
-            DEFAULT_PASSWORD
-        );
+        userWithNoPermissionsAuth = await createAuthUser();
     });
 
     afterAll(async () => {
@@ -59,7 +50,7 @@ describe('User Routes', () => {
 
     describe('GET /api/users', () => {
         it("should return 200 with users' data", async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .get(`${API_BASE_URL}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -94,7 +85,7 @@ describe('User Routes', () => {
         });
 
         it("should return 403 when user doesn't have necessary permissions ['view:user', 'admin:user]", async () => {
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent
                 .get(`${API_BASE_URL}`)
                 .set({
                     Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
@@ -114,7 +105,7 @@ describe('User Routes', () => {
         it('should return 200 with newly created user data', async () => {
             const payload = generateUserData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .post(`${API_BASE_URL}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -144,7 +135,7 @@ describe('User Routes', () => {
         });
 
         it("should return 403 when authorized user doesn't have necessary permissions", async () => {
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent
                 .post(`${API_BASE_URL}`)
                 .set({
                     Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
@@ -166,7 +157,7 @@ describe('User Routes', () => {
             const targetUser = await User.create(generateUserData());
             const payload = generateUserData();
 
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -195,7 +186,7 @@ describe('User Routes', () => {
         });
 
         it('should return 404 with non-existent target user', async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .put(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -214,7 +205,7 @@ describe('User Routes', () => {
             const targetUser = await User.create(generateUserData());
             const payload = generateUserData();
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
                     Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
@@ -252,7 +243,7 @@ describe('User Routes', () => {
 
             const payload = generateUserData();
 
-            const response = await request(app)
+            const response = await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetUser.id}`)
                 .set({
                     Authorization: `Bearer ${customAuthUser.accessToken}`,
@@ -280,7 +271,7 @@ describe('User Routes', () => {
         it('should return 200 with the deleted user data', async () => {
             const targetUser = await User.create(generateUserData());
 
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -300,7 +291,7 @@ describe('User Routes', () => {
         it('should return 200 when force deleting a user', async () => {
             const targetUser = await User.create(generateUserData());
 
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${targetUser!.id}?force=true`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -316,7 +307,7 @@ describe('User Routes', () => {
         });
 
         it('should return 404 with non-existent user ID', async () => {
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_USER_ID}`)
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -331,7 +322,7 @@ describe('User Routes', () => {
         it("should return 403 when authorized user doesn't have required permission", async () => {
             const targetUser = await User.create(generateUserData());
 
-            const response = await request(app)
+            const response = await userWithNoPermissionsAuth.agent
                 .delete(`${API_BASE_URL}/${targetUser.id}`)
                 .set({
                     Authorization: `Bearer ${userWithNoPermissionsAuth.accessToken}`,
@@ -354,7 +345,7 @@ describe('User Routes', () => {
                 where: { username: 'superadmin' }
             });
 
-            const response = await request(app)
+            const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${targetUser?.id}`) // Deleting the main superadmin
                 .set({
                     Authorization: `Bearer ${superadminAuth.accessToken}`,
@@ -386,7 +377,7 @@ describe('User Routes', () => {
             );
             await customAuthUser.user?.setRoles(customAuthUserRole);
 
-            const response = await request(app)
+            const response = await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
                 .set({
                     Authorization: `Bearer ${customAuthUser.accessToken}`,
