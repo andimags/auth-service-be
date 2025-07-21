@@ -30,7 +30,6 @@ describe('Role Permission Routes', () => {
 
     const NON_EXISTENT_USER_ID = 999999;
     const NON_EXISTENT_ROLE_ID = 999999;
-    const DEFAULT_PASSWORD = 'abcd1234';
     const API_BASE_URL = '/api/user-role/user';
 
     beforeAll(async () => {
@@ -48,7 +47,6 @@ describe('Role Permission Routes', () => {
         await superadminAuth.user!.addRoles([superadminRole]);
         userWithNoPermissionsAuth = await createAuthUser();
     });
-
 
     afterAll(async () => {
         await superadminAuth.user?.destroy({ force: true });
