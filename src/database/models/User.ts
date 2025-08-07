@@ -38,9 +38,9 @@ import {
     userHasAnyPermission
 } from '../../services/permissionService';
 import { isUserMorePrivilegedThan } from '../../services/roleService';
-import hashPassowrd from '../../utils/hashPassword';
 import Role from './Role';
 import UserRole from './UserRole';
+import hashPassword from '../../utils/hashPassword';
 
 @Scopes(() => ({
     withRoles: {
@@ -167,8 +167,8 @@ export default class User extends Model {
 
     // Hooks
     @BeforeValidate
-    static generateApiKey(instance: User) {
-        instance.password = hashPassowrd(instance.password);
+    static hashPassword(instance: User) {
+        if(instance.password) instance.password = hashPassword(instance.password);
     }
 
     @BeforeUpdate
