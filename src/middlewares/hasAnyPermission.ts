@@ -39,10 +39,7 @@ export default function hasAnyPermission(
                 console.warn(
                     'Only users with global role for this permission must be allowed'
                 );
-                throw new AppError(
-                    errorMsg,
-                    403
-                );
+                throw new AppError(errorMsg, 403);
             }
 
             // Check for channel-based roles (only if roleScope is 'channel')

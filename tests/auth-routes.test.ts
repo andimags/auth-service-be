@@ -2,10 +2,7 @@ import request from 'supertest';
 import app from '../src/app';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
-import {
-    forceDeleteInstances,
-    generateUserData
-} from './utils';
+import { forceDeleteInstances, generateUserData } from './utils';
 
 describe('Auth Routes', () => {
     let accessToken: string;
@@ -118,9 +115,10 @@ describe('Auth Routes', () => {
 
     describe('GET /api/auth/refresh-token', () => {
         it('should return 200 with refreshed token', async () => {
-            const response = await AGENT.get(`${API_BASE_URL}/refresh-token`)
-                .expect('Content-Type', /json/)
-                // .expect(200);
+            const response = await AGENT.get(
+                `${API_BASE_URL}/refresh-token`
+            ).expect('Content-Type', /json/);
+            // .expect(200);
 
             expect(response.body).toHaveProperty('status');
             expect(response.body.status).toBe(1);

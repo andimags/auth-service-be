@@ -216,7 +216,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the role being assigned is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:user_role'],
@@ -240,11 +242,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuthUser.agent
                 .post(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -403,7 +401,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the role being assigned is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:user_role'],
@@ -427,11 +427,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -651,7 +647,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the role being assigned is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:user_role'],
@@ -675,11 +673,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);

@@ -77,11 +77,7 @@ describe('Role Routes', () => {
 
             const response = await customAuthUser.agent
                 .get(API_BASE_URL)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
@@ -213,7 +209,9 @@ describe('Role Routes', () => {
             const correctChannel = await Channel.create(
                 await generateChannelData()
             );
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(
                 await generateChannelData()
             );
@@ -230,11 +228,7 @@ describe('Role Routes', () => {
 
             const response = await customAuthUser.agent
                 .post(`${API_BASE_URL}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -348,7 +342,9 @@ describe('Role Routes', () => {
             const correctChannel = await Channel.create(
                 await generateChannelData()
             );
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(
                 await generateChannelData()
             );
@@ -364,11 +360,7 @@ describe('Role Routes', () => {
 
             const response = await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -525,7 +517,9 @@ describe('Role Routes', () => {
             );
 
             // Auth user's role being in the correct channel
-            const customAuthUser: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuthUser: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const customAuthUserRole = await createRole(
                 ['admin:role', 'add:role'],
                 correctChannel.id
@@ -534,11 +528,7 @@ describe('Role Routes', () => {
 
             const response = await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 

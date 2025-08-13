@@ -57,8 +57,8 @@ describe('Permission Routes', () => {
 
     describe('GET /api/permissions', () => {
         it('should return 200 with permissions data for authorized user', async () => {
-            const response = await superadminAuth.agent!
-                .get(API_BASE_URL)
+            const response = await superadminAuth
+                .agent!.get(API_BASE_URL)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -70,8 +70,8 @@ describe('Permission Routes', () => {
         });
 
         it('should return 403 when user lacks required permissions', async () => {
-            const response = await userWithNoPermissionsAuth.agent!
-                .get(API_BASE_URL)
+            const response = await userWithNoPermissionsAuth
+                .agent!.get(API_BASE_URL)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -89,8 +89,8 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await superadminAuth.agent!
-                .get(`${API_BASE_URL}/${targetPermission.id}`)
+            const response = await superadminAuth
+                .agent!.get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -120,8 +120,8 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await userWithNoPermissionsAuth.agent!
-                .get(`${API_BASE_URL}/${targetPermission.id}`)
+            const response = await userWithNoPermissionsAuth
+                .agent!.get(`${API_BASE_URL}/${targetPermission.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -139,8 +139,8 @@ describe('Permission Routes', () => {
         it('should return 200 with permissions data for authorized user', async () => {
             const payload = await generatePermissionData();
 
-            const response = await superadminAuth.agent!
-                .post(`${API_BASE_URL}`)
+            const response = await superadminAuth
+                .agent!.post(`${API_BASE_URL}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -160,8 +160,8 @@ describe('Permission Routes', () => {
         it('should return 403 when authorized user does not have required permissions', async () => {
             const payload = await generatePermissionData();
 
-            const response = await userWithNoPermissionsAuth.agent!
-                .post(`${API_BASE_URL}`)
+            const response = await userWithNoPermissionsAuth
+                .agent!.post(`${API_BASE_URL}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -181,8 +181,8 @@ describe('Permission Routes', () => {
             );
             const payload = await generatePermissionData();
 
-            const response = await superadminAuth.agent!
-                .put(`${API_BASE_URL}/${targetPermission!.id}`)
+            const response = await superadminAuth
+                .agent!.put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -211,8 +211,8 @@ describe('Permission Routes', () => {
         it('should return 404 with non-existent permission ID', async () => {
             const payload = await generatePermissionData();
 
-            const response = await superadminAuth.agent!
-                .put(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
+            const response = await superadminAuth
+                .agent!.put(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -229,8 +229,8 @@ describe('Permission Routes', () => {
             );
             const payload = await generatePermissionData();
 
-            const response = await userWithNoPermissionsAuth.agent!
-                .put(`${API_BASE_URL}/${targetPermission!.id}`)
+            const response = await userWithNoPermissionsAuth
+                .agent!.put(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -258,11 +258,7 @@ describe('Permission Routes', () => {
 
             const response = await request(app)
                 .put(`${API_BASE_URL}/${targetPermission!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuthUser.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuthUser.accessToken!))
                 .send(await generatePermissionData())
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -287,8 +283,8 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await superadminAuth.agent!
-                .delete(`${API_BASE_URL}/${targetPermission!.id}`)
+            const response = await superadminAuth
+                .agent!.delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -302,8 +298,8 @@ describe('Permission Routes', () => {
         });
 
         it('should return 404 with non-existent permission ID', async () => {
-            const response = await superadminAuth.agent!
-                .delete(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
+            const response = await superadminAuth
+                .agent!.delete(`${API_BASE_URL}/${NON_EXISTENT_PERMISSION_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -318,8 +314,8 @@ describe('Permission Routes', () => {
                 generatePermissionData()
             );
 
-            const response = await userWithNoPermissionsAuth.agent!
-                .delete(`${API_BASE_URL}/${targetPermission!.id}`)
+            const response = await userWithNoPermissionsAuth
+                .agent!.delete(`${API_BASE_URL}/${targetPermission!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);

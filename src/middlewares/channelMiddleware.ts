@@ -13,9 +13,12 @@ export const channelMiddleware = async (
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
 
-        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!)  as IDecodedToken;
-        
-        req.channel = await Channel.findByPk((decoded.channel_id));
+        const decoded = jwt.verify(
+            token,
+            process.env.ACCESS_SECRET!
+        ) as IDecodedToken;
+
+        req.channel = await Channel.findByPk(decoded.channel_id);
 
         next();
     } catch (error: any) {

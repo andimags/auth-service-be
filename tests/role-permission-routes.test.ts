@@ -47,7 +47,6 @@ describe('Role Permission Routes', () => {
         userWithNoPermissionsAuth = await createAuthUser();
     });
 
-
     afterAll(async () => {
         await superadminAuth.user?.destroy({ force: true });
         await userWithNoPermissionsAuth.user?.destroy({ force: true });
@@ -58,8 +57,8 @@ describe('Role Permission Routes', () => {
         it(`should return 200 with role's permissions for authorized user`, async () => {
             const targetRole = await createRole(['admin:role_permission']);
 
-            const response = await superadminAuth.agent!
-                .get(`${API_BASE_URL}/${targetRole!.id}`)
+            const response = await superadminAuth
+                .agent!.get(`${API_BASE_URL}/${targetRole!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(200);
@@ -75,8 +74,8 @@ describe('Role Permission Routes', () => {
         it('should return 404 when role is non-existent', async () => {
             const targetRole = await createRole(['admin:role_permission']);
 
-            const response = await superadminAuth.agent!
-                .get(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
+            const response = await superadminAuth
+                .agent!.get(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(404);
@@ -91,8 +90,8 @@ describe('Role Permission Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             const targetRole = await createRole(['admin:role_permission']);
 
-            const response = await userWithNoPermissionsAuth.agent!
-                .get(`${API_BASE_URL}/${targetRole!.id}`)
+            const response = await userWithNoPermissionsAuth
+                .agent!.get(`${API_BASE_URL}/${targetRole!.id}`)
                 .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -109,7 +108,9 @@ describe('Role Permission Routes', () => {
             const correctChannel = await Channel.create(
                 await generateChannelData()
             );
-            const customAuth: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuth: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(
                 await generateChannelData()
             );
@@ -126,13 +127,9 @@ describe('Role Permission Routes', () => {
                 wrongChannel.id
             );
 
-            const response = await customAuth.agent!
-                .get(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuth.accessToken!
-                    )
-                )
+            const response = await customAuth
+                .agent!.get(`${API_BASE_URL}/${targetRole!.id}`)
+                .set(createAuthHeaders(customAuth.accessToken!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -160,8 +157,8 @@ describe('Role Permission Routes', () => {
             };
             const targetRole = await createRole(['admin:role_permission']);
 
-            const response = await superadminAuth.agent!
-                .post(`${API_BASE_URL}/${targetRole!.id}`)
+            const response = await superadminAuth
+                .agent!.post(`${API_BASE_URL}/${targetRole!.id}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -184,8 +181,8 @@ describe('Role Permission Routes', () => {
             };
             const targetRole = await createRole(['admin:role_permission']);
 
-            const response = await superadminAuth.agent!
-                .post(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
+            const response = await superadminAuth
+                .agent!.post(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
@@ -281,7 +278,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuth: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuth: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:role_permission'],
@@ -308,11 +307,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuth.agent
                 .post(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuth.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -428,9 +423,7 @@ describe('Role Permission Routes', () => {
                 message: `Permission IDs ${NON_EXISTENT_PERMISSION_ID} do not exist`
             });
 
-            await forceDeleteInstances([
-                targetRole
-            ]);
+            await forceDeleteInstances([targetRole]);
         });
 
         it('should return 403 when authorized user is replacing permissions to a role with higher or equal level to theirs', async () => {
@@ -477,7 +470,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuth: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuth: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:role_permission'],
@@ -504,11 +499,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuth.agent
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuth.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -623,9 +614,7 @@ describe('Role Permission Routes', () => {
                 message: `Permission IDs ${NON_EXISTENT_PERMISSION_ID} do not exist`
             });
 
-            await forceDeleteInstances([
-                targetRole
-            ]);
+            await forceDeleteInstances([targetRole]);
         });
 
         it('should return 403 when authorized user is deleting permissions to a role with higher or equal level to theirs', async () => {
@@ -672,7 +661,9 @@ describe('Role Permission Routes', () => {
 
         it("should return 403 when authorized user's role is channel-based and the target role is from different channel", async () => {
             const correctChannel = await Channel.create(generateChannelData());
-            const customAuth: IAuth = await createAuthUser(correctChannel.api_key);
+            const customAuth: IAuth = await createAuthUser(
+                correctChannel.api_key
+            );
             const wrongChannel = await Channel.create(generateChannelData());
             const authUserRole = await createRole(
                 ['admin:role_permission'],
@@ -699,11 +690,7 @@ describe('Role Permission Routes', () => {
 
             const response = await customAuth.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(
-                    createAuthHeaders(
-                        customAuth.accessToken!
-                    )
-                )
+                .set(createAuthHeaders(customAuth.accessToken!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);

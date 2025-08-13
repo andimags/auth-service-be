@@ -32,7 +32,7 @@ const generateToken = async (
 
         let channel = null;
 
-        if (apiKey.toLowerCase() != 'global'){
+        if (apiKey.toLowerCase() != 'global') {
             channel = await Channel.findOne({
                 where: {
                     api_key: apiKey
@@ -156,7 +156,10 @@ const hasAnyPermission = async (
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
 
-        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as IDecodedToken;
+        const decoded = jwt.verify(
+            token,
+            process.env.ACCESS_SECRET!
+        ) as IDecodedToken;
         const hasPermissions = await (
             req.authorizedUser as User
         ).hasAnyPermission(
@@ -165,7 +168,7 @@ const hasAnyPermission = async (
             decoded.channel_id ?? null
         );
 
-        console.log('hasPermissions', hasPermissions)
+        console.log('hasPermissions', hasPermissions);
 
         if (hasPermissions) {
             res.json({

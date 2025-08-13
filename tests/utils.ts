@@ -56,7 +56,11 @@ export function generateRoleData(channelId?: number, level?: number) {
     };
 }
 
-export async function generateToken(email: string, password: string, apiKey='global') {
+export async function generateToken(
+    email: string,
+    password: string,
+    apiKey = 'global'
+) {
     const AGENT = request.agent(app); // preserves cookies
 
     const res = await AGENT.post('/api/auth/generate-token')
@@ -75,14 +79,12 @@ export async function generateToken(email: string, password: string, apiKey='glo
 }
 
 // Helper function to create authenticated headers
-export const createAuthHeaders = (
-    accessToken: string
-) => ({
+export const createAuthHeaders = (accessToken: string) => ({
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json'
 });
 
-export const createAuthUser = async (apiKey='global') => {
+export const createAuthUser = async (apiKey = 'global') => {
     const user = await User.create(await generateUserData());
     const response = await generateToken(user.email, DEFAULT_PASSWORD, apiKey);
 

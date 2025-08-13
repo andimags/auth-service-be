@@ -168,7 +168,8 @@ export default class User extends Model {
     // Hooks
     @BeforeValidate
     static hashPassword(instance: User) {
-        if(instance.password) instance.password = hashPassword(instance.password);
+        if (instance.password)
+            instance.password = hashPassword(instance.password);
     }
 
     @BeforeUpdate

@@ -25,7 +25,10 @@ export async function userCanManageRoles(
     let unassignableRoleIds: any[] = [];
 
     roles.forEach((r) => {
-        if ((userChannelId != null && r.channel_id != userChannelId) || userRoleLevel >= r.level) {
+        if (
+            (userChannelId != null && r.channel_id != userChannelId) ||
+            userRoleLevel >= r.level
+        ) {
             unassignableRoleIds.push(r.id);
         }
     });
