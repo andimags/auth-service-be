@@ -20,5 +20,5 @@ export const updateValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(isUniqueField(Channel, 'ref_name', 'ref name'))
+        .custom(isUniqueField(Channel, 'ref_name', 'ref name', 'channel_id'))
 ];
