@@ -1,21 +1,36 @@
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import { AppError } from '../middlewares/errorHandler';
-import User from '../database/models/User';
+import paginate from '../utils/paginate';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let channels = null;
+        const page = parseInt(req.query.page as string) || 1;
+        const size = parseInt(req.query.size as string) || 10;
+        const searchTerm = (req.query.search as string) || undefined;
+        const sortField = (req.query.sort_field as string) || undefined;
+        const sortDesc =
+            typeof req.query.sort_desc === 'string'
+                ? req.query.sort_desc === 'true'
+                : undefined;
 
-        if (req.isGlobalRole) {
-            channels = await Channel.findAll();
-        } else {
-            channels = await (req.authorizedUser as User).getChannels();
-        }
+        const paginatedChannels = await paginate(
+            Channel,
+            page - 1,
+            size,
+            {
+                searchTerm: searchTerm,
+                stringFields: ['name', 'description', 'ref_name', 'api_key']
+            },
+            {
+                field: sortField,
+                desc: sortDesc
+            }
+        );
 
         res.json({
             status: 1,
-            data: channels
+            ...paginatedChannels
         });
     } catch (error: unknown) {
         next(error);
