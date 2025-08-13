@@ -61,12 +61,31 @@ describe('Channel Routes', () => {
                 .get(API_BASE_URL)
                 .set(createAuthHeaders(superadminAuth.accessToken!))
                 .expect('Content-Type', /json/)
-                // .expect(200);
+                .expect(200);
 
             expect(response.body).toMatchObject({
-                data: expect.any(Array),
-                status: 1
+                status: expect.any(Number),
+                count: expect.any(Number),
+                rows: expect.any(Array),
+                totalPages: expect.any(Number),
+                currentPage: expect.any(Number)
             });
+
+            expect(response.body.rows).toEqual(
+        expect.arrayContaining([
+                    expect.objectContaining({
+                    id: expect.any(Number),
+                    name: expect.any(String),
+                    description: null,
+                    ref_name: expect.any(String),
+                    api_key: expect.any(String),
+                    created_at: expect.any(String),
+                    updated_at: expect.any(String),
+                    deleted_at: null
+                })
+            ])
+        );
+
         });
 
         it('should return 403 when user lacks required permissions', async () => {

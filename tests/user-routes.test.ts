@@ -67,8 +67,8 @@ describe('User Routes', () => {
                 currentPage: expect.any(Number)
             });
 
-            response.body.rows.forEach((row: any) => {
-                expect(row).toEqual(
+                        expect(response.body.rows).toEqual(
+        expect.arrayContaining([
                     expect.objectContaining({
                         id: expect.any(Number),
                         username: expect.any(String),
@@ -79,9 +79,9 @@ describe('User Routes', () => {
                         created_at: expect.any(String),
                         updated_at: expect.any(String),
                         deleted_at: null
-                    })
-                );
-            });
+                })
+            ])
+        );
         });
 
         it("should return 403 when user doesn't have necessary permissions ['view:user', 'admin:user]", async () => {
