@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { UserStatusType } from '../constants/enums';
+import Channel from '../database/models/Channel';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -24,11 +26,12 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
                 stringFields: ['username', 'email', 'first_name', 'last_name'],
                 enumFilter: statusFilter
                     ? [
-                          {
-                              field: 'status',
-                              value: statusFilter
-                          }
-                      ]
+                        {
+                            field: 'status',
+                            value: statusFilter,
+                            allowedValues: Object.values(UserStatusType)
+                        }
+                    ]
                     : []
             },
             {

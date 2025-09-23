@@ -11,6 +11,7 @@ interface DateRangeFilter {
 interface EnumFilter {
     field: string;
     value: string;
+    allowedValues: string[];
 }
 
 interface SearchOptions {
@@ -30,7 +31,8 @@ export default async function paginate(
     _page: number = 0,
     _limit: number = 10,
     searchOptions: SearchOptions = {},
-    sortOptions: SortOptions = {}
+    sortOptions: SortOptions = {},
+    include?: any[]
 ) {
     let where: any = {};
     let filters: any[] = [];
@@ -49,11 +51,9 @@ export default async function paginate(
     }
 
     if (Array.isArray(enumFilter) && enumFilter.length > 0) {
-        const userStatusValues: string[] = Object.values(UserStatusType);
-
         filters.push(
             ...enumFilter
-                .filter((filter) => userStatusValues.includes(filter.value))
+                .filter((filter) => filter.allowedValues.includes(filter.value))
                 .map((filter) => {
                     const { field, value } = filter;
 
@@ -88,7 +88,8 @@ export default async function paginate(
         limit: size,
         offset: page * size,
         where,
-        order
+        order,
+        include
     });
 
     return {

@@ -3,12 +3,15 @@ import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { RoleScopeType } from '../constants/enums';
+import Channel from '../database/models/Channel';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const size = parseInt(req.query.size as string) || 10;
         const searchTerm = (req.query.search as string) || undefined;
+        const scopeFilter = (req.query.scope as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
             typeof req.query.sort_desc === 'string'
@@ -21,12 +24,24 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             size,
             {
                 searchTerm: searchTerm,
-                stringFields: ['name', 'description', 'ref_name', 'scope']
+                stringFields: ['name', 'description', 'ref_name'],
+                enumFilter: scopeFilter
+                    ? [
+                          {
+                              field: 'scope',
+                              value: scopeFilter,
+                              allowedValues: Object.values(RoleScopeType)
+                          }
+                      ]
+                    : []
             },
             {
                 field: sortField,
                 desc: sortDesc
-            }
+            },
+            [
+                { model: Channel, as: 'channel' }
+            ]
         );
 
         res.json({

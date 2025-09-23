@@ -30,7 +30,7 @@ export const updateValidator = [
         .custom(checkUniqueRefNameScope),
 
     body('channel_id')
-        .optional()
+        .optional({ nullable: true, checkFalsy: true })
         .isInt()
         .withMessage('Channel ID must be integer'),
 
