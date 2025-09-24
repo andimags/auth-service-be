@@ -147,6 +147,27 @@ const verifyToken = async (
     }
 };
 
+const me = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
+    try {
+        const token = req.header('Authorization')?.split(' ')[1];
+        if (!token) throw new AppError('Token not found', 404);
+
+        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
+        const user = await User.findByPk(decoded.id);
+
+        res.json({
+            status: 1,
+            user: user
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 const hasAnyPermission = async (
     req: Request,
     res: Response,
@@ -186,5 +207,6 @@ export default {
     generateToken,
     refreshToken,
     verifyToken,
+    me,
     hasAnyPermission
 };
