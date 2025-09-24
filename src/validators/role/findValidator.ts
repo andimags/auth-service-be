@@ -5,6 +5,6 @@ export const findValidator = [
         .notEmpty()
         .withMessage('Role ID is required')
         .bail()
-        .isInt()
+        .isInt({ allow_leading_zeroes: false })
         .withMessage('Role ID must be integer')
 ];
