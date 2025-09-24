@@ -1,28 +1,62 @@
 import { NextFunction, Request, Response } from 'express';
+import { PermissionAccessLevelType, PermissionScopeType } from '../constants/enums';
 import Permission from '../database/models/Permission';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import paginate from '../utils/paginate';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let permissions = null;
-        const authorizedUser = req.authorizedUser as User;
+        const page = parseInt(req.query.page as string) || 1;
+        const size = parseInt(req.query.size as string) || 10;
+        const searchTerm = (req.query.search as string) || undefined;
+        const scopeFilter = (req.query.scope as string) || undefined;
+        const accessLevelFilter = (req.query.access_level as string) || undefined;
+        const sortField = (req.query.sort_field as string) || undefined;
+        const sortDesc =
+            typeof req.query.sort_desc === 'string'
+                ? req.query.sort_desc === 'true'
+                : undefined;
 
-        if (req.isGlobalRole) {
-            permissions = await Permission.findAll();
-        } else {
-            // Get only the permissions assigned to the authenticated user for the specific channel
-            permissions = await authorizedUser.getPermissions(req.channel!.id);
-        }
+        const paginatedRoles = await paginate(
+            Permission,
+            page - 1,
+            size,
+            {
+                searchTerm: searchTerm,
+                stringFields: ['name', 'description', 'ref_name'],
+                enumFilter:  [
+                ...(scopeFilter
+                    ? [{
+                        field: "scope",
+                        value: scopeFilter,
+                        allowedValues: Object.values(PermissionScopeType) as string[],
+                    }]
+                    : []),
+                ...(accessLevelFilter
+                    ? [{
+                        field: "access_level",
+                        value: accessLevelFilter,
+                        allowedValues: Object.values(PermissionAccessLevelType) as string[],
+                    }]
+                    : []),
+                ]
+            },
+            {
+                field: sortField,   
+                desc: sortDesc
+            }
+        );
 
         res.json({
             status: 1,
-            data: permissions
+            ...paginatedRoles
         });
     } catch (error: unknown) {
         next(error);
     }
 };
+
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
