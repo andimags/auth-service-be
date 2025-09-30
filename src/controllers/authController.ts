@@ -7,6 +7,8 @@ import RefreshToken from '../database/models/RefreshToken';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
+import Permission from '../database/models/Permission';
+import Role from '../database/models/Role';
 
 const generateToken = async (
     req: Request,
@@ -168,6 +170,44 @@ const me = async (
     }
 };
 
+// Get current logged in user's roles and permissions (only globals and the specific channel depending on the api key)
+const getRolesAndPermissions = async (    
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
+    try {
+        const token = req.header('Authorization')?.split(' ')[1];
+        if (!token) throw new AppError('Token not found', 404);
+
+        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
+        const user = await User.findByPk(decoded.id);
+        const rolesWithPermissions = await Role.findAll({
+            attributes: ['id', 'ref_name', 'level', 'channel_id'],
+            include: [
+                {
+                    model: Permission,
+                    attributes: ['id', 'ref_name', 'scope'],
+                    through: { attributes: [] } // hide Role → Permission join table
+                },
+                {
+                    model: User,
+                    attributes: [], // don’t return any user fields
+                    where: { id: user?.id }, // filter roles for this user
+                    through: { attributes: [] } // hide User → Role join table
+                }
+            ]
+        });
+
+        res.json({
+            status: 1,
+            rolesWithPermissions
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
 const hasAnyPermission = async (
     req: Request,
     res: Response,
@@ -208,5 +248,6 @@ export default {
     refreshToken,
     verifyToken,
     me,
+    getRolesAndPermissions,
     hasAnyPermission
 };
