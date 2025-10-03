@@ -10,8 +10,6 @@ authRoutes.get('/refresh-token', authController.refreshToken);
 
 authRoutes.get('/me', authMiddleware, authController.me);
 
-authRoutes.get('/roles-and-permissions', authMiddleware, authController.getRolesAndPermissions);
-
 authRoutes.get('/verify-token', authMiddleware, authController.verifyToken);
 
 authRoutes.get(

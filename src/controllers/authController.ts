@@ -161,27 +161,6 @@ const me = async (
         const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
         const user = await User.findByPk(decoded.id);
 
-        res.json({
-            status: 1,
-            user: user
-        });
-    } catch (error: unknown) {
-        next(error);
-    }
-};
-
-// Get current logged in user's roles and permissions (only globals and the specific channel depending on the api key)
-const getRolesAndPermissions = async (    
-    req: Request,
-    res: Response,
-    next: NextFunction
-): Promise<any> => {
-    try {
-        const token = req.header('Authorization')?.split(' ')[1];
-        if (!token) throw new AppError('Token not found', 404);
-
-        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
-        const user = await User.findByPk(decoded.id);
         const rolesWithPermissions = await Role.findAll({
             attributes: ['id', 'ref_name', 'level', 'channel_id'],
             include: [
@@ -201,12 +180,14 @@ const getRolesAndPermissions = async (
 
         res.json({
             status: 1,
+            user: user,
             rolesWithPermissions
+
         });
     } catch (error: unknown) {
         next(error);
     }
-}
+};
 
 const hasAnyPermission = async (
     req: Request,
@@ -248,6 +229,5 @@ export default {
     refreshToken,
     verifyToken,
     me,
-    getRolesAndPermissions,
     hasAnyPermission
 };
