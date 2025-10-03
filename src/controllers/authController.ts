@@ -161,6 +161,8 @@ const me = async (
         const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
         const user = await User.findByPk(decoded.id);
 
+        if(!user) throw new AppError('User not found', 404)
+
         const rolesWithPermissions = await Role.findAll({
             attributes: ['id', 'ref_name', 'level', 'channel_id'],
             include: [
@@ -180,9 +182,10 @@ const me = async (
 
         res.json({
             status: 1,
-            user: user,
-            rolesWithPermissions
-
+            user: {
+                ...user.toJSON(),
+                rolesWithPermissions
+            },
         });
     } catch (error: unknown) {
         next(error);
