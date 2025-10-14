@@ -23,6 +23,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             page - 1,
             size,
             {
+                baseWhere: req.channel ? { channel_id: req.channel.id } : undefined,
                 searchTerm: searchTerm,
                 stringFields: ['name', 'description', 'ref_name'],
                 enumFilter: scopeFilter

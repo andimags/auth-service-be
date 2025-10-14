@@ -15,7 +15,7 @@ export default function hasAnyPermission(
         try {
             const apiKey = req.header('x-api-key');
 
-            // Check for global permissions first
+            // Check for global roles first
             const userHasAnyPermissionOnGlobalRoles = await (
                 req.authorizedUser as User
             ).hasAnyPermission(permissionRefNames);
@@ -34,7 +34,7 @@ export default function hasAnyPermission(
                 throw new AppError(errorMsg, 403);
             }
 
-            // If roleScope is 'global', only global permissions are allowed
+            // If requireGlobalRole == true, only global roles are allowed
             if (requireGlobalRole) {
                 console.warn(
                     'Only users with global role for this permission must be allowed'
@@ -42,14 +42,16 @@ export default function hasAnyPermission(
                 throw new AppError(errorMsg, 403);
             }
 
-            // Check for channel-based roles (only if roleScope is 'channel')
+            // Check for global permissions on channel based roles
             const channelId = req.channel?.id;
+
+            console.log('channelId', channelId)
 
             const userHasAnyPermissionOnChannelBasedRoles = await (
                 req.authorizedUser as User
             ).hasAnyPermission(permissionRefNames, 'global', channelId);
 
-            // res.json({'userHasAnyPermissionOnChannelBasedRoles': userHasAnyPermissionOnChannelBasedRoles});
+            console.log('userHasAnyPermissionOnChannelBasedRoles', userHasAnyPermissionOnChannelBasedRoles)
 
             if (userHasAnyPermissionOnChannelBasedRoles) {
                 req.isGlobalRole = false;

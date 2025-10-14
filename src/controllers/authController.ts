@@ -7,8 +7,8 @@ import RefreshToken from '../database/models/RefreshToken';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
-import Permission from '../database/models/Permission';
 import Role from '../database/models/Role';
+import Permission from '../database/models/Permission';
 
 const generateToken = async (
     req: Request,
@@ -27,22 +27,6 @@ const generateToken = async (
 
         const match = await bcrypt.compare(req.body.password, user.password);
         if (!match) throw new AppError('Invalid email or password', 401);
-
-        // Channel checking
-        const apiKey = req.header('x-api-key');
-        if (!apiKey) throw new AppError('API Key not found', 401);
-
-        let channel = null;
-
-        if (apiKey.toLowerCase() != 'global') {
-            channel = await Channel.findOne({
-                where: {
-                    api_key: apiKey
-                }
-            });
-
-            if (!channel) throw new AppError('Invalid API key', 401);
-        }
 
         // Generating of refresh and access tokens
         const jti = uuidv4();
@@ -67,7 +51,7 @@ const generateToken = async (
         });
 
         const accessToken = jwt.sign(
-            { id: user.id, channel_id: channel?.id ?? null },
+            { id: user.id },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
@@ -111,7 +95,7 @@ const refreshToken = async (
         if (!user) throw new AppError('User not found', 404);
 
         const newAccessToken = jwt.sign(
-            { id: user.id, channel: decoded.channel_id },
+            { id: user.id, channel_id: decoded.channel_id },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
@@ -155,16 +139,11 @@ const me = async (
     next: NextFunction
 ): Promise<any> => {
     try {
-        const token = req.header('Authorization')?.split(' ')[1];
-        if (!token) throw new AppError('Token not found', 404);
-
-        const decoded = jwt.verify(token, process.env.ACCESS_SECRET!) as any;
-        const user = await User.findByPk(decoded.id);
-
-        if(!user) throw new AppError('User not found', 404)
-
-        const rolesWithPermissions = await Role.findAll({
+        const roles = await Role.findAll({
             attributes: ['id', 'ref_name', 'level', 'channel_id'],
+            where: {
+                channel_id: req.channel?.id ? req.channel.id : null
+            },
             include: [
                 {
                     model: Permission,
@@ -174,7 +153,7 @@ const me = async (
                 {
                     model: User,
                     attributes: [], // don’t return any user fields
-                    where: { id: user?.id }, // filter roles for this user
+                    where: { id: req.authorizedUser?.id }, // filter roles for this user
                     through: { attributes: [] } // hide User → Role join table
                 }
             ]
@@ -182,9 +161,10 @@ const me = async (
 
         res.json({
             status: 1,
+            channel: req.channel ?? null,
             user: {
-                ...user.toJSON(),
-                rolesWithPermissions
+                ...req.authorizedUser.toJSON(),
+                roles
             },
         });
     } catch (error: unknown) {

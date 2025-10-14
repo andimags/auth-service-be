@@ -10,17 +10,24 @@ export const checkApiKeyMiddleware = async (
     next: NextFunction
 ): Promise<any> => {
     try {
-        const refreshToken = req.cookies['refresh_token'];
-        if (!refreshToken) throw new AppError('Refresh token not found', 403);
+        // Channel checking
+        const apiKey = req.header('x-api-key');
+        if (!apiKey) throw new AppError('API Key not found', 401);
 
-        const decoded = jwt.verify(
-            refreshToken,
-            process.env.REFRESH_SECRET!
-        ) as IDecodedToken;
+        let channel = null;
 
-        let channel = await Channel.findByPk(decoded.channel_id);
+        if (apiKey.toLowerCase() != 'global') {
+            channel = await Channel.findOne({
+                attributes: ['id', 'name', 'ref_name'],
+                where: {
+                    api_key: apiKey
+                }
+            });
 
-        req.channel = channel;
+            if (!channel) throw new AppError('Invalid API key', 401);
+        }
+
+        req.channel = channel ?? null;
 
         next();
     } catch (error: any) {

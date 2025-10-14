@@ -105,6 +105,13 @@ export async function userHasAnyPermission(
         where: { channel_id: channelId }
     });
 
+    console.log([
+        { param: "channelRoles", value: channelRoles[0].get({plain: true}) },
+        { param: "permissionRefNames", value: permissionRefNames },
+        { param: "permissionScope", value: permissionScope }
+    ]);
+
+
     return await rolesHasPermissions(
         channelRoles,
         permissionRefNames,
