@@ -58,7 +58,8 @@ const generateToken = async (
 
         res.json({
             status: 1,
-            access_token: accessToken
+            access_token: accessToken,
+            refresh_token: refreshToken
         });
     } catch (error: unknown) {
         next(error);
