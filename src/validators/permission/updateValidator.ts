@@ -45,7 +45,7 @@ export const updateValidator = [
         ),
 
     body('sequence')
-        .optional()
+        .optional({ nullable: true })
         .isInt({ min: 1 })
         .withMessage('Sequence must be greater or equal to 1')
 ];

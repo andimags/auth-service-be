@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { Sequelize } from 'sequelize-typescript';
 import Channel from './models/Channel';
 import Permission from './models/Permission';
-import RefreshToken from './models/RefreshToken';
 import Role from './models/Role';
 import RolePermission from './models/RolePermission';
 import User from './models/User';
@@ -20,8 +19,7 @@ const sequelize = new Sequelize({
         Permission,
         User,
         UserRole,
-        RolePermission,
-        RefreshToken
+        RolePermission
     ],
     logging: false
 });

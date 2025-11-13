@@ -45,6 +45,7 @@
     },
     "dependencies": {
         "@types/express-validator": "^3.0.2",
+        "axios": "^1.13.2",
         "bcrypt": "^5.1.1",
         "cookie-parser": "^1.4.7",
         "express-validator": "^7.2.1",

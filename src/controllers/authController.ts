@@ -2,8 +2,6 @@ import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import Channel from '../database/models/Channel';
-import RefreshToken from '../database/models/RefreshToken';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
@@ -37,80 +35,78 @@ const generateToken = async (
             { expiresIn: '7d' }
         );
 
-        await RefreshToken.create({
-            user_id: user.id,
-            jti,
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
-
-        res.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict', // Protect from CSRF
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
-
         const accessToken = jwt.sign(
             { id: user.id },
             process.env.ACCESS_SECRET!,
             { expiresIn: '15m' }
         );
 
+        // Store refreshToken to cookies
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: false, // true only in production over HTTPS
+            sameSite: 'lax', // or 'none' if cross-domain with secure=true
+            maxAge: 15 * 60 * 1000
+        });
+
         res.json({
             status: 1,
-            access_token: accessToken,
-            refresh_token: refreshToken
+            access_token: accessToken
         });
     } catch (error: unknown) {
         next(error);
     }
 };
 
-const refreshToken = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const refreshToken = req.cookies['refresh_token'];
-        if (!refreshToken) throw new AppError('Refresh token not found', 403);
+        const oldRefreshToken = req.cookies['refresh_token'];
+        if (!oldRefreshToken) throw new AppError('Refresh token not found', 403);
 
-        const decoded = jwt.verify(
-            refreshToken,
-            process.env.REFRESH_SECRET!
-        ) as IDecodedToken;
+        let decoded: IDecodedToken;
 
-        // 🔍 Check if refresh token exists in DB
-        const tokenRecord = await RefreshToken.findOne({
-            where: {
-                user_id: decoded.id,
-                jti: decoded.jti
+        try {
+            decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET!) as IDecodedToken;
+        } catch (err: any) {
+            if (err.name === 'TokenExpiredError') {
+                throw new AppError('Refresh token expired', 403);
+            } else {
+                throw new AppError('Invalid refresh token', 403);
             }
-        });
-
-        if (!tokenRecord) {
-            throw new AppError('Refresh token invalid or revoked', 403);
         }
 
         const user = await User.findByPk(decoded.id);
         if (!user) throw new AppError('User not found', 404);
 
-        const newAccessToken = jwt.sign(
-            { id: user.id, channel_id: decoded.channel_id },
-            process.env.ACCESS_SECRET!,
-            { expiresIn: '15m' }
+        // Generate new tokens
+        const jti = uuidv4();
+
+        const newRefreshToken = jwt.sign(
+        { id: user.id, jti },
+        process.env.REFRESH_SECRET!,
+        { expiresIn: '7d' }
         );
+
+        const newAccessToken = jwt.sign(
+        { id: user.id, channel_id: decoded.channel_id },
+        process.env.ACCESS_SECRET!,
+        { expiresIn: '15m' }
+        );
+
+        // Store newRefreshToken to cookies
+        res.cookie('refresh_token', newRefreshToken, {
+            httpOnly: true,
+            secure: false, // true only in production over HTTPS
+            sameSite: 'lax', // or 'none' if cross-domain with secure=true
+            maxAge: 15 * 60 * 1000
+        });
 
         res.json({
             status: 1,
             access_token: newAccessToken
         });
-    } catch (error: any) {
-        if (error.name === 'TokenExpiredError') {
-            return next(new AppError('Refresh token expired', 403));
-        }
-
-        return next(new AppError('Invalid or expired refresh token', 403));
+    } catch (error) {
+        next(error);
     }
 };
 
