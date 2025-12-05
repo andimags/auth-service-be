@@ -137,7 +137,7 @@ const me = async (
 ): Promise<any> => {
     try {
         const roles = await Role.findAll({
-            attributes: ['id', 'ref_name', 'level', 'channel_id'],
+            attributes: ['id', 'ref_name', 'scope', 'level', 'channel_id'],
             where: {
                 channel_id: req.channel?.id ? req.channel.id : null
             },
