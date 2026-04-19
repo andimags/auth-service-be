@@ -22,7 +22,7 @@ describe('Auth Routes', () => {
             })
             .send({
                 email: authUser.email,
-                password: DEFAULT_PASSWORD
+                password: DEFAULT_PASSWORD,
             });
 
         accessToken = res.body.access_token;

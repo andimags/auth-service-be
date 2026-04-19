@@ -29,16 +29,16 @@ const generateToken = async (
         // Generating of refresh and access tokens
         const jti = uuidv4();
 
+        const accessToken = jwt.sign(
+            { id: user.id },
+            process.env.ACCESS_SECRET!,
+            { expiresIn: '5m' }
+        );
+
         const refreshToken = jwt.sign(
             { id: user.id, jti },
             process.env.REFRESH_SECRET!,
             { expiresIn: '7d' }
-        );
-
-        const accessToken = jwt.sign(
-            { id: user.id },
-            process.env.ACCESS_SECRET!,
-            { expiresIn: '15m' }
         );
 
         // Store refreshToken to cookies
@@ -49,9 +49,16 @@ const generateToken = async (
             maxAge: 15 * 60 * 1000
         });
 
+        const plainUser = user.toJSON();
+        const { password, ...userWithoutPassword } = plainUser;
+
         res.json({
-            status: 1,
-            access_token: accessToken
+            user: userWithoutPassword,
+            auth: {
+                access_token: accessToken,
+                token_type: "Bearer",
+                expires_in: 300 // 5m
+            }        
         });
     } catch (error: unknown) {
         next(error);
@@ -72,6 +79,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
                 throw new AppError('Refresh token expired', 403);
             } else {
                 throw new AppError('Invalid refresh token', 403);
+                console.log(err);
             }
         }
 
@@ -81,19 +89,19 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
         // Generate new tokens
         const jti = uuidv4();
 
-        const newRefreshToken = jwt.sign(
-        { id: user.id, jti },
-        process.env.REFRESH_SECRET!,
-        { expiresIn: '7d' }
-        );
-
         const newAccessToken = jwt.sign(
-        { id: user.id, channel_id: decoded.channel_id },
-        process.env.ACCESS_SECRET!,
-        { expiresIn: '15m' }
+            { id: user.id, channel_id: decoded.channel_id },
+            process.env.ACCESS_SECRET!,
+            { expiresIn: '5m' }
         );
 
-        // Store newRefreshToken to cookies
+        const newRefreshToken = jwt.sign(
+            { id: user.id, jti },
+            process.env.REFRESH_SECRET!,
+            { expiresIn: '7d' }
+        );
+
+        // Store new refreshToken to cookies
         res.cookie('refresh_token', newRefreshToken, {
             httpOnly: true,
             secure: false, // true only in production over HTTPS
@@ -101,9 +109,16 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
             maxAge: 15 * 60 * 1000
         });
 
+        const plainUser = user.toJSON();
+        const { password, ...userWithoutPassword } = plainUser;
+
         res.json({
-            status: 1,
-            access_token: newAccessToken
+            user: userWithoutPassword,
+            auth: {
+                access_token: newAccessToken,
+                token_type: "Bearer",
+                expires_in: 300 // 5m
+            }        
         });
     } catch (error) {
         next(error);
@@ -122,7 +137,6 @@ const verifyToken = async (
         const decoded = jwt.verify(token, process.env.ACCESS_SECRET!);
 
         res.json({
-            status: 1,
             decoded: decoded
         });
     } catch (error: unknown) {
@@ -157,7 +171,6 @@ const me = async (
         });
 
         res.json({
-            status: 1,
             channel: req.channel ?? null,
             user: {
                 ...req.authorizedUser.toJSON(),

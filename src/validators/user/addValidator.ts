@@ -32,13 +32,13 @@ export const addValidator = [
 
     body('last_name')
         .notEmpty()
-        .withMessage('First name is required')
+        .withMessage('Last name is required')
         .bail()
         .isLength({ min: 2 })
-        .withMessage('First name must have minimum of 2 characters')
+        .withMessage('Last name must have minimum of 2 characters')
         .matches(/^[a-zA-Z\s'-]+$/)
         .withMessage(
-            'First name can only contain letters, spaces, apostrophes, and hyphens'
+            'Last name can only contain letters, spaces, apostrophes, and hyphens'
         ),
 
     body('status')
