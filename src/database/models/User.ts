@@ -23,7 +23,8 @@ import {
     PrimaryKey,
     Scopes,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    HasMany
 } from 'sequelize-typescript';
 import { UserStatusType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
@@ -41,6 +42,7 @@ import { isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
 import UserRole from './UserRole';
 import hashPassword from '../../utils/hashPassword';
+import RefreshToken from './RefreshToken';
 
 @Scopes(() => ({
     withRoles: {
@@ -154,6 +156,9 @@ export default class User extends Model {
     @BelongsToMany(() => Role, () => UserRole)
     roles: Role[];
 
+    @HasMany(() => RefreshToken, 'user_id')
+    refreshTokens: RefreshToken[];
+        
     // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
 

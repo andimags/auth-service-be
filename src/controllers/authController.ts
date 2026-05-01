@@ -7,6 +7,8 @@ import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
 import Role from '../database/models/Role';
 import Permission from '../database/models/Permission';
+import RefreshToken from '../database/models/RefreshToken';
+import sequelize from '../database/sequelize';
 
 const generateToken = async (
     req: Request,
@@ -32,7 +34,7 @@ const generateToken = async (
         const accessToken = jwt.sign(
             { id: user.id },
             process.env.ACCESS_SECRET!,
-            { expiresIn: '5m' }
+            { expiresIn: '2m' }
         );
 
         const refreshToken = jwt.sign(
@@ -41,24 +43,27 @@ const generateToken = async (
             { expiresIn: '7d' }
         );
 
-        // Store refreshToken to cookies
-        res.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: false, // true only in production over HTTPS
-            sameSite: 'lax', // or 'none' if cross-domain with secure=true
-            maxAge: 15 * 60 * 1000
-        });
+        await RefreshToken.create({
+            user_id: user.id,
+            jti,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        })
 
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
 
         res.json({
             user: userWithoutPassword,
-            auth: {
-                access_token: accessToken,
-                token_type: "Bearer",
-                expires_in: 300 // 5m
-            }        
+            tokens:{
+                access:{
+                    value: accessToken,
+                    expires_at: Date.now() + 120 * 1000 // 2m
+                },
+                refresh:{
+                    value: refreshToken,
+                    expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7d
+                }
+            }
         });
     } catch (error: unknown) {
         next(error);
@@ -67,20 +72,17 @@ const generateToken = async (
 
 const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const oldRefreshToken = req.cookies['refresh_token'];
+        const oldRefreshToken = req.body['refresh_token'];
         if (!oldRefreshToken) throw new AppError('Refresh token not found', 403);
+        if (!process.env.REFRESH_SECRET) throw new AppError('Refresh token not found', 403);
 
         let decoded: IDecodedToken;
 
-        try {
-            decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET!) as IDecodedToken;
-        } catch (err: any) {
-            if (err.name === 'TokenExpiredError') {
-                throw new AppError('Refresh token expired', 403);
-            } else {
-                throw new AppError('Invalid refresh token', 403);
-                console.log(err);
-            }
+        try{
+            decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET) as IDecodedToken;
+        }
+        catch{
+            throw new AppError("Invalid token", 401);
         }
 
         const user = await User.findByPk(decoded.id);
@@ -92,21 +94,33 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
         const newAccessToken = jwt.sign(
             { id: user.id, channel_id: decoded.channel_id },
             process.env.ACCESS_SECRET!,
-            { expiresIn: '5m' }
+            { expiresIn: '2m' }
         );
 
         const newRefreshToken = jwt.sign(
             { id: user.id, jti },
-            process.env.REFRESH_SECRET!,
+            process.env.REFRESH_SECRET,
             { expiresIn: '7d' }
         );
 
-        // Store new refreshToken to cookies
-        res.cookie('refresh_token', newRefreshToken, {
-            httpOnly: true,
-            secure: false, // true only in production over HTTPS
-            sameSite: 'lax', // or 'none' if cross-domain with secure=true
-            maxAge: 15 * 60 * 1000
+        await sequelize.transaction(async (t) => {
+            const destroyedCount = await RefreshToken.destroy({
+                where: { jti: decoded.jti },
+                transaction: t
+            });
+
+            // If 0 rows were deleted, another refresh request likely won the race and
+            // rotated/deleted this token already. In that case, abort instead of issuing
+            // another refresh token (prevents token "explosion").
+            if (destroyedCount === 0) {
+                throw new AppError("Invalid token", 403);
+            }
+
+            await RefreshToken.create({
+                user_id: user.id,
+                jti,
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            }, { transaction: t });
         });
 
         const plainUser = user.toJSON();
@@ -114,11 +128,52 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
 
         res.json({
             user: userWithoutPassword,
-            auth: {
-                access_token: newAccessToken,
-                token_type: "Bearer",
-                expires_in: 300 // 5m
-            }        
+            tokens:{
+                access:{
+                    value: newAccessToken,
+                    expires_at: Date.now() + 120 * 1000 // 2m
+                },
+                refresh:{
+                    value: newRefreshToken,
+                    expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7d
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const destroyToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const oldRefreshToken = req.body['refresh_token'];
+        console.log(oldRefreshToken);
+        if (!oldRefreshToken) throw new AppError('Refresh token not found', 403);
+        if (!process.env.REFRESH_SECRET) throw new AppError('Refresh token not found', 403);
+
+        let decoded: IDecodedToken | null;
+
+        try{
+            decoded = jwt.verify(oldRefreshToken, process.env.REFRESH_SECRET) as IDecodedToken;
+        }
+        catch{
+            throw new AppError("Invalid token", 401);
+        }
+
+        console.log('decoded.jti', decoded.jti);
+
+        const deletedCount = await RefreshToken.destroy({
+            where: {
+                jti: decoded.jti
+            }
+        });
+
+        console.log('destroyToken deletedCount', deletedCount);
+
+        res.json({
+            message: "Logout successful",
+            deleted_refresh_token_rows: deletedCount,
+            decoded_jti: decoded.jti
         });
     } catch (error) {
         next(error);
@@ -220,6 +275,7 @@ const hasAnyPermission = async (
 export default {
     generateToken,
     refreshToken,
+    destroyToken,
     verifyToken,
     me,
     hasAnyPermission

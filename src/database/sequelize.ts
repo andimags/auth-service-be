@@ -6,6 +6,7 @@ import Role from './models/Role';
 import RolePermission from './models/RolePermission';
 import User from './models/User';
 import UserRole from './models/UserRole';
+import RefreshToken from './models/RefreshToken';
 
 const sequelize = new Sequelize({
     host: process.env.DB_HOST,
@@ -19,7 +20,8 @@ const sequelize = new Sequelize({
         Permission,
         User,
         UserRole,
-        RolePermission
+        RolePermission,
+        RefreshToken
     ],
     logging: false
 });
