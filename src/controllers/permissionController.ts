@@ -7,8 +7,17 @@ import paginate from '../utils/paginate';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const size = parseInt(req.query.size as string) || 10;
+        const page = Number.parseInt(req.query.page as string);
+        const size = Number.parseInt(req.query.size as string);
+
+        console.log('Query parameters:', req.query.size, req.query.page);
+
+        if(!req.query.page && !req.query.size){
+            const permissions = await Permission.findAll();
+            res.json(permissions);
+            return;
+        }
+
         const searchTerm = (req.query.search as string) || undefined;
         const scopeFilter = (req.query.scope as string) || undefined;
         const accessLevelFilter = (req.query.access_level as string) || undefined;

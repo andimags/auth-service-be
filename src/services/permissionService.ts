@@ -35,17 +35,19 @@ export async function isPermissionAssignable(
 }
 
 export async function findMissingPermissions(
-    permissionIds: number | number[]
+    permissionIds: number | string | (number | string)[]
 ): Promise<number[]> {
-    permissionIds = Array.isArray(permissionIds)
-        ? permissionIds
-        : [permissionIds];
-    const existingPermissions = await Permission.findAll({
-        where: { id: permissionIds }
-    });
-    const existingIds = existingPermissions.map((permission) => permission.id);
+    const normalizedIds = (Array.isArray(permissionIds) ? permissionIds : [permissionIds]).map(
+        (id) => Number(id)
+    );
 
-    return permissionIds.filter((id) => !existingIds.includes(id));
+    const existingPermissions = await Permission.findAll({
+        where: { id: normalizedIds }
+    });
+
+    const existingIds = new Set(existingPermissions.map((permission) => Number(permission.id)));
+
+    return normalizedIds.filter((id) => !existingIds.has(id));
 }
 
 /**
