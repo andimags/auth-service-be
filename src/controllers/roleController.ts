@@ -8,8 +8,15 @@ import Channel from '../database/models/Channel';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const size = parseInt(req.query.size as string) || 10;
+        const page = Number.parseInt(req.query.page as string);
+        const size = Number.parseInt(req.query.size as string);
+
+        if(!req.query.page && !req.query.size){
+            const roles = await Role.findAll();
+            res.json(roles);
+            return;
+        }
+
         const searchTerm = (req.query.search as string) || undefined;
         const scopeFilter = (req.query.scope as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;

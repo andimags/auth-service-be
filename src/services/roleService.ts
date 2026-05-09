@@ -37,14 +37,19 @@ export async function userCanManageRoles(
 }
 
 export async function findMissingRoles(
-    roleIds: number | number[]
+    roleIds: number | string | (number | string)[]
 ): Promise<number[]> {
-    // Returns array of role IDs that don't exist
-    roleIds = Array.isArray(roleIds) ? roleIds : [roleIds];
-    const existingRoles = await Role.findAll({ where: { id: roleIds } });
-    const existingIds = existingRoles.map((role) => role.id);
+    const normalizedIds = (Array.isArray(roleIds) ? roleIds : [roleIds]).map(
+        (id) => Number(id)
+    );
 
-    return roleIds.filter((id) => !existingIds.includes(id));
+    const existingRoles = await Role.findAll({
+        where: { id: normalizedIds }
+    });
+
+    const existingIds = new Set(existingRoles.map((role) => Number(role.id)));
+
+    return normalizedIds.filter((id) => !existingIds.has(id));
 }
 
 /**
