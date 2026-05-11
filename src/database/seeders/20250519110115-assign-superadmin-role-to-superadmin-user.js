@@ -4,14 +4,14 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         const [roleResult] = await queryInterface.sequelize.query(
-            `SELECT id FROM roles WHERE ref_name = 'superadmin' LIMIT 1;`
+            `SELECT id FROM roles WHERE is_superadmin = true LIMIT 1;`
         );
 
         const roleId = roleResult[0]?.id;
         if (!roleId) throw new Error('Superadmin role not found');
 
         const [userResult] = await queryInterface.sequelize.query(
-            `SELECT id FROM users WHERE username = 'superadmin' LIMIT 1;`
+            `SELECT id FROM users WHERE is_superadmin = true LIMIT 1;`
         );
 
         const userId = userResult[0]?.id;
@@ -30,14 +30,14 @@ module.exports = {
 
     async down(queryInterface, Sequelize) {
         const [roleResult] = await queryInterface.sequelize.query(
-            `SELECT id FROM roles WHERE ref_name = 'superadmin' LIMIT 1;`
+            `SELECT id FROM roles WHERE is_superadmin = true LIMIT 1;`
         );
 
         const roleId = roleResult[0]?.id;
         if (!roleId) throw new Error('Superadmin role not found');
 
         const [userResult] = await queryInterface.sequelize.query(
-            `SELECT id FROM users WHERE username = 'superadmin' LIMIT 1;`
+            `SELECT id FROM users WHERE is_superadmin = true LIMIT 1;`
         );
 
         const userId = userResult[0]?.id;

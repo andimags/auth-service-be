@@ -11,6 +11,7 @@ module.exports = {
             ref_name: 'superadmin',
             level: 1,
             scope: 'global',
+            is_superadmin: true,
             created_at: new Date(),
             updated_at: new Date()
         }], {});

@@ -24,7 +24,8 @@ import {
     Scopes,
     Table,
     UpdatedAt,
-    HasMany
+    HasMany,
+    BeforeCreate
 } from 'sequelize-typescript';
 import { UserStatusType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
@@ -143,6 +144,11 @@ export default class User extends Model {
     @Column(DataType.STRING)
     password: string;
 
+    @AllowNull(false)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    is_superadmin: boolean;
+
     @CreatedAt
     created_at: Date;
 
@@ -177,23 +183,44 @@ export default class User extends Model {
             instance.password = hashPassword(instance.password);
     }
 
+    @BeforeCreate
+    static preventAddingAnotherSuperadminUser(instance: User) {
+        if (
+            instance.is_superadmin
+        ) {
+            throw new AppError(
+                'There can only be one superadmin user',
+                403
+            );
+        }
+    }
+
     @BeforeUpdate
-    static preventUsernameUpdateForSuperadmin(instance: User) {
-        const originalUsername = instance.previous('username');
+    static preventSuperadminChangeUsername(instance: User) {
+        const isSuperadmin = instance.previous('is_superadmin');
 
         if (
-            originalUsername === 'superadmin' &&
-            instance.username !== originalUsername
+            isSuperadmin &&
+            instance.changed('is_superadmin')
         ) {
-            instance.username = originalUsername;
+            const usernameOriginalValue = instance.previous('username');
+            instance.username = usernameOriginalValue;
+        }
+    }
+
+    @BeforeUpdate
+    static preventChangeIsSuperadmin(instance: User) {
+        if (instance.changed('is_superadmin')) {
+            const originalValue = instance.previous('is_superadmin');
+            instance.is_superadmin = originalValue;
         }
     }
 
     @BeforeDestroy
-    static preventDeletingUserWithUsernameAsSuperadmin(instance: User) {
-        if (instance.username == 'superadmin') {
+    static preventDeleteSuperadmin(instance: User) {
+        if (instance.is_superadmin) {
             throw new AppError(
-                'User with username as superadmin cannot be deleted',
+                'Superadmin user cannot be deleted',
                 403
             );
         }

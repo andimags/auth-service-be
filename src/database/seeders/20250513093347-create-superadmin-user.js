@@ -11,6 +11,7 @@ module.exports = {
             last_name: 'admin',
             email: 'superadmin@gmail.com',
             password: bcrypt.hashSync('abcd1234', 10),
+            is_superadmin: true,
             created_at: new Date(),
             updated_at: new Date()
         }], {});

@@ -23,7 +23,7 @@ const sequelize = new Sequelize({
         RolePermission,
         RefreshToken
     ],
-    logging: false
+    logging: false,
 });
 
 export default sequelize;

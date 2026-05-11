@@ -2,12 +2,15 @@ import {
     AfterCreate,
     AllowNull,
     AutoIncrement,
+    BeforeCreate,
+    BeforeDestroy,
     BeforeUpdate,
     BelongsTo,
     BelongsToMany,
     Column,
     CreatedAt,
     DataType,
+    Default,
     DeletedAt,
     ForeignKey,
     Model,
@@ -32,6 +35,7 @@ import RolePermission from './RolePermission';
 import User from './User';
 import UserRole from './UserRole';
 import { isRoleHigher } from '../../services/roleService';
+import { AppError } from '../../middlewares/errorHandler';
 
 @Scopes(() => ({
     // includes
@@ -75,6 +79,11 @@ export default class Role extends Model {
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(RoleScopeType)))
     scope: string;
+
+    @AllowNull(false)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    is_superadmin: boolean;
 
     @CreatedAt
     created_at: Date;
@@ -131,10 +140,40 @@ export default class Role extends Model {
         await user?.addRoles([role]);
     }
 
+    @BeforeCreate
+    static preventAddingAnotherSuperadminRole(instance: Role) {
+        if (
+            instance.is_superadmin
+        ) {
+            throw new AppError(
+                'There can only be one superadmin role',
+                403
+            );
+        }
+    }
+
+    @BeforeUpdate
+    static preventChangeIsSuperadmin(instance: Role) {
+        if (instance.changed('is_superadmin')) {
+            const originalValue = instance.previous('is_superadmin');
+            instance.is_superadmin = originalValue;
+        }
+    }
+
     @BeforeUpdate
     static preventChannelIdUpdate(instance: Role) {
         if (instance.changed('channel_id')) {
             throw new Error('channel_id cannot be modified once set.');
+        }
+    }
+
+    @BeforeDestroy
+    static preventDeleteSuperadmin(instance: Role) {
+        if (instance.is_superadmin) {
+            throw new AppError(
+                'Superadmin role cannot be deleted',
+                403
+            );
         }
     }
 }

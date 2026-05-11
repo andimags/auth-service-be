@@ -1,10 +1,15 @@
 'use strict';
 
+// IGNORE SEEDER
+// No longer needed since superadmin role will no longer have to attach permissions one by one as it must automatically bypass the middleware if is_superadmin column is true
+
 const globalPermissionsJson = require('../../constants/globalPermissions.json');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
+        return true;
+
         // Fetch the role ID using raw SQL
         const [results] = await queryInterface.sequelize.query(
             `SELECT id FROM roles WHERE ref_name = 'superadmin' LIMIT 1;`
@@ -36,6 +41,8 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
+        return true;
+
         const [results] = await queryInterface.sequelize.query(
             `SELECT id FROM roles WHERE ref_name = 'superadmin' LIMIT 1;`
         );
