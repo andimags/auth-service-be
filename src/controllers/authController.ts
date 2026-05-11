@@ -21,7 +21,21 @@ const generateToken = async (
             attributes: { include: ['password'] },
             where: {
                 email: req.body.email
-            }
+            },
+            include: [
+                {
+                    model: Role,
+                    attributes: ['id', 'ref_name', 'scope'],
+                    through: { attributes: [] }, // hide User → Role join table
+                    include: [
+                        {
+                            model: Permission,
+                            attributes: ['id', 'ref_name', 'scope'],
+                            through: { attributes: [] } // hide Role → Permission join table
+                        }
+                    ]
+                }
+            ]
         });
         if (!user) throw new AppError('User not found', 401);
 
