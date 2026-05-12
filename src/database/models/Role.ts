@@ -146,10 +146,13 @@ export default class Role extends Model {
     }
 
     @BeforeUpdate
-    static preventChangeIsSuperadmin(instance: Role) {
-        if (instance.changed('is_superadmin')) {
-            const originalValue = instance.previous('is_superadmin');
-            instance.is_superadmin = originalValue;
+    static preventSuperadminRoleModification(instance: Role) {
+        // block ANY attempted update to ANY column
+        if (instance.previous('is_superadmin') === true && instance.changed()) {
+            throw new AppError(
+                'Superadmin role cannot be modified',
+                403
+            );
         }
     }
 
