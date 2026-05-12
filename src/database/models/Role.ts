@@ -133,13 +133,6 @@ export default class Role extends Model {
     >;
 
     // Hooks
-    @AfterCreate
-    static async assignToSuperadminUser(role: Role) {
-        const user = await User.findOne({ where: { username: 'superadmin' } });
-
-        await user?.addRoles([role]);
-    }
-
     @BeforeCreate
     static preventAddingAnotherSuperadminRole(instance: Role) {
         if (
