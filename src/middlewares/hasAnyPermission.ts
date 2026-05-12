@@ -5,8 +5,6 @@ import { AppError } from './errorHandler';
 const errorMsg =
     'You do not have the required permissions to perform this action';
 
-// Checks permission on GLOBAL scope only
-// If roleScope == 'global', it only allows permissions attached to a global role and not channel-based roles
 export default function hasAnyPermission(
     permissionRefNames: string | string[],
     requireGlobalRole: boolean = true
@@ -14,11 +12,16 @@ export default function hasAnyPermission(
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             const apiKey = req.header('x-api-key');
+            const authorizedUser = req.authorizedUser as User;
+
+            if(await authorizedUser.isSuperadmin()){
+                console.log('User is superadmin, bypassing permission checks');
+                req.isGlobalRole = true;
+                return next();
+            }
 
             // Check for global roles first
-            const userHasAnyPermissionOnGlobalRoles = await (
-                req.authorizedUser as User
-            ).hasAnyPermission(permissionRefNames);
+            const userHasAnyPermissionOnGlobalRoles = await (authorizedUser).hasAnyPermission(permissionRefNames);
 
             if (userHasAnyPermissionOnGlobalRoles) {
                 req.isGlobalRole = true;
@@ -45,13 +48,9 @@ export default function hasAnyPermission(
             // Check for global permissions on channel based roles
             const channelId = req.channel?.id;
 
-            console.log('channelId', channelId)
-
             const userHasAnyPermissionOnChannelBasedRoles = await (
                 req.authorizedUser as User
             ).hasAnyPermission(permissionRefNames, 'global', channelId);
-
-            console.log('userHasAnyPermissionOnChannelBasedRoles', userHasAnyPermissionOnChannelBasedRoles)
 
             if (userHasAnyPermissionOnChannelBasedRoles) {
                 req.isGlobalRole = false;

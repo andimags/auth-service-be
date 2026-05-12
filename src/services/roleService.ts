@@ -140,3 +140,13 @@ export async function isRoleHigher(firstRole: Role, secondRole: Role) {
 
     return false;
 }
+
+export async function isUserHasSuperadminRole(user: User){
+    const superadminRole = await user.getRoles({
+        where: {
+            is_superadmin: true
+        }
+    })
+
+    return superadminRole.length > 0;
+}

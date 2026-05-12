@@ -39,7 +39,7 @@ import {
     userHasAccessToPermission,
     userHasAnyPermission
 } from '../../services/permissionService';
-import { isUserMorePrivilegedThan } from '../../services/roleService';
+import { isUserHasSuperadminRole, isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
 import UserRole from './UserRole';
 import hashPassword from '../../utils/hashPassword';
@@ -111,6 +111,10 @@ export default class User extends Model {
         channelId?: number
     ): Promise<boolean> {
         return await userHasAccessToPermission(this, permissionId, channelId);
+    }
+
+    async isSuperadmin(): Promise<boolean> {
+        return this.is_superadmin || await isUserHasSuperadminRole(this);
     }
 
     // Columns
