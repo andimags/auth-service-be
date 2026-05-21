@@ -3,7 +3,6 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { UserStatusType } from '../constants/enums';
-import Channel from '../database/models/Channel';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -51,21 +50,6 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log('hello world');
-        const authorizedUserHasPermissions = await (
-            req.authorizedUser as User
-        ).hasAnyPermission(['view:user', 'admin:user']);
-
-        if (
-            !authorizedUserHasPermissions &&
-            req.authorizedUser.id != parseInt(req.params.user_id)
-        ) {
-            throw new AppError(
-                'You do not have the required permissions to perform this action',
-                403
-            );
-        }
-
         const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
@@ -104,21 +88,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         const authorizedUser = req.authorizedUser;
 
-        const authorizedUserHasAnyPermission =
-            await authorizedUser!.hasAnyPermission([
-                'update:user',
-                'admin:user'
-            ]);
-
         // Skip these validations if user is updating herself
         if (targetUser.id != authorizedUser!.id) {
-            if (!authorizedUserHasAnyPermission) {
-                throw new AppError(
-                    'You do not have the required permissions to perform this action',
-                    403
-                );
-            }
-
             const isAuthorizedUserMorePrivileged =
                 await authorizedUser?.isMorePrivilegedThan(targetUser.id);
 
@@ -129,8 +100,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 );
             }
         } else {
+            // user cannot update their own status
             delete req.body.status;
-            delete req.body.username;
         }
 
         await targetUser?.update(req.body);
@@ -151,10 +122,8 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         const targetUser = await User.findByPk(req.params.user_id, {
             paranoid: false
         });
-        if (!targetUser) throw new AppError('User not found', 404);
 
-        if (targetUser?.username == 'superadmin')
-            throw new AppError('Cannot delete superadmin user', 403);
+        if (!targetUser) throw new AppError('User not found', 404);
 
         const authorizedUser = req.authorizedUser;
         const isAuthorizedUserMorePrivileged =
