@@ -2,13 +2,14 @@ import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import Permission from '../database/models/Permission';
+import Policy from '../database/models/Policy';
+import RefreshToken from '../database/models/RefreshToken';
+import Role from '../database/models/Role';
 import User from '../database/models/User';
+import sequelize from '../database/sequelize';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
-import Role from '../database/models/Role';
-import Permission from '../database/models/Permission';
-import RefreshToken from '../database/models/RefreshToken';
-import sequelize from '../database/sequelize';
 
 const generateToken = async (
     req: Request,
@@ -29,9 +30,16 @@ const generateToken = async (
                     through: { attributes: [] }, // hide User → Role join table
                     include: [
                         {
-                            model: Permission,
-                            attributes: ['id', 'ref_name', 'scope'],
-                            through: { attributes: [] } // hide Role → Permission join table
+                            model: Policy,
+                            attributes: ['id', 'ref_name'],
+                            through: { attributes: [] }, // hide Role → Policy join table
+                            include: [
+                                {
+                                    model: Permission,
+                                    attributes: ['id', 'ref_name'],
+                                    through: { attributes: [] } // hide Policy → Permission join table
+                                }
+                            ]
                         }
                     ]
                 }
@@ -48,7 +56,8 @@ const generateToken = async (
         const accessToken = jwt.sign(
             { id: user.id },
             process.env.ACCESS_SECRET!,
-            { expiresIn: '2m' }
+            // { expiresIn: '2m' }
+            { expiresIn: '1d' }
         );
 
         const refreshToken = jwt.sign(
@@ -260,6 +269,8 @@ const hasAnyPermission = async (
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
 
+        console.log("hello,", req.body.role_scope);
+
         const decoded = jwt.verify(
             token,
             process.env.ACCESS_SECRET!
@@ -268,8 +279,8 @@ const hasAnyPermission = async (
             req.authorizedUser as User
         ).hasAnyPermission(
             req.body.permission_ref_names,
-            req.body.permission_scope,
-            decoded.channel_id ?? null
+            req.body.role_scope,
+            decoded.channel_id ?? undefined
         );
 
         console.log('hasPermissions', hasPermissions);

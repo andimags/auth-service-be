@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
-import { findMissingRoles, userCanManageRoles } from '../services/roleService';
+import { findMissingRoles, findRolesNotInChannel } from '../services/roleService';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (
@@ -16,7 +16,7 @@ const getUserRoles = async (
         let roles = null;
 
         // Only show user roles within their channel if the authenticated user's role is not global
-        if (req.isGlobalRole) {
+        if (req.isGlobalScope) {
             roles = await targetUser.getRoles();
         } else {
             roles = await targetUser.getRoles({
@@ -51,25 +51,28 @@ const addUserRoles = async (
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
         }
 
-        const authUserRoleLevel = await (
-            req.authorizedUser as User
-        ).hasAnyPermissionLevel(
-            ['assign:user_role', 'admin:user_role'],
-            'global'
-        );
-        const authUserCanAssignRoles = await userCanManageRoles(
-            req.body.role_ids,
-            authUserRoleLevel!,
-            req.channel?.id,
-            req.isGlobalRole
-        );
+        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
 
-        // If the request is made by a channel-based role, it ensures that they can only attach role ids within their channel
-        if (!authUserCanAssignRoles)
+        if (!authUserIsMorePrivileged) {
             throw new AppError(
-                'One or more roles cannot be added: they either belong to a different channel or have a level equal to or higher than your own',
+                'You can only assign roles to users with a lower privilege level than yourself',
                 403
             );
+        }
+
+        if(!req.isGlobalScope) {
+            const rolesNotInChannel = await findRolesNotInChannel(
+                req.body.role_ids,
+                req.channel!.id
+            );
+
+            if (rolesNotInChannel.length > 0) {
+                throw new AppError(
+                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    403
+                );
+            }
+        }
 
         if (Array.isArray(req.body.role_ids)) {
             await targetUser.addRoles(req.body.role_ids);
@@ -104,25 +107,29 @@ const replaceUserRoles = async (
         if (missingRoles.length > 0)
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        const authUserRoleLevel = await (
-            req.authorizedUser as User
-        ).hasAnyPermissionLevel(
-            ['assign:user_role', 'admin:user_role'],
-            'global'
-        );
 
-        const authUserCanAssignRoles = await userCanManageRoles(
-            req.body.role_ids,
-            authUserRoleLevel!,
-            req.channel?.id,
-            req.isGlobalRole
-        );
+        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
 
-        if (!authUserCanAssignRoles)
+        if (!authUserIsMorePrivileged) {
             throw new AppError(
-                'One or more roles cannot be replaced: they either belong to a different channel or have a level equal to or higher than your own',
+                'You can only assign roles to users with a lower privilege level than yourself',
                 403
             );
+        }
+
+        if(!req.isGlobalScope) {
+            const rolesNotInChannel = await findRolesNotInChannel(
+                req.body.role_ids,
+                req.channel!.id
+            );
+
+            if (rolesNotInChannel.length > 0) {
+                throw new AppError(
+                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    403
+                );
+            }
+        }
 
         await targetUser.setRoles(req.body.role_ids);
 
@@ -153,24 +160,28 @@ const destroyUserRole = async (
         if (missingRoles.length > 0)
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        const authUserRoleLevel = await (
-            req.authorizedUser as User
-        ).hasAnyPermissionLevel(
-            ['assign:user_role', 'admin:user_role'],
-            'global'
-        );
-        const authUserCanAssignRoles = await userCanManageRoles(
-            req.body.role_ids,
-            authUserRoleLevel!,
-            req.channel?.id,
-            req.isGlobalRole
-        );
+        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
 
-        if (!authUserCanAssignRoles)
+        if (!authUserIsMorePrivileged) {
             throw new AppError(
-                'One or more roles cannot be deleted: they either belong to a different channel or have a level equal to or higher than your own',
+                'You can only assign roles to users with a lower privilege level than yourself',
                 403
             );
+        }
+
+        if(!req.isGlobalScope) {
+            const rolesNotInChannel = await findRolesNotInChannel(
+                req.body.role_ids,
+                req.channel!.id
+            );
+
+            if (rolesNotInChannel.length > 0) {
+                throw new AppError(
+                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    403
+                );
+            }
+        }
 
         if (Array.isArray(req.body.role_ids)) {
             await targetUser.removeRoles(req.body.role_ids);

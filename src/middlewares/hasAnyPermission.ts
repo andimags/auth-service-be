@@ -14,17 +14,17 @@ export default function hasAnyPermission(
             const apiKey = req.header('x-api-key');
             const authorizedUser = req.authorizedUser as User;
 
-            if(await authorizedUser.isSuperadmin()){
+            if(authorizedUser.isSuperadmin() || authorizedUser.isRootSuperadmin()) {
                 console.log('User is superadmin, bypassing permission checks');
-                req.isGlobalRole = true;
+                req.isGlobalScope = true;
                 return next();
             }
 
             // Check for global roles first
-            const userHasAnyPermissionOnGlobalRoles = await (authorizedUser).hasAnyPermission(permissionRefNames);
+            const userHasAnyPermissionOnGlobalRoles = await (authorizedUser).hasAnyPermission(permissionRefNames, 'global');
 
             if (userHasAnyPermissionOnGlobalRoles) {
-                req.isGlobalRole = true;
+                req.isGlobalScope = true;
                 return next(); // Continue to next middleware/route handler
             }
 
@@ -53,7 +53,7 @@ export default function hasAnyPermission(
             ).hasAnyPermission(permissionRefNames, 'global', channelId);
 
             if (userHasAnyPermissionOnChannelBasedRoles) {
-                req.isGlobalRole = false;
+                req.isGlobalScope = false;
                 return next(); // Continue to next middleware/route handler
             }
             throw new AppError(errorMsg, 403);

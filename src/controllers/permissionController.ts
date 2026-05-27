@@ -74,13 +74,14 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         );
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
-        const hasAccessToPermission = await (
-            req.authorizedUser as User
-        ).hasAccessToPermission(targetPermission.id, req.channel?.id ?? null);
+        const hasAccessToPermission = await req.authorizedUser.hasPermissions(
+            targetPermission.ref_name,
+            req.channel?.id ?? undefined
+        );
 
-        if (!req.isGlobalRole && !hasAccessToPermission) {
+        if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
-                'You are not authorized to view this permission, as it is not assigned to any of your roles',
+                'You are not authorized to view this permission',
                 403
             );
         }
@@ -116,14 +117,14 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         const hasAccessToPermission = await (
             req.authorizedUser as User
-        ).hasAccessToPermission(
-            targetPermission.id,
+        ).hasPermissions(
+            targetPermission.ref_name,
             req.channel?.id ?? undefined
         );
 
-        if (!req.isGlobalRole && !hasAccessToPermission) {
+        if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
-                'You are not authorized to update this permission, as it is not assigned to any of your roles',
+                'You are not authorized to update this permission',
                 403
             );
         }

@@ -67,11 +67,14 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let newUser = await User.create(req.body);
+        const newUser = await User.create(req.body);
+
+        const user = newUser.toJSON();
+        delete user.password;
 
         res.json({
             status: 1,
-            data: newUser
+            data: user
         });
     } catch (error: unknown) {
         next(error);

@@ -9,14 +9,14 @@ export class AppError extends Error {
         this.statusCode = statusCode;
         Object.setPrototypeOf(this, AppError.prototype); // Required for instanceof
     }
-    }
+}
 
-    export const errorHandler = (
+export const errorHandler = (
     err: unknown,
     req: Request,
     res: Response,
     next: NextFunction
-    ) => {
+) => {
     console.error('Backend error:', err);
 
     let statusCode = 500;
@@ -35,7 +35,6 @@ export class AppError extends Error {
 
     // Always return JSON with consistent structure
     res.status(statusCode).json({
-        status: 0, // 0 = failure, 1 = success
-        message,
+        message
     });
 };

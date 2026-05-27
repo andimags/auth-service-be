@@ -1,265 +1,122 @@
-import { Op } from 'sequelize';
-import Permission from '../database/models/Permission';
-import Role from '../database/models/Role';
+import Permission, {IPermission} from '../database/models/Permission';
+import Policy, {IPolicy} from '../database/models/Policy';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
+import { WhereOptions } from 'sequelize';
 
-// Channel based roles can only assign permissions in channel-based scope
-export async function isPermissionAssignable(
-    permissionIds: number | number[],
-    isAuthorizedUserGlobalRole: boolean = false
-): Promise<boolean> {
-    // Global roles can assign any permissions
-    if (isAuthorizedUserGlobalRole) {
-        return true;
-    }
+// Permission functions
+// 1. isPermissionAssignable
+// 2. findMissingPermissions
+// 3. userHasAnyPermission
+// 4. rolesHavePermissions
+// 5. hasAnyPermissionLevel
+// 6. getUserPermissions
+// 7. userHasAccessToPermission
 
-    // Channel-based roles can only assign roles within their channel
-    if (Array.isArray(permissionIds)) {
-        for (const id of permissionIds) {
-            const permission = await Permission.findByPk(id);
-
-            if (permission?.scope === 'global') {
-                return false;
-            }
-        }
-    } else {
-        const permission = await Permission.findByPk(permissionIds);
-
-        if (permission?.scope == 'global') {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-export async function findMissingPermissions(
-    permissionIds: number | string | (number | string)[]
-): Promise<number[]> {
-    const normalizedIds = (Array.isArray(permissionIds) ? permissionIds : [permissionIds]).map(
-        (id) => Number(id)
-    );
-
-    const existingPermissions = await Permission.findAll({
-        where: { id: normalizedIds }
-    });
-
-    const existingIds = new Set(existingPermissions.map((permission) => Number(permission.id)));
-
-    return normalizedIds.filter((id) => !existingIds.has(id));
-}
-
-/**
- * @param userId
- * The ID of the user to check permission for.
- *
- * @param permissionRefNames
- * A single permission name or an array of permission names to check.
- *
- * @param permissionScope
- * If provided, restricts the check to either 'channel' or 'global' permissions only.
- *
- * @param channelId
- * If provided, checks for channel-based roles for the specified channelId
- * If not provided, checks only global roles.
- * Must be provided if permissionScope is 'channel'.
- *
- * @returns boolean
- * True if the user has at least one of the requested permissions in the applicable scope(s), false otherwise.
- */
-export async function userHasAnyPermission(
+export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    permissionScope: 'channel' | 'global' = 'global',
+    roleScope: 'global' | 'channel' | '*',
     channelId?: number
-): Promise<boolean> {
-    if (!user) throw new AppError('User not found', 404);
+): Promise<boolean> => {
+    const permissions = await getUserPermissions(user, roleScope, channelId);
 
-    if (permissionScope === 'channel' && !channelId) {
-        throw new Error(
-            "channelId must be provided when permissionScope is 'channel'"
-        );
-    }
+    const requiredPermissions = Array.isArray(permissionRefNames)
+        ? permissionRefNames
+        : [permissionRefNames];
 
-    // Check global roles
-    const globalRoles = await user.getRoles({
-        where: { channel_id: { [Op.is]: null }, scope: 'global' }
-    });
-
-    if (
-        globalRoles &&
-        (await rolesHasPermissions(
-            globalRoles,
-            permissionRefNames,
-            permissionScope
-        ))
-    ) {
-        return true;
-    }
-
-    if (!channelId) {
-        return false;
-    }
-
-    // Check channel roles
-    const channelRoles = await user.getRoles({
-        where: { channel_id: channelId }
-    });
-
-    console.log([
-        { param: "channelRoles", value: channelRoles[0].get({plain: true}) },
-        { param: "permissionRefNames", value: permissionRefNames },
-        { param: "permissionScope", value: permissionScope }
-    ]);
-
-
-    return await rolesHasPermissions(
-        channelRoles,
-        permissionRefNames,
-        permissionScope
+    return requiredPermissions.every(refName =>
+        permissions.some((permission: IPermission) => {
+            return permission.ref_name === refName
+        })
     );
-}
+};
 
-async function rolesHasPermissions(
-    roles: any[],
-    permissionRefNames: string | string[],
-    permissionScope: string
-): Promise<boolean> {
-    if (!roles?.length) return false;
-
-    const whereCondition = Array.isArray(permissionRefNames)
-        ? { ref_name: { [Op.in]: permissionRefNames }, scope: permissionScope }
-        : { ref_name: permissionRefNames, scope: permissionScope };
-
-    for (const role of roles) {
-        const [permission] = await role.getPermissions({
-            where: whereCondition,
-            limit: 1
-        });
-        if (permission) return true;
-    }
-
-    return false;
-}
-
-/**
- *
- * @param user
- * @param permissionRefNames
- * @param permissionsScope
- * @param channelId
- * If provided, will check only channel-based roles, if not, it will check all roles
- *
- * @returns Promise<number | null>
- */
-export async function hasAnyPermissionLevel(
+export const userHasAnyPermission = async (
     user: User,
     permissionRefNames: string | string[],
-    permissionsScope: 'global' | 'channel',
+    roleScope: 'global' | 'channel' | '*',
     channelId?: number
-): Promise<number | null> {
-    let highestLevel: number | null = null;
+): Promise<boolean> => {
+    const permissions = await getUserPermissions(user, roleScope, channelId);
+    console.log('users permissions: ', permissions);
 
-    let roles: Role[] | null = null;
+    const requiredPermissions = Array.isArray(permissionRefNames)
+        ? permissionRefNames
+        : [permissionRefNames];
 
-    if (channelId) {
-        roles = await user.getRoles({
-            where: { channel_id: { [Op.in]: [channelId, null] } }
-        });
-    } else {
-        roles = await user.getRoles({
-            where: { channel_id: { [Op.eq]: null } }
-        });
+    return requiredPermissions.some(refName =>
+        permissions.some((permission: IPermission) => {
+            return permission.ref_name === refName
+        })
+    );
+};
+
+export const getUserPermissions = async (
+    user: User,
+    roleScope: 'global' | 'channel' | '*',
+    channelId?: number
+): Promise<IPermission[]> => {
+    if (roleScope === 'channel' && !channelId) {
+        throw new AppError('channelId is required when roleScope is channel', 400);
     }
 
-    if (!roles) return null;
+    const whereOptions: WhereOptions = {};
 
-    for (const role of roles) {
-        const permissions = await role.getPermissions({
-            where: {
-                ref_name: {
-                    [Op.in]: Array.isArray(permissionRefNames)
-                        ? permissionRefNames
-                        : [permissionRefNames]
-                },
-                scope: permissionsScope
-            }
-        });
-
-        if (permissions.length > 0) {
-            const currentLevel = role.level;
-
-            if (highestLevel === null || currentLevel < highestLevel) {
-                highestLevel = currentLevel;
-            }
-        }
+    if (roleScope === 'global' || roleScope === 'channel') {
+        whereOptions.scope = roleScope;
     }
 
-    return highestLevel;
-}
+    if (roleScope === 'channel') {
+        whereOptions.channel_id = channelId!;
+    }
 
-export async function getUserPermissions(
-    targetUserId: number, // the user whose permissions you're checking
-    channelId?: number
-) {
-    const user = await User.findByPk(targetUserId);
-
-    if (!user) throw new AppError('User not found.', 404);
+    console.log('whereOptions', whereOptions);
 
     const roles = await user.getRoles({
-        where: {
-            channel_id: {
-                [Op.in]: channelId ? [null, channelId] : [null]
+        where: whereOptions,
+        include: [
+            {
+                model: Policy,
+                through: { attributes: [] },
+                include: [
+                    {
+                        model: Permission,
+                        through: { attributes: [] }
+                    }
+                ]
             }
-        }
+        ]
     });
 
-    const permissionsNested = await Promise.all(
-        roles.map((role) => role.getPermissions())
-    );
-    const permissions = permissionsNested.flat();
+    const test = await user.getRoles();
+    console.log('roles', test);
 
-    // Remove duplicate permissions
-    const uniquePermissions = Array.from(
-        new Map(permissions.map((p) => [p.id, p])).values()
-    );
+    const permissionsSet = new Set<IPermission>();
 
-    return uniquePermissions;
-}
-
-/**
- *
- * @param userId
- * @param permissionId
- * @param channelId - Assume to look only for global roles if it's empty
- *
- * Checks if the user has access to a specific permission.
- * It verifies whether the permission is assigned to the user.
- * If `channelId` is provided, both global and channel-specific roles are considered.
- * If `channelId` is not provided, only global roles are checked.
- * */
-export async function userHasAccessToPermission(
-    user: User,
-    permissionId: number,
-    channelId?: number
-): Promise<boolean> {
-    const roles = await user?.getRoles({
-        where: {
-            channel_id: { [Op.in]: channelId ? [null, channelId] : [null] }
-        }
-    });
-    if (!roles) return false;
-
-    for (const role of roles) {
-        const [permission] = await role.getPermissions({
-            where: { id: permissionId }
+    roles.forEach(role => {
+        role.policies.forEach((policy: IPolicy) => {
+            policy.permissions.forEach((permission: IPermission) => {
+                permissionsSet.add(permission);
+            });
         });
+    });
 
-        if (permission) {
-            return true;
-        }
-    }
-
-    return false;
+    return Array.from(permissionsSet);
 }
+
+export const findMissingPermissionIds = async (
+    permissionIds: number | number[]
+): Promise<number[]> => {
+    const ids = Array.isArray(permissionIds) ? permissionIds : [permissionIds];
+
+    const existingPermissions = await Permission.findAll({
+        where: {
+            id: ids
+        }
+    });
+
+    const existingPermissionIds = new Set(existingPermissions.map(p => p.id));
+
+    return ids.filter(id => !existingPermissionIds.has(id));
+};

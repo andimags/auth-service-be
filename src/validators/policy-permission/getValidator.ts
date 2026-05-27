@@ -1,10 +1,10 @@
 import { param } from 'express-validator';
 
 export const getValidator = [
-    param('role_id')
+    param('policy_id')
         .notEmpty()
-        .withMessage('User ID is required')
+        .withMessage('Policy ID is required')
         .bail()
         .isInt()
-        .withMessage('User ID must be integer')
+        .withMessage('Policy ID must be integer')
 ];

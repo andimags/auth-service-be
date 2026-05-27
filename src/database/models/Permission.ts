@@ -1,4 +1,4 @@
-import { BelongsToManyGetAssociationsMixin } from 'sequelize';
+import { BelongsToManyGetAssociationsMixin, InferAttributes, InferCreationAttributes } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
@@ -16,22 +16,23 @@ import {
     PrimaryKey,
     Scopes,
     Table,
+    Unique,
     UpdatedAt
 } from 'sequelize-typescript';
 import {
-    PermissionAccessLevelType,
-    PermissionScopeType
+    PermissionAccessLevelType
 } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
 import Channel from './Channel';
-import Role from './Role';
-import RolePermission from './RolePermission';
+import Policy from './Policy';
+import PolicyPermission from './PolicyPermission';
 
 @DefaultScope(() => ({
     attributes: {
         exclude: ['admin_password']
     }
 }))
+
 @Scopes(() => ({
     withChannel: {
         include: [
@@ -44,16 +45,11 @@ import RolePermission from './RolePermission';
         ]
     }
 }))
+
 @Table({
-    tableName: 'permissions',
-    indexes: [
-        {
-            name: 'unique_ref_name_scope', // optional name
-            unique: true,
-            fields: ['ref_name', 'scope']
-        }
-    ]
+    tableName: 'permissions'
 })
+
 export default class Permission extends Model {
     @PrimaryKey
     @AutoIncrement
@@ -68,6 +64,7 @@ export default class Permission extends Model {
     description: string;
 
     @AllowNull(false)
+    @Unique
     @Column(DataType.STRING)
     ref_name: string;
 
@@ -76,15 +73,13 @@ export default class Permission extends Model {
     module: string;
 
     @AllowNull(false)
-    @Column(DataType.ENUM(...Object.values(PermissionScopeType)))
-    scope: string;
-
-    @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(PermissionAccessLevelType)))
     access_level: string;
 
-    @Column(DataType.INTEGER)
-    sequence: number;
+    @AllowNull(false)
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    is_system: boolean;
 
     @CreatedAt
     created_at: Date;
@@ -95,16 +90,18 @@ export default class Permission extends Model {
     @DeletedAt
     deleted_at: Date;
 
-    @BelongsToMany(() => Role, () => RolePermission)
-    roles: Role[];
+    // Associatons
+    @BelongsToMany(() => Policy, () => PolicyPermission)
+    roles: Policy[];
 
-    declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
+    // Mixins
+    declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
 
     @BeforeUpdate
-    static preventGlobalScopeSoftDeletion(permission: Permission) {
-        if (permission.scope === 'global' && permission.changed('deleted_at')) {
+    static preventSystemPermissionSoftDeletion(permission: Permission) {
+        if (permission.is_system && permission.changed('deleted_at')) {
             throw new AppError(
-                'Global scope permissions cannot be deleted',
+                'System permissions cannot be deleted',
                 403
             );
         }
@@ -112,22 +109,25 @@ export default class Permission extends Model {
 
     @BeforeUpdate
     @BeforeCreate
-    static preventGlobalScopeModification(permission: Permission) {
-        if (permission.scope === 'global') {
+    static preventSystemPermissionModification(permission: Permission) {
+        if (permission.is_system) {
             throw new AppError(
-                'Global scope permissions must be seeded. You cannot create or update a permission to have a global scope',
+                'System permissions must be seeded and cannot be modified',
                 403
             );
         }
     }
 
     @BeforeDestroy
-    static preventGlobalScopeDeletion(permission: Permission) {
-        if (permission.scope === 'global') {
+    static preventSystemPermissionDeletion(permission: Permission) {
+        if (permission.is_system) {
             throw new AppError(
-                'Global scope permissions cannot be deleted',
+                'System permissions cannot be deleted',
                 403
             );
         }
     }
 }
+
+export type IPermission = InferAttributes<Permission>;
+export type IPermissionCreation = InferCreationAttributes<Permission>;

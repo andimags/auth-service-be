@@ -7,7 +7,7 @@ import { validationMiddleware } from '../middlewares/validationMiddleware';
 
 const authRoutes = Router();
 
-authRoutes.post('/generate-token', authController.generateToken);
+authRoutes.post('/generate-token', checkApiKeyMiddleware, authController.generateToken);
 
 authRoutes.post('/refresh-token', validationMiddleware(refreshTokenValidator), authController.refreshToken);
 

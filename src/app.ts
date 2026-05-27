@@ -12,10 +12,12 @@ import { checkApiKeyMiddleware } from './middlewares/checkApiKeyMiddleware';
 import authRoutes from './routes/authRoutes';
 import channelRoutes from './routes/channelRoutes';
 import permissionRoutes from './routes/permissionRoutes';
-import rolePermissionRoutes from './routes/rolePermissionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import userRoutes from './routes/userRoutes';
+import policyRoutes from './routes/policyRoutes';
+import rolePolicyRoutes from './routes/rolePolicyRoutes';
+import policyPermissionRoutes from './routes/policyPermissionRoutes';
 
 const app = express();
 
@@ -44,8 +46,10 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/permissions', permissionRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/policies', policyRoutes);
 app.use('/api/user-role', userRoleRoutes);
-app.use('/api/role-permission', rolePermissionRoutes);
+app.use('/api/role-policy', rolePolicyRoutes);
+app.use('/api/policy-permission', policyPermissionRoutes);
 
 app.use(errorHandler);
 

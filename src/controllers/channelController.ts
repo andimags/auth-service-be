@@ -45,7 +45,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const authorizedUserHasAccessToChannel =
             await req.authorizedUser.hasAccessToChannel(channel.id);
 
-        if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
+        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
             throw new AppError(
                 'You can only view channels associated to your roles',
                 403
@@ -82,7 +82,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const authorizedUserHasAccessToChannel =
             await req.authorizedUser.hasAccessToChannel(channel.id);
 
-        if (!req.isGlobalRole && !authorizedUserHasAccessToChannel) {
+        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
             throw new AppError(
                 "You can only update channels you're associated to",
                 403

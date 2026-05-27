@@ -1,16 +1,12 @@
 import {
-    AfterCreate,
     AllowNull,
     AutoIncrement,
-    BeforeCreate,
-    BeforeDestroy,
     BeforeUpdate,
     BelongsTo,
     BelongsToMany,
     Column,
     CreatedAt,
     DataType,
-    Default,
     DeletedAt,
     ForeignKey,
     Model,
@@ -26,16 +22,16 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin
+    BelongsToSetAssociationMixin,
+    InferAttributes,
+    InferCreationAttributes
 } from 'sequelize';
 import { RoleScopeType } from '../../constants/enums';
 import Channel from './Channel';
-import Permission from './Permission';
-import RolePermission from './RolePermission';
+import Policy from './Policy';
+import RolePolicy from './RolePolicy';
 import User from './User';
 import UserRole from './UserRole';
-import { isRoleHigher } from '../../services/roleService';
-import { AppError } from '../../middlewares/errorHandler';
 
 @Scopes(() => ({
     // includes
@@ -47,11 +43,6 @@ import { AppError } from '../../middlewares/errorHandler';
     tableName: 'roles'
 })
 export default class Role extends Model {
-    // Custom functions
-    async isRoleHighter(otherRole: Role) {
-        return await isRoleHigher(this, otherRole);
-    }
-
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
@@ -68,10 +59,6 @@ export default class Role extends Model {
     @Column(DataType.STRING)
     ref_name: string;
 
-    @AllowNull(false)
-    @Column(DataType.INTEGER)
-    level: number;
-
     @ForeignKey(() => Channel)
     @Column
     channel_id: number;
@@ -79,11 +66,6 @@ export default class Role extends Model {
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(RoleScopeType)))
     scope: string;
-
-    @AllowNull(false)
-    @Default(false)
-    @Column(DataType.BOOLEAN)
-    is_superadmin: boolean;
 
     @CreatedAt
     created_at: Date;
@@ -95,66 +77,25 @@ export default class Role extends Model {
     deleted_at: Date;
 
     // Associations
-    @BelongsTo(() => Channel, {
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-        // set hooks to true if you have model-level hooks (like beforeDestroy, afterUpdate, etc.)
-        // hooks: true
-    })
+    @BelongsTo(() => Channel)
     channel: Channel;
 
     @BelongsToMany(() => User, () => UserRole)
     users: User[];
 
-    @BelongsToMany(() => Permission, () => RolePermission)
-    permissions: Permission[];
+    @BelongsToMany(() => Policy, () => RolePolicy)
+    policies: Policy[];
 
     // Mixins
-    declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
+    declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
 
-    declare setPermissions: BelongsToManySetAssociationsMixin<
-        Permission,
-        number
-    >;
+    declare setPolicies: BelongsToSetAssociationMixin<Policy, number>;
 
-    declare addPermissions: BelongsToManyAddAssociationsMixin<
-        Permission,
-        number
-    >;
-    declare addPermission: BelongsToManyAddAssociationMixin<Permission, number>;
+    declare addPolicies: BelongsToManyAddAssociationsMixin<Policy, number>;
+    declare addPolicy: BelongsToManyAddAssociationMixin<Policy, number>;
 
-    declare removePermissions: BelongsToManyRemoveAssociationsMixin<
-        Permission,
-        number
-    >;
-    declare removePermission: BelongsToManyRemoveAssociationMixin<
-        Permission,
-        number
-    >;
-
-    // Hooks
-    @BeforeCreate
-    static preventAddingAnotherSuperadminRole(instance: Role) {
-        if (
-            instance.is_superadmin
-        ) {
-            throw new AppError(
-                'There can only be one superadmin role',
-                403
-            );
-        }
-    }
-
-    @BeforeUpdate
-    static preventSuperadminRoleModification(instance: Role) {
-        // block ANY attempted update to ANY column
-        if (instance.previous('is_superadmin') === true && instance.changed()) {
-            throw new AppError(
-                'Superadmin role cannot be modified',
-                403
-            );
-        }
-    }
+    declare removePolicies: BelongsToManyRemoveAssociationsMixin<Policy, number>;
+    declare removePolicy: BelongsToManyRemoveAssociationMixin<Policy, number>;
 
     @BeforeUpdate
     static preventChannelIdUpdate(instance: Role) {
@@ -162,14 +103,7 @@ export default class Role extends Model {
             throw new Error('channel_id cannot be modified once set.');
         }
     }
-
-    @BeforeDestroy
-    static preventDeleteSuperadmin(instance: Role) {
-        if (instance.is_superadmin) {
-            throw new AppError(
-                'Superadmin role cannot be deleted',
-                403
-            );
-        }
-    }
 }
+
+export type IRole = InferAttributes<Role>;
+export type IRoleCreation = InferCreationAttributes<Role>;

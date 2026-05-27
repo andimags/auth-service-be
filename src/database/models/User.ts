@@ -4,7 +4,9 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToSetAssociationMixin
+    BelongsToSetAssociationMixin,
+    InferAttributes,
+    InferCreationAttributes
 } from 'sequelize';
 import {
     AllowNull,
@@ -27,7 +29,7 @@ import {
     HasMany,
     BeforeCreate
 } from 'sequelize-typescript';
-import { UserStatusType } from '../../constants/enums';
+import { UserLevelType, UserStatusType } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
 import {
     getUserChannels,
@@ -35,15 +37,14 @@ import {
 } from '../../services/channelService';
 import {
     getUserPermissions,
-    hasAnyPermissionLevel,
-    userHasAccessToPermission,
-    userHasAnyPermission
+    userHasAnyPermission,
+    userHasPermissions
 } from '../../services/permissionService';
-import { isUserHasSuperadminRole, isUserMorePrivilegedThan } from '../../services/roleService';
 import Role from './Role';
 import UserRole from './UserRole';
 import hashPassword from '../../utils/hashPassword';
 import RefreshToken from './RefreshToken';
+import { isUserMorePrivileged } from '../../services/userService';
 
 @Scopes(() => ({
     withRoles: {
@@ -64,21 +65,8 @@ export default class User extends Model {
         return [this.first_name, this.last_name].join(' ');
     }
 
-    async hasAnyPermission(
-        permissionRefNames: string | string[],
-        permissionScope: 'channel' | 'global' = 'global',
-        channelId?: number
-    ) {
-        return await userHasAnyPermission(
-            this,
-            permissionRefNames,
-            permissionScope,
-            channelId
-        );
-    }
-
-    async isMorePrivilegedThan(userId: number) {
-        return await isUserMorePrivilegedThan(this.id, userId);
+    async isMorePrivileged(user: User) {
+        return await isUserMorePrivileged(this, user);
     }
 
     async getChannels() {
@@ -89,32 +77,35 @@ export default class User extends Model {
         await hasAccessToChannel(this.id, channelId);
     }
 
-    async getPermissions(channelId?: number) {
-        await getUserPermissions(this.id, channelId);
+    async getPermissions(
+        roleScope: 'global' | 'channel' | '*',
+        channelId?: number
+    ) {
+        await getUserPermissions(this, roleScope, channelId);
     }
 
-    async hasAnyPermissionLevel(
+    isRootSuperadmin(): boolean {
+        return this.level === 'root_superadmin';
+    }
+
+    isSuperadmin(): boolean {
+        return this.level === 'superadmin';
+    }
+
+    async hasPermissions(
         permissionRefNames: string | string[],
-        permissionsScope: 'global' | 'channel',
+        roleScope: 'global' | 'channel' | '*',
         channelId?: number
-    ): Promise<number | null> {
-        return await hasAnyPermissionLevel(
-            this,
-            permissionRefNames,
-            permissionsScope,
-            channelId
-        );
+    ) {
+        return await userHasPermissions(this, permissionRefNames, roleScope, channelId);
     }
 
-    async hasAccessToPermission(
-        permissionId: number,
+    async hasAnyPermission(
+        permissionRefNames: string | string[],
+        roleScope: 'global' | 'channel' | '*',
         channelId?: number
-    ): Promise<boolean> {
-        return await userHasAccessToPermission(this, permissionId, channelId);
-    }
-
-    async isSuperadmin(): Promise<boolean> {
-        return this.is_superadmin || await isUserHasSuperadminRole(this);
+    ) {
+        return await userHasAnyPermission(this, permissionRefNames, roleScope, channelId);
     }
 
     // Columns
@@ -149,9 +140,9 @@ export default class User extends Model {
     password: string;
 
     @AllowNull(false)
-    @Default(false)
-    @Column(DataType.BOOLEAN)
-    is_superadmin: boolean;
+    @Default('member')
+    @Column(DataType.ENUM(...Object.values(UserLevelType)))
+    level: string;
 
     @CreatedAt
     created_at: Date;
@@ -188,45 +179,40 @@ export default class User extends Model {
     }
 
     @BeforeCreate
-    static preventAddingAnotherSuperadminUser(instance: User) {
+    static preventAddingAnotherRootSuperadminUser(instance: User) {
         if (
-            instance.is_superadmin
+            instance.isRootSuperadmin()
         ) {
             throw new AppError(
-                'There can only be one superadmin user',
+                'There can only be one root superadmin user',
                 403
             );
         }
     }
 
     @BeforeUpdate
-    static preventSuperadminChangeUsername(instance: User) {
-        const isSuperadmin = instance.previous('is_superadmin');
+    static preventRootSuperadminChangeUsername(instance: User) {
+        const isRootSuperadmin = instance.previous('level') === 'root_superadmin';
 
         if (
-            isSuperadmin &&
-            instance.changed('is_superadmin')
+            isRootSuperadmin &&
+            instance.changed('level')
         ) {
             const usernameOriginalValue = instance.previous('username');
             instance.username = usernameOriginalValue;
         }
     }
 
-    @BeforeUpdate
-    static preventChangeIsSuperadmin(instance: User) {
-        if (instance.changed('is_superadmin')) {
-            const originalValue = instance.previous('is_superadmin');
-            instance.is_superadmin = originalValue;
-        }
-    }
-
     @BeforeDestroy
-    static preventDeleteSuperadmin(instance: User) {
-        if (instance.is_superadmin) {
+    static preventDeleteRootSuperadmin(instance: User) {
+        if (instance.isRootSuperadmin()) {
             throw new AppError(
-                'Superadmin user cannot be deleted',
+                'Root superadmin user cannot be deleted',
                 403
             );
         }
     }
 }
+
+export type IUser = InferAttributes<User>;
+export type IUserCreation = InferCreationAttributes<User>;

@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { RoleScopeType } from '../constants/enums';
-import Channel from '../database/models/Channel';
-import Role from '../database/models/Role';
+import Policy from '../database/models/Policy';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 
@@ -11,49 +9,36 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const size = Number.parseInt(req.query.size as string);
 
         if(!req.query.page && !req.query.size){
-            const roles = await Role.findAll();
-            res.json(roles);
+            const policies = await Policy.findAll();
+            res.json(policies);
             return;
         }
 
         const searchTerm = (req.query.search as string) || undefined;
-        const scopeFilter = (req.query.scope as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
             typeof req.query.sort_desc === 'string'
                 ? req.query.sort_desc === 'true'
                 : undefined;
 
-        const paginatedRoles = await paginate(
-            Role,
+        const paginatedPolicies = await paginate(
+            Policy,
             page - 1,
             size,
             {
                 baseWhere: req.channel ? { channel_id: req.channel.id } : undefined,
                 searchTerm: searchTerm,
-                stringFields: ['name', 'description', 'ref_name'],
-                enumFilter: scopeFilter
-                    ? [
-                        {
-                            field: 'scope',
-                            value: scopeFilter,
-                            allowedValues: Object.values(RoleScopeType)
-                        }
-                    ]
-                    : []
+                stringFields: ['name', 'description', 'ref_name']
             },
             {
                 field: sortField,
                 desc: sortDesc
-            },
-            [
-                { model: Channel, as: 'channel' }
-            ]
+            }
         );
 
         res.json({
             status: 1,
-            ...paginatedRoles
+            ...paginatedPolicies
         });
     } catch (error: unknown) {
         next(error);
@@ -62,19 +47,11 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetRole = await Role.findByPk(req.params.role_id);
-        if (!targetRole) throw new AppError('Role not found', 404);
-
-        if (!req.isGlobalScope && targetRole?.channel_id != req?.channel?.id) {
-            throw new AppError(
-                'Unauthorized to access roles outside your channel',
-                403
-            );
-        }
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
+        if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         res.json({
-            status: 1,
-            data: targetRole
+            data: targetPolicy
         });
     } catch (error: unknown) {
         next(error);
@@ -85,12 +62,12 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.isGlobalScope && req.channel?.id != req.body.channel_id) {
             throw new AppError(
-                'You can only add roles within your channel',
+                'You can only add policies within your channel',
                 403
             );
         }
 
-        const newRole = await Role.create(req.body);
+        const newRole = await Policy.create(req.body);
 
         res.json({
             status: 1,
@@ -103,15 +80,8 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetRole = await Role.findByPk(req.params.role_id);
-        if (!targetRole) throw new AppError('Role not found', 404);
-
-        if (!req.isGlobalScope && req.channel?.id != targetRole.channel_id) {
-            throw new AppError(
-                'You can only update roles within your channel',
-                403
-            );
-        }
+        const targetRole = await Policy.findByPk(req.params.policy_id);
+        if (!targetRole) throw new AppError('Policy not found', 404);
 
         await targetRole?.update(req.body);
 
@@ -127,25 +97,18 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const role = await Role.findByPk(req.params.role_id);
-        if (!role) throw new AppError('Role not found', 404);
-
-        if (!req.isGlobalScope && req.channel?.id != role.channel_id) {
-            throw new AppError(
-                'You can only delete roles within your channel',
-                403
-            );
-        }
+        const policy = await Policy.findByPk(req.params.policy_id);
+        if (!policy) throw new AppError('Policy not found', 404);
 
         const shouldForce = req.query.force === 'true';
 
-        await role?.destroy({ force: shouldForce });
+        await policy?.destroy({ force: shouldForce });
 
         res.json({
             status: 1,
             message: shouldForce
-                ? 'Role successfully deleted permanently'
-                : 'Role successfully soft-deleted'
+                ? 'Policy successfully deleted permanently'
+                : 'Policy successfully soft-deleted'
         });
     } catch (error: unknown) {
         next(error);

@@ -28,6 +28,7 @@ export const checkApiKeyMiddleware = async (
         }
 
         req.channel = channel ?? null;
+        req.isGlobalScope = !channel;
 
         next();
     } catch (error: any) {

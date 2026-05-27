@@ -1,27 +1,27 @@
 import {
+    BelongsTo,
     Column,
+    CreatedAt,
     ForeignKey,
     Model,
-    Table,
-    CreatedAt,
-    BelongsTo
+    Table
 } from 'sequelize-typescript';
 
+import Policy from './Policy';
 import Role from './Role';
-import User from './User';
 
 @Table({
-    tableName: 'user_role',
+    tableName: 'role_policy',
     updatedAt: false
 })
-export default class UserRole extends Model {
-    @ForeignKey(() => User)
+export default class RolePolicy extends Model {
+    @ForeignKey(() => Policy)
     @Column
-    user_id: number;
-    @BelongsTo(() => User, {
+    policy_id: number;
+    @BelongsTo(() => Policy, {
         onDelete: 'CASCADE'
     })
-    user: User;
+    policy: Policy;
 
     @ForeignKey(() => Role)
     @Column
