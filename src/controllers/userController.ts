@@ -39,10 +39,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             }
         );
 
-        res.json({
-            status: 1,
-            ...paginatedUsers
-        });
+        res.json(paginatedUsers);
     } catch (error: unknown) {
         next(error);
     }
@@ -56,10 +53,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', 404);
         }
 
-        res.json({
-            status: 1,
-            data: targetUser
-        });
+        res.json(targetUser);
     } catch (error: unknown) {
         next(error);
     }
@@ -72,10 +66,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
         const user = newUser.toJSON();
         delete user.password;
 
-        res.json({
-            status: 1,
-            data: user
-        });
+        res.json(user);
     } catch (error: unknown) {
         next(error);
     }
@@ -89,12 +80,12 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', 404);
         }
 
-        const authorizedUser = req.authorizedUser;
+        const authorizedUser = req.authorizedUser as User;
 
         // Skip these validations if user is updating herself
         if (targetUser.id != authorizedUser!.id) {
             const isAuthorizedUserMorePrivileged =
-                await authorizedUser?.isMorePrivilegedThan(targetUser.id);
+                await authorizedUser?.isMorePrivileged(targetUser);
 
             if (!isAuthorizedUserMorePrivileged) {
                 throw new AppError(
@@ -109,10 +100,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         await targetUser?.update(req.body);
 
-        res.json({
-            status: 1,
-            data: targetUser
-        });
+        res.json(targetUser);
     } catch (error: unknown) {
         next(error);
     }
@@ -128,9 +116,9 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
 
         if (!targetUser) throw new AppError('User not found', 404);
 
-        const authorizedUser = req.authorizedUser;
+        const authorizedUser = req.authorizedUser as User;
         const isAuthorizedUserMorePrivileged =
-            await authorizedUser?.isMorePrivilegedThan(targetUser.id);
+            await authorizedUser?.isMorePrivileged(targetUser);
 
         if (!isAuthorizedUserMorePrivileged) {
             throw new AppError(
@@ -142,7 +130,6 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         await targetUser?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1,
             message: shouldForce
                 ? 'User successfully deleted permanently'
                 : 'User successfully soft-deleted'

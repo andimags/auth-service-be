@@ -26,10 +26,7 @@ const getUserRoles = async (
             });
         }
 
-        res.json({
-            status: 1,
-            data: roles
-        });
+        res.json(roles);
     } catch (error: unknown) {
         next(error);
     }
@@ -82,10 +79,7 @@ const addUserRoles = async (
 
         const roles = await targetUser.getRoles();
 
-        res.json({
-            status: 1,
-            data: roles
-        });
+        res.json(roles);
     } catch (error: unknown) {
         next(error);
     }
@@ -135,10 +129,7 @@ const replaceUserRoles = async (
 
         const updatedRoles = await targetUser.getRoles();
 
-        res.json({
-            status: 1,
-            data: updatedRoles
-        });
+        res.json(updatedRoles);
     } catch (error: unknown) {
         next(error);
     }
@@ -191,11 +182,7 @@ const destroyUserRole = async (
 
         const remainingRoles = await targetUser.getRoles();
 
-        res.json({
-            status: 1,
-            message: 'User role successfully deleted',
-            data: remainingRoles
-        });
+        res.json(remainingRoles);
     } catch (error: unknown) {
         next(error);
     }
