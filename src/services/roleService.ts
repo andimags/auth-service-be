@@ -1,8 +1,8 @@
 import Role from "../database/models/Role";
 
 export async function findMissingRoles(
-    roleIds: number | number[]
-): Promise<number[]> {
+    roleIds: number | number[] | string | string[]
+): Promise<(string | number)[]> {
     const idsToCheck = Array.isArray(roleIds) ? roleIds : [roleIds];
 
     const existingRoles = await Role.findAll({
@@ -13,7 +13,7 @@ export async function findMissingRoles(
     });
 
     const existingRoleIds = new Set(existingRoles.map((role) => role.id));
-    return idsToCheck.filter((id) => !existingRoleIds.has(id));
+    return idsToCheck.filter((id) => !existingRoleIds.has(Number(id)));
 }
 
 export async function findRolesNotInChannel(
