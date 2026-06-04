@@ -4,15 +4,6 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { WhereOptions } from 'sequelize';
 
-// Permission functions
-// 1. isPermissionAssignable
-// 2. findMissingPermissions
-// 3. userHasAnyPermission
-// 4. rolesHavePermissions
-// 5. hasAnyPermissionLevel
-// 6. getUserPermissions
-// 7. userHasAccessToPermission
-
 export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
