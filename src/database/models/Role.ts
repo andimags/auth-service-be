@@ -13,7 +13,8 @@ import {
     PrimaryKey,
     Scopes,
     Table,
-    UpdatedAt
+    UpdatedAt,
+    Unique
 } from 'sequelize-typescript';
 
 import {
@@ -56,6 +57,7 @@ export default class Role extends Model {
     description: string;
 
     @AllowNull(false)
+    @Unique
     @Column(DataType.STRING)
     ref_name: string;
 

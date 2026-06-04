@@ -1,5 +1,6 @@
 import { body } from 'express-validator';
-import { checkUniqueRefNameScope } from './checkUniqueRefNameScope';
+import { isUniqueField } from '../custom/isUniqueField';
+import Role from '../../database/models/Role';
 
 export const addValidator = [
     body('name')
@@ -19,7 +20,7 @@ export const addValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(checkUniqueRefNameScope),
+        .custom(isUniqueField(Role, 'ref name')),
 
     body('channel_id')
         .optional()
@@ -32,11 +33,4 @@ export const addValidator = [
         .bail()
         .isIn(['global', 'channel'])
         .withMessage("Scope value must only be either 'channel' or 'global'"),
-
-    body('level')
-        .notEmpty()
-        .withMessage('Level is required')
-        .bail()
-        .isInt({ min: 1 })
-        .withMessage('Level must be integer and be greater or equal to 1')
 ];
