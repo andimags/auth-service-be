@@ -28,10 +28,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             }
         );
 
-        res.json({
-            status: 1,
-            ...paginatedChannels
-        });
+        res.json(paginatedChannels);
     } catch (error: unknown) {
         next(error);
     }
@@ -52,10 +49,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        res.json({
-            status: 1,
-            data: channel
-        });
+        res.json(channel);
     } catch (error: unknown) {
         next(error);
     }
@@ -91,10 +85,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         await channel?.update(req.body);
 
-        res.json({
-            status: 1,
-            data: channel
-        });
+        res.json(channel);
     } catch (error: unknown) {
         next(error);
     }
@@ -111,7 +102,6 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         await channel?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1,
             message: shouldForce
                 ? 'Channel successfully deleted permanently'
                 : 'Channel successfully soft-deleted'
