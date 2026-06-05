@@ -5,8 +5,15 @@ import paginate from '../utils/paginate';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const size = parseInt(req.query.size as string) || 10;
+        const page = Number.parseInt(req.query.page as string);
+        const size = Number.parseInt(req.query.size as string);
+
+        if(!req.query.page && !req.query.size){
+            const channels = await Channel.findAll();
+            res.json(channels);
+            return;
+        }
+
         const searchTerm = (req.query.search as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
@@ -20,7 +27,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             size,
             {
                 searchTerm: searchTerm,
-                stringFields: ['name', 'description', 'ref_name', 'api_key']
+                stringFields: ['name', 'description', 'ref_name']
             },
             {
                 field: sortField,
@@ -59,10 +66,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const channel = await Channel.create(req.body);
 
-        res.json({
-            status: 1,
-            data: channel
-        });
+        res.json(channel);
     } catch (error: unknown) {
         next(error);
     }
