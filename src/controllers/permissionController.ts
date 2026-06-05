@@ -10,8 +10,6 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
 
-        console.log('Query parameters:', req.query.size, req.query.page);
-
         if(!req.query.page && !req.query.size){
             const permissions = await Permission.findAll();
             res.json(permissions);
