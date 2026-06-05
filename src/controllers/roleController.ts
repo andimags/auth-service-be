@@ -51,10 +51,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             ]
         );
 
-        res.json({
-            status: 1,
-            ...paginatedRoles
-        });
+        res.json(paginatedRoles);
     } catch (error: unknown) {
         next(error);
     }
@@ -72,10 +69,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        res.json({
-            status: 1,
-            data: targetRole
-        });
+        res.json(targetRole);
     } catch (error: unknown) {
         next(error);
     }
@@ -92,10 +86,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
         const newRole = await Role.create(req.body);
 
-        res.json({
-            status: 1,
-            data: newRole
-        });
+        res.json(newRole);
     } catch (error: unknown) {
         next(error);
     }
@@ -115,10 +106,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         await targetRole?.update(req.body);
 
-        res.json({
-            status: 1,
-            data: targetRole
-        });
+        res.json(targetRole);
     } catch (error: unknown) {
         next(error);
         return;
@@ -142,7 +130,6 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         await role?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1,
             message: shouldForce
                 ? 'Role successfully deleted permanently'
                 : 'Role successfully soft-deleted'
