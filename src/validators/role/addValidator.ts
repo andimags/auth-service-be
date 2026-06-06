@@ -20,12 +20,13 @@ export const addValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(isUniqueField(Role, 'ref name')),
+        .custom(isUniqueField(Role, 'ref_name', 'ref name')),
 
     body('channel_id')
-        .optional()
+        .optional({ nullable: true })
+        .toInt()
         .isInt({ min: 1 })
-        .withMessage('Channel ID must be integer'),
+        .withMessage('Channel ID must be a numeric integer'),
 
     body('scope')
         .notEmpty()

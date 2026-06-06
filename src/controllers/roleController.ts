@@ -59,7 +59,12 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetRole = await Role.findByPk(req.params.role_id);
+        const targetRole = await Role.findByPk(req.params.role_id, {
+            include: [
+                { model: Channel, as: 'channel' }
+            ]
+        });
+        
         if (!targetRole) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalScope && targetRole?.channel_id != req?.channel?.id) {
@@ -77,6 +82,14 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if(req.body.channel_id){
+            const channel = await Channel.findByPk(req.body.channel_id);
+
+            if (!channel) {
+                throw new AppError("Channel does not exist", 400);
+            }
+        }
+
         if (!req.isGlobalScope && req.channel?.id != req.body.channel_id) {
             throw new AppError(
                 'You can only add roles within your channel',

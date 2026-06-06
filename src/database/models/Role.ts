@@ -79,7 +79,9 @@ export default class Role extends Model {
     deleted_at: Date;
 
     // Associations
-    @BelongsTo(() => Channel)
+    @BelongsTo(() => Channel, {
+        onDelete: 'CASCADE',
+    })
     channel: Channel;
 
     @BelongsToMany(() => User, () => UserRole)
