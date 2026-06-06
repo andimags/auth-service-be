@@ -9,15 +9,12 @@ const getPolicyPermissions = async (
     next: NextFunction
 ) => {
     try {
-        const targetPolicy = await Policy.findByPk(req.params.role_id);
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         const permissions = await targetPolicy.getPermissions();
 
-        res.json({
-            status: 1,
-            data: permissions
-        });
+        res.json(permissions);
     } catch (error: unknown) {
         next(error);
     }
@@ -30,11 +27,11 @@ const addPolicyPermissions = async (
     next: NextFunction
 ) => {
     try {
-        const targetPolicy = await Policy.findByPk(req.params.role_id);
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         const missingPermissionIds = await findMissingPermissionIds(
-            req.body.policy_ids
+            req.body.permission_ids
         );
         if (missingPermissionIds.length > 0)
             throw new AppError(
@@ -42,18 +39,15 @@ const addPolicyPermissions = async (
                 404
             );
 
-        if (Array.isArray(req.body.policy_ids)) {
-            await targetPolicy.addPermissions(req.body.policy_ids);
+        if (Array.isArray(req.body.permission_ids)) {
+            await targetPolicy.addPermissions(req.body.permission_ids);
         } else {
-            await targetPolicy.addPermission(req.body.policy_ids);
+            await targetPolicy.addPermission(req.body.permission_ids);
         }
 
         const permissions = await targetPolicy.getPermissions();
 
-        res.json({
-            status: 1,
-            data: permissions
-        });
+        res.json(permissions);
     } catch (error: unknown) {
         next(error);
     }
@@ -66,11 +60,11 @@ const replacePolicyPermissions = async (
     next: NextFunction
 ) => {
     try {
-        const targetPolicy = await Policy.findByPk(req.params.role_id);
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         const missingPermissionIds = await findMissingPermissionIds(
-            req.body.policy_ids
+            req.body.permission_ids
         );
 
         if (missingPermissionIds.length > 0)
@@ -79,14 +73,11 @@ const replacePolicyPermissions = async (
                 404
             );
 
-        await targetPolicy.setPermissions(req.body.policy_ids);
+        await targetPolicy.setPermissions(req.body.permission_ids);
 
         const permissions = await targetPolicy.getPermissions();
 
-        res.json({
-            status: 1,
-            data: permissions
-        });
+        res.json(permissions);
     } catch (error: unknown) {
         next(error);
     }
@@ -99,11 +90,11 @@ const destroyPolicyPermissions = async (
     next: NextFunction
 ) => {
     try {
-        const targetPolicy = await Policy.findByPk(req.params.role_id);
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         const missingPermissionIds = await findMissingPermissionIds(
-            req.body.policy_ids
+            req.body.permission_ids
         );
         if (missingPermissionIds.length > 0)
             throw new AppError(
@@ -111,14 +102,13 @@ const destroyPolicyPermissions = async (
                 404
             );
 
-        if (Array.isArray(req.body.policy_ids)) {
-            await targetPolicy.removePermissions(req.body.policy_ids);
+        if (Array.isArray(req.body.permission_ids)) {
+            await targetPolicy.removePermissions(req.body.permission_ids);
         } else {
-            await targetPolicy.removePermission(req.body.policy_ids);
+            await targetPolicy.removePermission(req.body.permission_ids);
         }
 
         res.json({
-            status: 1,
             message: 'Policy permission successfully deleted'
         });
     } catch (error: unknown) {
