@@ -27,7 +27,7 @@ export const updateValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(isUniqueField(Policy, 'ref_name', 'Ref name')),
+        .custom(isUniqueField(Policy, 'ref_name', 'Ref name', 'policy_id')),
 
     body('is_system')
         .optional()

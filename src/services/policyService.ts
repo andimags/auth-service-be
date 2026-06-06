@@ -3,15 +3,20 @@ import Policy, { IPolicy } from "../database/models/Policy";
 import User from "../database/models/User";
 import { AppError } from "../middlewares/errorHandler";
 
-export async function findMissingPolicyIds(policyIds: number[]): Promise<number[]> {
-    const existingPolicies = await Policy.findAll({
+export async function findMissingPolicyIds(
+    policyIds: number | number[] | string | string[]
+): Promise<(string | number)[]> {
+    const idsToCheck = Array.isArray(policyIds) ? policyIds : [policyIds];
+
+    const existinPolicies = await Policy.findAll({
         where: {
-            id: policyIds
-        }
+            id: idsToCheck
+        },
+        attributes: ['id']
     });
 
-    const existingPolicyIds = new Set(existingPolicies.map(policy => policy.id));
-    return policyIds.filter(id => !existingPolicyIds.has(id));
+    const existingPolicyIds = new Set(existinPolicies.map((role) => role.id));
+    return idsToCheck.filter((id) => !existingPolicyIds.has(Number(id)));
 }
 
 export const userHasPolicies = async (

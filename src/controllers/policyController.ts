@@ -50,9 +50,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
-        res.json({
-            data: targetPolicy
-        });
+        res.json(targetPolicy);
     } catch (error: unknown) {
         next(error);
     }
@@ -67,12 +65,9 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        const newRole = await Policy.create(req.body);
+        const newPolicy = await Policy.create(req.body);
 
-        res.json({
-            status: 1,
-            data: newRole
-        });
+        res.json(newPolicy);
     } catch (error: unknown) {
         next(error);
     }
@@ -80,15 +75,12 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetRole = await Policy.findByPk(req.params.policy_id);
-        if (!targetRole) throw new AppError('Policy not found', 404);
+        const targetPolicy = await Policy.findByPk(req.params.policy_id);
+        if (!targetPolicy) throw new AppError('Policy not found', 404);
 
-        await targetRole?.update(req.body);
+        await targetPolicy?.update(req.body);
 
-        res.json({
-            status: 1,
-            data: targetRole
-        });
+        res.json(targetPolicy);
     } catch (error: unknown) {
         next(error);
         return;
@@ -105,7 +97,6 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         await policy?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1,
             message: shouldForce
                 ? 'Policy successfully deleted permanently'
                 : 'Policy successfully soft-deleted'
