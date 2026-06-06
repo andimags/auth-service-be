@@ -21,10 +21,7 @@ const getRolePolicies = async (
 
         const policies = await targetRole.getPolicies();
 
-        res.json({
-            status: 1,
-            data: policies
-        });
+        res.json(policies);
     } catch (error: unknown) {
         next(error);
     }
@@ -64,10 +61,7 @@ const addRolePolicies = async (
 
         const permissions = await targetRole.getPolicies();
 
-        res.json({
-            status: 1,
-            data: permissions
-        });
+        res.json(permissions);
     } catch (error: unknown) {
         next(error);
     }
@@ -103,10 +97,7 @@ const replaceRolePolicies = async (
 
         const policies = await targetRole.getPolicies();
 
-        res.json({
-            status: 1,
-            data: policies
-        });
+        res.json(policies);
     } catch (error: unknown) {
         next(error);
     }
@@ -145,7 +136,6 @@ const destroyRolePolicies = async (
         }
 
         res.json({
-            status: 1,
             message: 'Role policy successfully deleted'
         });
     } catch (error: unknown) {
