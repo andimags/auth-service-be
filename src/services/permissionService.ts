@@ -97,8 +97,8 @@ export const getUserPermissions = async (
 }
 
 export const findMissingPermissionIds = async (
-    permissionIds: number | number[]
-): Promise<number[]> => {
+    permissionIds: number | number[] | string | string[]
+): Promise<(string | number)[]> => {
     const ids = Array.isArray(permissionIds) ? permissionIds : [permissionIds];
 
     const existingPermissions = await Permission.findAll({
@@ -109,5 +109,5 @@ export const findMissingPermissionIds = async (
 
     const existingPermissionIds = new Set(existingPermissions.map(p => p.id));
 
-    return ids.filter(id => !existingPermissionIds.has(id));
+    return ids.filter(id => !existingPermissionIds.has(Number(id)));
 };
