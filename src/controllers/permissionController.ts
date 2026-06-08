@@ -19,6 +19,8 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const searchTerm = (req.query.search as string) || undefined;
         const scopeFilter = (req.query.scope as string) || undefined;
         const accessLevelFilter = (req.query.access_level as string) || undefined;
+        const isSystemFilter = (req.query.is_system as string) || undefined;
+        console.log('isSystemFilter', isSystemFilter)
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
             typeof req.query.sort_desc === 'string'
@@ -47,6 +49,13 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
                         allowedValues: Object.values(PermissionAccessLevelType) as string[],
                     }]
                     : []),
+                ...(isSystemFilter
+                    ? [{
+                        field: "is_system",
+                        value: isSystemFilter,
+                        allowedValues: ['true', 'false'],
+                    }]
+                    : []),
                 ]
             },
             {
@@ -55,10 +64,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             }
         );
 
-        res.json({
-            status: 1,
-            ...paginatedRoles
-        });
+        res.json(paginatedRoles);
     } catch (error: unknown) {
         next(error);
     }
@@ -84,10 +90,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        res.json({
-            status: 1,
-            data: targetPermission
-        });
+        res.json(targetPermission);
     } catch (error: unknown) {
         next(error);
     }
@@ -97,10 +100,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const permission = await Permission.create(req.body);
 
-        res.json({
-            status: 1,
-            data: permission
-        });
+        res.json(permission);
     } catch (error: unknown) {
         next(error);
     }
@@ -129,10 +129,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
         await targetPermission?.update(req.body);
 
-        res.json({
-            status: 1,
-            data: targetPermission
-        });
+        res.json(targetPermission);
     } catch (error: unknown) {
         next(error);
     }
@@ -152,7 +149,6 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         await targetPermission?.destroy({ force: shouldForce });
 
         res.json({
-            status: 1,
             message: shouldForce
                 ? 'Permission successfully deleted permanently'
                 : 'Permission successfully soft-deleted'

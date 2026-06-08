@@ -33,19 +33,6 @@ import PolicyPermission from './PolicyPermission';
     }
 }))
 
-@Scopes(() => ({
-    withChannel: {
-        include: [
-            {
-                model: Channel,
-                attributes: {
-                    exclude: ['created_at', 'updated_at', 'deleted_at']
-                }
-            }
-        ]
-    }
-}))
-
 @Table({
     tableName: 'permissions'
 })
