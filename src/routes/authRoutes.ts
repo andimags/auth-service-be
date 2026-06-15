@@ -9,7 +9,7 @@ const authRoutes = Router();
 
 authRoutes.post('/generate-token', checkApiKeyMiddleware, authController.generateToken);
 
-authRoutes.post('/refresh-token', validationMiddleware(refreshTokenValidator), authController.refreshToken);
+authRoutes.post('/refresh-token', checkApiKeyMiddleware, validationMiddleware(refreshTokenValidator), authController.refreshToken);
 
 authRoutes.post('/destroy-token', authController.destroyToken);
 

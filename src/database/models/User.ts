@@ -70,18 +70,32 @@ export default class User extends Model {
     }
 
     async getChannels() {
-        await getUserChannels(this.id);
+        return await getUserChannels(this.id);
     }
 
     async hasAccessToChannel(channelId: number) {
-        await hasAccessToChannel(this.id, channelId);
+        return await hasAccessToChannel(this.id, channelId);
     }
 
     async getPermissions(
         roleScope: 'global' | 'channel' | '*',
         channelId?: number
     ) {
-        await getUserPermissions(this, roleScope, channelId);
+        return await getUserPermissions(this, roleScope, channelId);
+    }
+
+    async getPermissionRefNames(
+        roleScope: 'global' | 'channel' | '*',
+        channelId?: number
+    ) {
+        const permissions = await this.getPermissions(
+            roleScope,
+            channelId
+        );
+
+        return [...new Set(
+        permissions.map(p => p.ref_name).filter(Boolean)
+        )];
     }
 
     isRootSuperadmin(): boolean {

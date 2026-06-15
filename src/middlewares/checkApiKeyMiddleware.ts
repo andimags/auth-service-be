@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { AppError } from './errorHandler';
-import { IDecodedToken } from '../types';
-import jwt from 'jsonwebtoken';
 import Channel from '../database/models/Channel';
+import { AppError } from './errorHandler';
 
 export const checkApiKeyMiddleware = async (
     req: Request,
@@ -27,7 +25,10 @@ export const checkApiKeyMiddleware = async (
             if (!channel) throw new AppError('Invalid API key', 401);
         }
 
-        req.channel = channel ?? null;
+        console.log('[checkApiKeyMiddleware] isGlobalScope', !channel)
+        console.log('[checkApiKeyMiddleware] channel', channel)
+
+        req.channel = channel;
         req.isGlobalScope = !channel;
 
         next();

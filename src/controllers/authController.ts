@@ -23,27 +23,27 @@ const generateToken = async (
             where: {
                 email: req.body.email
             },
-            include: [
-                {
-                    model: Role,
-                    attributes: ['id', 'ref_name', 'scope'],
-                    through: { attributes: [] }, // hide User → Role join table
-                    include: [
-                        {
-                            model: Policy,
-                            attributes: ['id', 'ref_name'],
-                            through: { attributes: [] }, // hide Role → Policy join table
-                            include: [
-                                {
-                                    model: Permission,
-                                    attributes: ['id', 'ref_name'],
-                                    through: { attributes: [] } // hide Policy → Permission join table
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            // include: [
+            //     {
+            //         model: Role,
+            //         attributes: ['id', 'ref_name', 'scope'],
+            //         through: { attributes: [] }, // hide User → Role join table
+            //         include: [
+            //             {
+            //                 model: Policy,
+            //                 attributes: ['id', 'ref_name'],
+            //                 through: { attributes: [] }, // hide Role → Policy join table
+            //                 include: [
+            //                     {
+            //                         model: Permission,
+            //                         attributes: ['id', 'ref_name'],
+            //                         through: { attributes: [] } // hide Policy → Permission join table
+            //                     }
+            //                 ]
+            //             }
+            //         ]
+            //     }
+            // ]
         });
         if (!user) throw new AppError('User not found', 401);
 
@@ -75,8 +75,17 @@ const generateToken = async (
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
 
+        console.log('[generateToken] isGlobalScope: ', req.isGlobalScope)
+        console.log('[generateToken] channel: ', req.channel)
+
+        const permissions = await user.getPermissionRefNames(
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id,
+        );
+
         res.json({
             user: userWithoutPassword,
+            permissions: permissions,
             tokens:{
                 access:{
                     value: accessToken,
@@ -148,9 +157,14 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
 
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
+        const permissions = await user.getPermissionRefNames(
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id,
+        );
 
         res.json({
             user: userWithoutPassword,
+            permissions,
             tokens:{
                 access:{
                     value: newAccessToken,
@@ -195,8 +209,7 @@ const destroyToken = async (req: Request, res: Response, next: NextFunction) => 
 
         res.json({
             message: "Logout successful",
-            deleted_refresh_token_rows: deletedCount,
-            decoded_jti: decoded.jti
+            deleted_refresh_token_rows: deletedCount
         });
     } catch (error) {
         next(error);

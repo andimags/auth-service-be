@@ -62,8 +62,6 @@ export const getUserPermissions = async (
         whereOptions.channel_id = channelId!;
     }
 
-    console.log('whereOptions', whereOptions);
-
     const roles = await user.getRoles({
         where: whereOptions,
         include: [
@@ -79,9 +77,6 @@ export const getUserPermissions = async (
             }
         ]
     });
-
-    const test = await user.getRoles();
-    console.log('roles', test);
 
     const permissionsSet = new Set<IPermission>();
 
