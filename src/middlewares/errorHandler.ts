@@ -1,40 +1,41 @@
-import { NextFunction, Request, Response } from 'express';
-import { AxiosError } from 'axios'; // optional, if you use Axios in your services
+import { AxiosError } from "axios";
+import { ErrorRequestHandler } from "express";
 
 export class AppError extends Error {
     statusCode: number;
+    details?: unknown;
+    isOperational: boolean; // true = expected/handled error, false = a bug that slipped through
 
-    constructor(message: string, statusCode: number = 500) {
+    constructor(message: string, statusCode: number = 500, details?: unknown) {
         super(message);
+        this.name = 'AppError';
         this.statusCode = statusCode;
-        Object.setPrototypeOf(this, AppError.prototype); // Required for instanceof
+        this.details = details;
+        this.isOperational = true;
+        Object.setPrototypeOf(this, AppError.prototype);
     }
 }
 
-export const errorHandler = (
-    err: unknown,
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     console.error('Backend error:', err);
 
     let statusCode = 500;
     let message = 'Internal Server Error';
+    let details: unknown;
 
     if (err instanceof AppError) {
         statusCode = err.statusCode;
         message = err.message;
+        details = err.details;
     } else if (err instanceof AxiosError) {
-        // Optional: if your backend services throw Axios errors
         statusCode = err.response?.status || 500;
         message = err.response?.data?.message || err.message;
     } else if (err instanceof Error) {
-        message = err.message;
+        message = process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message;
     }
 
-    // Always return JSON with consistent structure
     res.status(statusCode).json({
-        message
+        message,
+        ...(details !== undefined && { errors: details }),
     });
 };
