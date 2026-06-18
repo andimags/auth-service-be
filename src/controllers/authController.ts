@@ -264,7 +264,7 @@ const me = async (
         res.json({
             channel: req.channel ?? null,
             user: {
-                ...req.authorizedUser.toJSON(),
+                ...req.authorizedUser?.toJSON(),
                 roles
             },
         });

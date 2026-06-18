@@ -48,7 +48,7 @@ const addUserRoles = async (
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
         }
 
-        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
+        const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
 
         if (!authUserIsMorePrivileged) {
             throw new AppError(
@@ -102,7 +102,7 @@ const replaceUserRoles = async (
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
 
-        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
+        const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
 
         if (!authUserIsMorePrivileged) {
             throw new AppError(
@@ -151,7 +151,7 @@ const destroyUserRole = async (
         if (missingRoles.length > 0)
             throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
 
-        const authUserIsMorePrivileged = await req.authorizedUser.isMorePrivileged(targetUser);
+        const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
 
         if (!authUserIsMorePrivileged) {
             throw new AppError(

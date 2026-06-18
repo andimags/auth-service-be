@@ -78,9 +78,10 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         );
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
-        const hasAccessToPermission = await req.authorizedUser.hasPermissions(
+        const hasAccessToPermission = await req.authorizedUser?.hasPermissions(
             targetPermission.ref_name,
-            req.channel?.id ?? undefined
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id
         );
 
         if (!req.isGlobalScope && !hasAccessToPermission) {
@@ -117,7 +118,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             req.authorizedUser as User
         ).hasPermissions(
             targetPermission.ref_name,
-            req.channel?.id ?? undefined
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id
         );
 
         if (!req.isGlobalScope && !hasAccessToPermission) {

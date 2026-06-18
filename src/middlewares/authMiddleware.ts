@@ -28,7 +28,7 @@ export const authMiddleware = async (
 
         const decoded = jwt.verify(accessToken, secret) as IDecodedToken;
 
-        req.authorizedUser = await User.findByPk(decoded.id);
+        req.authorizedUser = await User.findByPk(decoded.id) ?? undefined;
 
         next();
     } catch (error: any) {

@@ -47,7 +47,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
-            await req.authorizedUser.hasAccessToChannel(channel.id);
+            await req.authorizedUser?.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
             throw new AppError(
@@ -78,7 +78,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
-            await req.authorizedUser.hasAccessToChannel(channel.id);
+            await req.authorizedUser?.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
             throw new AppError(
