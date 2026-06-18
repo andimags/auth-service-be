@@ -47,6 +47,22 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const authHasPermission = 
+            req.authorizedUser?.id.toString() == req.params.user_id 
+                ||
+            await req.authorizedUser?.hasAnyPermission(
+                [
+                        'admin:user',
+                        'view:user'
+                    ],
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )
+
+        if(!authHasPermission){
+            throw new AppError('You do not have the required permissions to perform this action', 403);
+        }
+
         const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
