@@ -22,28 +22,7 @@ const generateToken = async (
             attributes: { include: ['password'] },
             where: {
                 email: req.body.email
-            },
-            // include: [
-            //     {
-            //         model: Role,
-            //         attributes: ['id', 'ref_name', 'scope'],
-            //         through: { attributes: [] }, // hide User → Role join table
-            //         include: [
-            //             {
-            //                 model: Policy,
-            //                 attributes: ['id', 'ref_name'],
-            //                 through: { attributes: [] }, // hide Role → Policy join table
-            //                 include: [
-            //                     {
-            //                         model: Permission,
-            //                         attributes: ['id', 'ref_name'],
-            //                         through: { attributes: [] } // hide Policy → Permission join table
-            //                     }
-            //                 ]
-            //             }
-            //         ]
-            //     }
-            // ]
+            }
         });
         if (!user) throw new AppError('User not found', 401);
 
@@ -75,11 +54,14 @@ const generateToken = async (
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
 
-        console.log('[generateToken] isGlobalScope: ', req.isGlobalScope)
-        console.log('[generateToken] channel: ', req.channel)
+        // console.log('[generateToken] isGlobalScope: ', req.isGlobalScope)
+        // console.log('[generateToken] channel: ', req.channel)
+
+        const permissionNamespace = req.body['permission_namespace'];
 
         const permissions = await user.getPermissionRefNames(
             req.isGlobalScope ? 'global' : 'channel',
+            permissionNamespace,
             req.isGlobalScope ? undefined : req.channel?.id,
         );
 
@@ -157,8 +139,10 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
 
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
+        const permissionNamespace = req.body['permission_namespace'];
         const permissions = await user.getPermissionRefNames(
             req.isGlobalScope ? 'global' : 'channel',
+            permissionNamespace,
             req.isGlobalScope ? undefined : req.channel?.id,
         );
 
@@ -183,11 +167,9 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
 
 const destroyToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if (!process.env.REFRESH_SECRET) throw new AppError('REFRESH_SECRET on env not set', 403);
+        
         const oldRefreshToken = req.body['refresh_token'];
-        console.log(oldRefreshToken);
-        if (!oldRefreshToken) throw new AppError('Refresh token not found', 403);
-        if (!process.env.REFRESH_SECRET) throw new AppError('Refresh token not found', 403);
-
         let decoded: IDecodedToken | null;
 
         try{
@@ -284,16 +266,17 @@ const hasAnyPermission = async (
 
         console.log("hello,", req.body.role_scope);
 
-        const decoded = jwt.verify(
-            token,
-            process.env.ACCESS_SECRET!
-        ) as IDecodedToken;
+        // const decoded = jwt.verify(
+        //     token,
+        //     process.env.ACCESS_SECRET!
+        // ) as IDecodedToken;
+
         const hasPermissions = await (
             req.authorizedUser as User
         ).hasAnyPermission(
             req.body.permission_ref_names,
+            req.body.permission_namespace,
             req.body.role_scope,
-            decoded.channel_id ?? undefined
         );
 
         console.log('hasPermissions', hasPermissions);

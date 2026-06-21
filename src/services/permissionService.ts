@@ -7,10 +7,11 @@ import { WhereOptions } from 'sequelize';
 export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
+    permissionNamespace: 'auth' | 'app' | '*',
     roleScope: 'global' | 'channel' | '*',
     channelId?: number
 ): Promise<boolean> => {
-    const permissions = await getUserPermissions(user, roleScope, channelId);
+    const permissions = await getUserPermissions(user, roleScope, permissionNamespace, channelId);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
         ? permissionRefNames
@@ -26,10 +27,11 @@ export const userHasPermissions = async (
 export const userHasAnyPermission = async (
     user: User,
     permissionRefNames: string | string[],
+    permissionNamespace: 'auth' | 'app' | '*',
     roleScope: 'global' | 'channel' | '*',
     channelId?: number
 ): Promise<boolean> => {
-    const permissions = await getUserPermissions(user, roleScope, channelId);
+    const permissions = await getUserPermissions(user, roleScope, permissionNamespace, channelId);
     console.log('users permissions: ', permissions);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
@@ -46,24 +48,31 @@ export const userHasAnyPermission = async (
 export const getUserPermissions = async (
     user: User,
     roleScope: 'global' | 'channel' | '*',
+    permissionNamespace: 'auth' | 'app' | '*',
     channelId?: number
 ): Promise<IPermission[]> => {
     if (roleScope === 'channel' && !channelId) {
         throw new AppError('channelId is required when roleScope is channel', 400);
     }
 
-    const whereOptions: WhereOptions = {};
+    const roleWhereOptions: WhereOptions = {};
 
     if (roleScope === 'global' || roleScope === 'channel') {
-        whereOptions.scope = roleScope;
+        roleWhereOptions.scope = roleScope;
     }
 
     if (roleScope === 'channel') {
-        whereOptions.channel_id = channelId!;
+        roleWhereOptions.channel_id = channelId!;
+    }
+
+    const permissionWhereOptions: WhereOptions = {};
+
+    if (permissionNamespace === 'auth' || permissionNamespace === 'app') {
+        permissionWhereOptions.namespace = permissionNamespace;
     }
 
     const roles = await user.getRoles({
-        where: whereOptions,
+        where: roleWhereOptions,
         include: [
             {
                 model: Policy,
@@ -71,6 +80,7 @@ export const getUserPermissions = async (
                 include: [
                     {
                         model: Permission,
+                        where: permissionWhereOptions,
                         through: { attributes: [] }
                     }
                 ]

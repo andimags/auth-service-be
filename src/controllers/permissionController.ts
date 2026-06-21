@@ -81,6 +81,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const hasAccessToPermission = await req.authorizedUser?.hasPermissions(
             targetPermission.ref_name,
             req.isGlobalScope ? 'global' : 'channel',
+            'auth',
             req.isGlobalScope ? undefined : req.channel?.id
         );
 
@@ -119,6 +120,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         ).hasPermissions(
             targetPermission.ref_name,
             req.isGlobalScope ? 'global' : 'channel',
+            'auth',
             req.isGlobalScope ? undefined : req.channel?.id
         );
 

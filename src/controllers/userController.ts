@@ -48,6 +48,10 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const authHasPermission = 
+            req.authorizedUser?.isSuperadmin()
+                ||
+            req.authorizedUser?.isRootSuperadmin()
+                ||
             req.authorizedUser?.id.toString() == req.params.user_id 
                 ||
             await req.authorizedUser?.hasAnyPermission(
@@ -55,6 +59,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                         'admin:user',
                         'view:user'
                     ],
+                'auth',
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
             )

@@ -14,11 +14,6 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 
-@DefaultScope(() => ({
-    attributes: {
-        exclude: ['admin_password']
-    }
-}))
 @Table({
     tableName: 'channels'
 })

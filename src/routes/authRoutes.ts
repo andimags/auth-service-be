@@ -4,14 +4,16 @@ import { authMiddleware } from '../middlewares/authMiddleware';
 import { checkApiKeyMiddleware } from '../middlewares/checkApiKeyMiddleware';
 import { refreshTokenValidator } from '../validators/auth/refreshTokenValidator';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
+import { generateTokenValidator } from '../validators/auth/generateTokenValidator';
+import { destroyTokenValidator } from '../validators/auth/destroyTokenValidator';
 
 const authRoutes = Router();
 
-authRoutes.post('/generate-token', checkApiKeyMiddleware, authController.generateToken);
+authRoutes.post('/generate-token', checkApiKeyMiddleware, validationMiddleware(generateTokenValidator), authController.generateToken);
 
 authRoutes.post('/refresh-token', checkApiKeyMiddleware, validationMiddleware(refreshTokenValidator), authController.refreshToken);
 
-authRoutes.post('/destroy-token', authController.destroyToken);
+authRoutes.post('/destroy-token', validationMiddleware(destroyTokenValidator), authController.destroyToken);
 
 authRoutes.get('/me', authMiddleware, checkApiKeyMiddleware, authController.me);
 

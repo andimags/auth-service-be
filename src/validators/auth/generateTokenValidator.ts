@@ -1,12 +1,17 @@
 import { body } from 'express-validator';
 
-export const refreshTokenValidator = [
-    body('refresh_token')
+export const generateTokenValidator = [
+    body('email')
         .notEmpty()
-        .withMessage('Refresh token is required')
+        .withMessage('Username is required')
         .bail()
-        .isLength({ min: 2 })
-        .withMessage('Refresh token must have minimum of 2 characters'),
+        .isEmail()
+        .withMessage('Email has invalid format'),
+
+    body('password')
+        .notEmpty()
+        .withMessage('Password is required')
+        .bail(),
         
     body('permission_namespace')
         .notEmpty()

@@ -8,7 +8,7 @@ export class AppError extends Error {
 
     constructor(message: string, statusCode: number = 500, details?: unknown) {
         super(message);
-        this.name = 'AppError';
+        // this.name = 'Backend Error';
         this.statusCode = statusCode;
         this.details = details;
         this.isOperational = true;
@@ -17,7 +17,7 @@ export class AppError extends Error {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-    console.error('Backend error:', err);
+    console.error(err);
 
     let statusCode = 500;
     let message = 'Internal Server Error';
