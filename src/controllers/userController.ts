@@ -101,12 +101,10 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', 404);
         }
 
-        const authorizedUser = req.authorizedUser as User;
-
         // Skip these validations if user is updating herself
-        if (targetUser.id != authorizedUser!.id) {
+        if (targetUser.id != req.authorizedUser?.id) {
             const isAuthorizedUserMorePrivileged =
-                await authorizedUser?.isMorePrivileged(targetUser);
+                await req.authorizedUser?.isMorePrivileged(targetUser);
 
             if (!isAuthorizedUserMorePrivileged) {
                 throw new AppError(
