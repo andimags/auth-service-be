@@ -47,6 +47,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
+            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
             await req.authorizedUser?.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
@@ -78,6 +79,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         if (!channel) throw new AppError('Channel not found', 404);
 
         const authorizedUserHasAccessToChannel =
+            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
             await req.authorizedUser?.hasAccessToChannel(channel.id);
 
         if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
@@ -102,6 +104,17 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             paranoid: false
         });
         if (!channel) throw new AppError('Channel not found', 404);
+
+        const authorizedUserHasAccessToChannel =
+            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
+            await req.authorizedUser?.hasAccessToChannel(channel.id);
+
+        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
+            throw new AppError(
+                "You can only delete channels you're associated to",
+                403
+            );
+        }
 
         await channel?.destroy({ force: shouldForce });
 
