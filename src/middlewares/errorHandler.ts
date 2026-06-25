@@ -36,6 +36,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
     res.status(statusCode).json({
         message,
-        ...(details !== undefined && { errors: details }),
+        ...(details !== undefined && { details }),
     });
 };
