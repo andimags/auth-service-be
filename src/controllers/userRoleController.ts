@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, findRolesNotInChannel } from '../services/roleService';
+import Role from '../database/models/Role';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (
@@ -42,10 +43,10 @@ const addUserRoles = async (
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', 404);
 
-        const missingRoles = await findMissingRoles(req.body.role_ids);
+        const missingRoles = await findMissingRoles(req.body.role_ref_names);
 
         if (missingRoles.length > 0) {
-            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
         }
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
@@ -59,27 +60,29 @@ const addUserRoles = async (
 
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ids,
+                req.body.role_ref_names,
                 req.channel!.id
             );
 
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
-                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
                     403
                 );
             }
         }
 
-        if (Array.isArray(req.body.role_ids)) {
-            await targetUser.addRoles(req.body.role_ids);
-        } else {
-            await targetUser.addRole(req.body.role_ids);
-        }
+        const roles = await Role.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
+            }
+        });
 
-        const roles = await targetUser.getRoles();
+        await targetUser.addRoles(roles);
 
-        res.json(roles);
+        const updatedRoles = await targetUser.getRoles();
+
+        res.json(updatedRoles);
     } catch (error: unknown) {
         next(error);
     }
@@ -97,9 +100,9 @@ const replaceUserRoles = async (
         if (targetUser.username == 'superadmin')
             throw new AppError("Superadmin's roles cannot be updated", 403);
 
-        const missingRoles = await findMissingRoles(req.body.role_ids);
+        const missingRoles = await findMissingRoles(req.body.role_ref_names);
         if (missingRoles.length > 0)
-            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
 
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
@@ -113,19 +116,25 @@ const replaceUserRoles = async (
 
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ids,
+                req.body.role_ref_names,
                 req.channel!.id
             );
 
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
-                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be replaced`,
                     403
                 );
             }
         }
 
-        await targetUser.setRoles(req.body.role_ids);
+        const roles = await Role.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
+            }
+        });
+
+        await targetUser.setRoles(roles);
 
         const updatedRoles = await targetUser.getRoles();
 
@@ -147,9 +156,9 @@ const destroyUserRole = async (
         if (targetUser.username == 'superadmin')
             throw new AppError("Superadmin's roles cannot be deleted", 403);
 
-        const missingRoles = await findMissingRoles(req.body.role_ids);
+        const missingRoles = await findMissingRoles(req.body.role_ref_names);
         if (missingRoles.length > 0)
-            throw new AppError(`Role IDs ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
 
@@ -162,23 +171,25 @@ const destroyUserRole = async (
 
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ids,
+                req.body.role_ref_names,
                 req.channel!.id
             );
 
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
-                    `Role IDs ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
+                    `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be deleted`,
                     403
                 );
             }
         }
 
-        if (Array.isArray(req.body.role_ids)) {
-            await targetUser.removeRoles(req.body.role_ids);
-        } else {
-            await targetUser.removeRole(req.body.role_ids);
-        }
+        const roles = await Role.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
+            }
+        });
+
+        await targetUser.removeRoles(roles);
 
         const remainingRoles = await targetUser.getRoles();
 

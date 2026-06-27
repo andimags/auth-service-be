@@ -4,7 +4,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToSetAssociationMixin,
+    BelongsToManySetAssociationsMixin,
     InferAttributes,
     InferCreationAttributes
 } from 'sequelize';
@@ -197,7 +197,7 @@ export default class User extends Model {
     // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
 
-    declare setRoles: BelongsToSetAssociationMixin<Role, number>;
+    declare setRoles: BelongsToManySetAssociationsMixin<Role, number>;
 
     declare addRoles: BelongsToManyAddAssociationsMixin<Role, number>;
     declare addRole: BelongsToManyAddAssociationMixin<Role, number>;

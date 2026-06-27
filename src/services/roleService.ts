@@ -1,33 +1,33 @@
 import Role from "../database/models/Role";
 
 export async function findMissingRoles(
-    roleIds: number | number[] | string | string[]
-): Promise<(string | number)[]> {
-    const idsToCheck = Array.isArray(roleIds) ? roleIds : [roleIds];
+    roleRefNames: string | string[]
+): Promise<string[]> {
+    const refNamesToCheck = Array.isArray(roleRefNames) ? roleRefNames : [roleRefNames];
 
     const existingRoles = await Role.findAll({
         where: {
-            id: idsToCheck
+            ref_name: refNamesToCheck
         },
-        attributes: ['id']
+        attributes: ['ref_name']
     });
 
-    const existingRoleIds = new Set(existingRoles.map((role) => role.id));
-    return idsToCheck.filter((id) => !existingRoleIds.has(Number(id)));
+    const existingRoleRefNames = new Set(existingRoles.map((role) => role.ref_name));
+    return refNamesToCheck.filter((refName) => !existingRoleRefNames.has(refName));
 }
 
 export async function findRolesNotInChannel(
-    roleIds: number | number[],
+    roleRefNames: string | string[],
     channelId: number
-): Promise<number[]> {
-    const idsToCheck = Array.isArray(roleIds) ? roleIds : [roleIds];
+): Promise<string[]> {
+    const refNamesToCheck = Array.isArray(roleRefNames) ? roleRefNames : [roleRefNames];
     const rolesInChannel = await Role.findAll({
         where: {
-            id: idsToCheck,
+            ref_name: refNamesToCheck,
             channel_id: channelId
         },
-        attributes: ['id']
+        attributes: ['ref_name']
     });
-    const rolesInChannelIds = new Set(rolesInChannel.map((role) => role.id));
-    return idsToCheck.filter((id) => !rolesInChannelIds.has(id));
+    const rolesInChannelRefNames = new Set(rolesInChannel.map((role) => role.ref_name));
+    return refNamesToCheck.filter((refName) => !rolesInChannelRefNames.has(refName));
 }

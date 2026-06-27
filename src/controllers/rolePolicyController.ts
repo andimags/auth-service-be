@@ -156,7 +156,7 @@ const destroyRolePolicies = async (
         );
         if (missingPolicies.length > 0)
             throw new AppError(
-                `Policy IDs ${missingPolicies} do not exist`,
+                `Policy ref names ${missingPolicies} do not exist`,
                 404
             );
 
