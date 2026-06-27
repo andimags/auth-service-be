@@ -160,11 +160,13 @@ const destroyRolePolicies = async (
                 404
             );
 
-        if (Array.isArray(req.body.policy_ref_names)) {
-            await targetRole.removePolicies(req.body.policy_ref_names);
-        } else {
-            await targetRole.removePolicy(req.body.policy_ref_names);
-        }
+        const policies = await Policy.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
+            },
+        });
+
+        await targetRole.removePolicies(policies);
 
         res.json({
             message: 'Role policy successfully deleted'
