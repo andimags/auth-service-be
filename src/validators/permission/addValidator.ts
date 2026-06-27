@@ -1,5 +1,6 @@
 import { body } from 'express-validator';
-import { checkUniqueRefNameScope } from '../role/checkUniqueRefNameScope';
+import { isUniqueCompositeField } from '../custom/isUniqueCompositeField';
+import Permission from '../../database/models/Permission';
 
 export const addValidator = [
     body('name')
@@ -19,7 +20,13 @@ export const addValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(checkUniqueRefNameScope),
+        .custom(
+                isUniqueCompositeField(
+                Permission,
+                ['namespace', 'ref_name'],
+                'Namespace and ref name'
+            )
+        ),
 
     body('module')
         .notEmpty()
@@ -28,13 +35,6 @@ export const addValidator = [
         .isLength({ min: 2 })
         .withMessage('Module must have minimum of 2 characters'),
 
-    body('scope')
-        .notEmpty()
-        .withMessage('Scope is required')
-        .bail()
-        .isIn(['global', 'channel'])
-        .withMessage("Scope value must only be either 'channel' or 'global'"),
-
     body('access_level')
         .notEmpty()
         .withMessage('Access level is required')
@@ -42,10 +42,5 @@ export const addValidator = [
         .isIn(['read', 'write', 'admin'])
         .withMessage(
             "Access level value must only be either 'read', 'write', or 'admin"
-        ),
-
-    body('sequence')
-        .optional()
-        .isInt({ min: 1 })
-        .withMessage('Sequence must be greater or equal to 1')
+        )
 ];

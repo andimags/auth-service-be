@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import Role from '../database/models/Role';
 import { AppError } from '../middlewares/errorHandler';
-import { findMissingPolicyIds } from '../services/policyService';
+import { findMissingPolicies } from '../services/policyService';
+import Policy from '../database/models/Policy';
 
 const getRolePolicies = async (
     req: Request,
@@ -44,24 +45,37 @@ const addRolePolicies = async (
             );
         }
 
-        const missingPolicyIds = await findMissingPolicyIds(
-            req.body.policy_ids
+        const missingPolicies = await findMissingPolicies(
+            req.body.policy_ref_names
         );
-        if (missingPolicyIds.length > 0)
+        if (missingPolicies.length > 0)
             throw new AppError(
-                `Policy IDs ${missingPolicyIds} do not exist`,
+                `Policy ref names ${missingPolicies} do not exist`,
                 404
             );
 
-        if (Array.isArray(req.body.policy_ids)) {
-            await targetRole.addPolicies(req.body.policy_ids);
-        } else {
-            await targetRole.addPolicy(req.body.policy_ids);
+        const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+            missingPolicies,
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id,
+        )    
+
+        if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
+            throw new AppError(
+                `Policy ref names ${missingPolicies} do not exist`,
+                404
+            );
         }
 
-        const permissions = await targetRole.getPolicies();
+        const policies = await Policy.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
+            },
+        });
 
-        res.json(permissions);
+        await targetRole.addPolicies(policies);
+
+        res.json(policies);
     } catch (error: unknown) {
         next(error);
     }
@@ -84,18 +98,35 @@ const replaceRolePolicies = async (
             );
         }
 
-        const missingPolicyIds = await findMissingPolicyIds(
-            req.body.policy_ids
+        const missingPolicies = await findMissingPolicies(
+            req.body.policy_ref_names
         );
-        if (missingPolicyIds.length > 0)
+        if (missingPolicies.length > 0)
             throw new AppError(
-                `Policy IDs ${missingPolicyIds} do not exist`,
+                `Policy ref names ${missingPolicies} do not exist`,
                 404
             );
 
-        await targetRole.setPolicies(req.body.policy_ids);
+        const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+            missingPolicies,
+            req.isGlobalScope ? 'global' : 'channel',
+            req.isGlobalScope ? undefined : req.channel?.id,
+        )    
 
-        const policies = await targetRole.getPolicies();
+        if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
+            throw new AppError(
+                `Policy ref names ${missingPolicies} do not exist`,
+                404
+            );
+        }
+
+        const policies = await Policy.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
+            },
+        });
+
+        await targetRole.setPolicies(policies);
 
         res.json(policies);
     } catch (error: unknown) {
@@ -120,19 +151,19 @@ const destroyRolePolicies = async (
             );
         }
 
-        const missingPolicyIds = await findMissingPolicyIds(
-            req.body.policy_ids
+        const missingPolicies = await findMissingPolicies(
+            req.body.policy_ref_names
         );
-        if (missingPolicyIds.length > 0)
+        if (missingPolicies.length > 0)
             throw new AppError(
-                `Policy IDs ${missingPolicyIds} do not exist`,
+                `Policy IDs ${missingPolicies} do not exist`,
                 404
             );
 
-        if (Array.isArray(req.body.policy_ids)) {
-            await targetRole.removePolicies(req.body.policy_ids);
+        if (Array.isArray(req.body.policy_ref_names)) {
+            await targetRole.removePolicies(req.body.policy_ref_names);
         } else {
-            await targetRole.removePolicy(req.body.policy_ids);
+            await targetRole.removePolicy(req.body.policy_ref_names);
         }
 
         res.json({

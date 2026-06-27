@@ -45,6 +45,8 @@ import UserRole from './UserRole';
 import hashPassword from '../../utils/hashPassword';
 import RefreshToken from './RefreshToken';
 import { isUserMorePrivileged } from '../../services/userService';
+import { getMissingUserPolicies } from '../../services/policyService';
+import { IPolicy } from './Policy';
 
 @Scopes(() => ({
     withRoles: {
@@ -125,6 +127,19 @@ export default class User extends Model {
         channelId?: number
     ) {
         return await userHasAnyPermission(this, permissionRefNames, permissionNamespace, roleScope, channelId);
+    }
+
+    async getMissingPolicies<K extends keyof IPolicy>(
+        policyRefNames: string | string[],
+        roleScope: "global" | "channel" | "*",
+        channelId?: number
+    ) {
+        return await getMissingUserPolicies(
+            this,
+            policyRefNames,
+            roleScope,
+            channelId
+        )
     }
 
     // Columns

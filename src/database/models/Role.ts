@@ -23,7 +23,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToSetAssociationMixin,
+    BelongsToManySetAssociationsMixin,
     InferAttributes,
     InferCreationAttributes
 } from 'sequelize';
@@ -93,7 +93,7 @@ export default class Role extends Model {
     // Mixins
     declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
 
-    declare setPolicies: BelongsToSetAssociationMixin<Policy, number>;
+    declare setPolicies: BelongsToManySetAssociationsMixin<Policy, number>;
 
     declare addPolicies: BelongsToManyAddAssociationsMixin<Policy, number>;
     declare addPolicy: BelongsToManyAddAssociationMixin<Policy, number>;

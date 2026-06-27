@@ -3,21 +3,59 @@ import Policy, { IPolicy } from "../database/models/Policy";
 import User from "../database/models/User";
 import { AppError } from "../middlewares/errorHandler";
 
-export async function findMissingPolicyIds(
-    policyIds: number | number[] | string | string[]
-): Promise<(string | number)[]> {
-    const idsToCheck = Array.isArray(policyIds) ? policyIds : [policyIds];
+/* -------------------------------------------------------------------------- */
+/*       find policies that do not exist and return an array of ref_name      */
+/* -------------------------------------------------------------------------- */
+export async function findMissingPolicies(
+    policyRefNames: string | string[]
+): Promise<string[]> {
+    const refNamesToCheck = Array.isArray(policyRefNames)
+        ? policyRefNames
+        : [policyRefNames];
 
-    const existinPolicies = await Policy.findAll({
+    const existingPolicies = await Policy.findAll({
         where: {
-            id: idsToCheck
+            ref_name: refNamesToCheck,
         },
-        attributes: ['id']
+        attributes: ["ref_name"],
     });
 
-    const existingPolicyIds = new Set(existinPolicies.map((role) => role.id));
-    return idsToCheck.filter((id) => !existingPolicyIds.has(Number(id)));
+    const existingPolicyRefNames = new Set(
+        existingPolicies.map((policy) => policy.ref_name)
+    );
+
+    return refNamesToCheck.filter(
+        (refName) => !existingPolicyRefNames.has(refName)
+    );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                 get policy ref_names not attached to the user              */
+/* -------------------------------------------------------------------------- */
+export const getMissingUserPolicies = async (
+    user: User,
+    policyRefNames: string | string[],
+    roleScope: 'global' | 'channel' | '*',
+    channelId?: number
+): Promise<string[]> => {
+    const requestedRefNames = Array.isArray(policyRefNames)
+        ? policyRefNames
+        : [policyRefNames];
+
+    const userPolicies = await getUserPolicies(
+        user,
+        roleScope,
+        channelId
+    );
+
+    const userPolicyRefNames = new Set(
+        userPolicies.map(policy => policy.ref_name)
+    );
+
+    return requestedRefNames.filter(
+        refName => !userPolicyRefNames.has(refName)
+    );
+};
 
 export const userHasPolicies = async (
     user: User,

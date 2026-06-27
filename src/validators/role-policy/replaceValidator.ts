@@ -1,5 +1,5 @@
 import { body, param } from 'express-validator';
-import { isIntegerOrArrayOfIntegers } from '../custom/isIntegerOrArrayOfIntegers';
+import { isStringOrArrayOfStrings } from '../custom/isStringOrArrayOfStrings';
 
 export const replaceValidator = [
     param('role_id')
@@ -9,9 +9,9 @@ export const replaceValidator = [
         .isInt()
         .withMessage('Role ID must be integer'),
 
-    body('policy_ids')
+    body('policy_ref_names')
         .notEmpty()
-        .withMessage('Policy IDs are required')
+        .withMessage('Policy ref names are required')
         .bail()
-        .custom(isIntegerOrArrayOfIntegers('policy IDs'))
+        .custom(isStringOrArrayOfStrings('ref names'))
 ];
