@@ -11,7 +11,7 @@ const userRoutes = Router();
 
 userRoutes.get(
     '/',
-    hasAnyPermission(['view:user', 'admin:user'], false),
+    hasAnyPermission(['auth:view:user', 'auth:admin:user'], false),
     userController.getAll
 );
 
@@ -23,7 +23,7 @@ userRoutes.get(
 
 userRoutes.post(
     '/',
-    hasAnyPermission(['add:user', 'admin:user'], false),
+    hasAnyPermission(['auth:add:user', 'auth:admin:user'], false),
     validationMiddleware(addValidator),
     userController.add
 );
@@ -36,7 +36,7 @@ userRoutes.put(
 
 userRoutes.delete(
     '/:user_id',
-    hasAnyPermission(['delete:user', 'admin:user']),
+    hasAnyPermission(['auth:delete:user', 'auth:admin:user']),
     validationMiddleware(deleteValidator),
     userController.destroy
 );

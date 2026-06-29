@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import Permission from '../database/models/Permission';
-import Policy from '../database/models/Policy';
 import RefreshToken from '../database/models/RefreshToken';
 import Role from '../database/models/Role';
 import User from '../database/models/User';

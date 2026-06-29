@@ -11,34 +11,34 @@ const channelRoutes = Router();
 
 channelRoutes.get(
     '/',
-    hasAnyPermission(['view:channel', 'admin:channel'], false),
+    hasAnyPermission(['auth:view:channel', 'auth:admin:channel'], false),
     channelController.getAll
 );
 
 channelRoutes.get(
     '/:channel_id',
-    hasAnyPermission(['view:channel', 'admin:channel'], false),
+    hasAnyPermission(['auth:view:channel', 'auth:admin:channel'], false),
     validationMiddleware(findValidator),
     channelController.find
 );
 
 channelRoutes.post(
     '/',
-    hasAnyPermission(['add:channel', 'admin:channel']),
+    hasAnyPermission(['auth:add:channel', 'auth:admin:channel']),
     validationMiddleware(addValidator),
     channelController.add
 );
 
 channelRoutes.put(
     '/:channel_id',
-    hasAnyPermission(['update:channel', 'admin:channel'], false),
+    hasAnyPermission(['auth:update:channel', 'auth:admin:channel'], false),
     validationMiddleware(updateValidator),
     channelController.update
 );
 
 channelRoutes.delete(
     '/:channel_id',
-    hasAnyPermission(['delete:channel', 'admin:channel']),
+    hasAnyPermission(['auth:delete:channel', 'auth:admin:channel']),
     validationMiddleware(deleteValidator),
     channelController.destroy
 );

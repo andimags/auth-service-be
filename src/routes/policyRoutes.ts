@@ -11,34 +11,34 @@ const policyRoutes = Router();
 
 policyRoutes.get(
     '/',
-    hasAnyPermission(['view:policy', 'admin:policy'], false),
+    hasAnyPermission(['auth:view:policy', 'auth:admin:policy'], false),
     policyController.getAll
 );
 
 policyRoutes.get(
     '/:policy_id',
-    hasAnyPermission(['view:policy', 'admin:policy'], false),
+    hasAnyPermission(['auth:view:policy', 'auth:admin:policy'], false),
     validationMiddleware(findValidator),
     policyController.find
 );
 
 policyRoutes.post(
     '/',
-    hasAnyPermission(['add:policy', 'admin:policy'], false),
+    hasAnyPermission(['auth:add:policy', 'auth:admin:policy'], false),
     validationMiddleware(addValidator),
     policyController.add
 );
 
 policyRoutes.put(
     '/:policy_id',
-    hasAnyPermission(['update:policy', 'admin:policy'], false),
+    hasAnyPermission(['auth:update:policy', 'auth:admin:policy'], false),
     validationMiddleware(updateValidator),
     policyController.update
 );
 
 policyRoutes.delete(
     '/:policy_id',
-    hasAnyPermission(['delete:policy', 'admin:policy'], false),
+    hasAnyPermission(['auth:delete:policy', 'auth:admin:policy'], false),
     validationMiddleware(deleteValidator),
     policyController.destroy
 );

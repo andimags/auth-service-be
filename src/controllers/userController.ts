@@ -56,8 +56,8 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                 ||
             await req.authorizedUser?.hasAnyPermission(
                 [
-                        'admin:user',
-                        'view:user'
+                        'auth:admin:user',
+                        'auth:view:user'
                     ],
                 'auth',
                 req.isGlobalScope ? 'global' : 'channel',

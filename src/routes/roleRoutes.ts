@@ -11,34 +11,34 @@ const roleRoutes = Router();
 
 roleRoutes.get(
     '/',
-    hasAnyPermission(['view:role', 'admin:role'], false),
+    hasAnyPermission(['auth:view:role', 'auth:admin:role'], false),
     roleController.getAll
 );
 
 roleRoutes.get(
     '/:role_id',
-    hasAnyPermission(['view:role', 'admin:role'], false),
+    hasAnyPermission(['auth:view:role', 'auth:admin:role'], false),
     validationMiddleware(findValidator),
     roleController.find
 );
 
 roleRoutes.post(
     '/',
-    hasAnyPermission(['add:role', 'admin:role'], false),
+    hasAnyPermission(['auth:add:role', 'auth:admin:role'], false),
     validationMiddleware(addValidator),
     roleController.add
 );
 
 roleRoutes.put(
     '/:role_id',
-    hasAnyPermission(['update:role', 'admin:role'], false),
+    hasAnyPermission(['auth:update:role', 'auth:admin:role'], false),
     validationMiddleware(updateValidator),
     roleController.update
 );
 
 roleRoutes.delete(
     '/:role_id',
-    hasAnyPermission(['delete:role', 'admin:role'], false),
+    hasAnyPermission(['auth:delete:role', 'auth:admin:role'], false),
     validationMiddleware(deleteValidator),
     roleController.destroy
 );

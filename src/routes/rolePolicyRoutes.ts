@@ -11,7 +11,7 @@ const rolePolicyRoutes = Router();
 
 rolePolicyRoutes.get(
     '/role/:role_id',
-    hasAnyPermission(['view:role_policy', 'admin:role_policy'], false),
+    hasAnyPermission(['auth:view:role_policy', 'auth:admin:role_policy'], false),
     validationMiddleware(getValidator),
     RolePolicyController.getRolePolicies
 );
@@ -19,7 +19,7 @@ rolePolicyRoutes.get(
 rolePolicyRoutes.post(
     '/role/:role_id',
     hasAnyPermission(
-        ['assign:role_policy', 'admin:role_policy'],
+        ['auth:assign:role_policy', 'auth:admin:role_policy'],
         false
     ),
     validationMiddleware(addValidator),
@@ -29,7 +29,7 @@ rolePolicyRoutes.post(
 rolePolicyRoutes.put(
     '/role/:role_id',
     hasAnyPermission(
-        ['update:role_policy', 'admin:role_policy'],
+        ['auth:update:role_policy', 'auth:admin:role_policy'],
         false
     ),
     validationMiddleware(replaceValidator),
@@ -39,7 +39,7 @@ rolePolicyRoutes.put(
 rolePolicyRoutes.delete(
     '/role/:role_id',
     hasAnyPermission(
-        ['remove:role_policy', 'admin:role_policy'],
+        ['auth:remove:role_policy', 'auth:admin:role_policy'],
         false
     ),
     validationMiddleware(deleteValidator),

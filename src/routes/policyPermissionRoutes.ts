@@ -11,7 +11,7 @@ const policyPermissionRoutes = Router();
 
 policyPermissionRoutes.get(
     '/policy/:policy_id',
-    hasAnyPermission(['view:policy_permission', 'admin:policy_permission'], false),
+    hasAnyPermission(['auth:view:policy_permission', 'auth:admin:policy_permission'], false),
     validationMiddleware(getValidator),
     PolicyPermissionController.getPolicyPermissions
 );
@@ -19,7 +19,7 @@ policyPermissionRoutes.get(
 policyPermissionRoutes.post(
     '/policy/:policy_id',
     hasAnyPermission(
-        ['assign:policy_permission', 'admin:policy_permission'],
+        ['auth:assign:policy_permission', 'auth:admin:policy_permission'],
         false
     ),
     validationMiddleware(addValidator),
@@ -29,7 +29,7 @@ policyPermissionRoutes.post(
 policyPermissionRoutes.put(
     '/policy/:policy_id',
     hasAnyPermission(
-        ['update:policy_permission', 'admin:policy_permission'],
+        ['auth:update:policy_permission', 'auth:admin:policy_permission'],
         false
     ),
     validationMiddleware(replaceValidator),
@@ -39,7 +39,7 @@ policyPermissionRoutes.put(
 policyPermissionRoutes.delete(
     '/policy/:policy_id',
     hasAnyPermission(
-        ['remove:policy_permission', 'admin:policy_permission'],
+        ['auth:remove:policy_permission', 'auth:admin:policy_permission'],
         false
     ),
     validationMiddleware(deleteValidator),
