@@ -7,11 +7,10 @@ import { WhereOptions } from 'sequelize';
 export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    permissionNamespace: 'auth' | 'app' | '*',
     roleScope: 'global' | 'channel' | '*',
     channelId?: number
 ): Promise<boolean> => {
-    const permissions = await getUserPermissions(user, roleScope, permissionNamespace, channelId);
+    const permissions = await getUserPermissions(user, roleScope, channelId);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
         ? permissionRefNames
@@ -27,11 +26,10 @@ export const userHasPermissions = async (
 export const userHasAnyPermission = async (
     user: User,
     permissionRefNames: string | string[],
-    permissionNamespace: 'auth' | 'app' | '*',
     roleScope: 'global' | 'channel' | '*',
     channelId?: number
 ): Promise<boolean> => {
-    const permissions = await getUserPermissions(user, roleScope, permissionNamespace, channelId);
+    const permissions = await getUserPermissions(user, roleScope, channelId);
     console.log('users permissions: ', permissions);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
@@ -48,7 +46,6 @@ export const userHasAnyPermission = async (
 export const getUserPermissions = async (
     user: User,
     roleScope: 'global' | 'channel' | '*',
-    permissionNamespace: 'auth' | 'app' | '*',
     channelId?: number
 ): Promise<IPermission[]> => {
     if (roleScope === 'channel' && !channelId) {
@@ -66,10 +63,6 @@ export const getUserPermissions = async (
     }
 
     const permissionWhereOptions: WhereOptions = {};
-
-    if (permissionNamespace === 'auth' || permissionNamespace === 'app') {
-        permissionWhereOptions.namespace = permissionNamespace;
-    }
 
     const roles = await user.getRoles({
         where: roleWhereOptions,

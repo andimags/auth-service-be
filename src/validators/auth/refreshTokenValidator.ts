@@ -7,10 +7,4 @@ export const refreshTokenValidator = [
         .bail()
         .isLength({ min: 2 })
         .withMessage('Refresh token must have minimum of 2 characters'),
-        
-    body('permission_namespace')
-        .notEmpty()
-        .withMessage('Permission namespace is required')
-        .isIn(['app', 'auth', '*'])
-        .withMessage('Permission namespace must be one of: app, auth, *')
 ];

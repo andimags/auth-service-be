@@ -1,6 +1,7 @@
 import { body } from 'express-validator';
 import { isUniqueCompositeField } from '../custom/isUniqueCompositeField';
 import Permission from '../../database/models/Permission';
+import { isUniqueField } from '../custom/isUniqueField';
 
 export const addValidator = [
     body('name')
@@ -20,13 +21,7 @@ export const addValidator = [
         .withMessage(
             'Ref name may include letters, numbers, colons, underscores, or dashes between words'
         )
-        .custom(
-                isUniqueCompositeField(
-                Permission,
-                ['namespace', 'ref_name'],
-                'Namespace and ref name'
-            )
-        ),
+        .custom(isUniqueField(Permission, 'ref_name', 'ref name')),
 
     body('module')
         .notEmpty()

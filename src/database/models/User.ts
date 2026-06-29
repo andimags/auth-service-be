@@ -81,20 +81,17 @@ export default class User extends Model {
 
     async getPermissions(
         roleScope: 'global' | 'channel' | '*',
-        permissionNamespace: 'auth' | 'app' | '*',
         channelId?: number
     ) {
-        return await getUserPermissions(this, roleScope, permissionNamespace, channelId);
+        return await getUserPermissions(this, roleScope, channelId);
     }
 
     async getPermissionRefNames(
         roleScope: 'global' | 'channel' | '*',
-        permissionNamespace: 'auth' | 'app' | '*',
         channelId?: number
     ) {
         const permissions = await this.getPermissions(
             roleScope,
-            permissionNamespace,
             channelId
         );
 
@@ -114,19 +111,17 @@ export default class User extends Model {
     async hasPermissions(
         permissionRefNames: string | string[],
         roleScope: 'global' | 'channel' | '*',
-        permissionNamespace: 'auth' | 'app' | '*',
         channelId?: number
     ) {
-        return await userHasPermissions(this, permissionRefNames, permissionNamespace, roleScope, channelId);
+        return await userHasPermissions(this, permissionRefNames, roleScope, channelId);
     }
 
     async hasAnyPermission(
         permissionRefNames: string | string[],
-        permissionNamespace: 'auth' | 'app' | '*',
         roleScope: 'global' | 'channel' | '*',
         channelId?: number
     ) {
-        return await userHasAnyPermission(this, permissionRefNames, permissionNamespace, roleScope, channelId);
+        return await userHasAnyPermission(this, permissionRefNames, roleScope, channelId);
     }
 
     async getMissingPolicies<K extends keyof IPolicy>(

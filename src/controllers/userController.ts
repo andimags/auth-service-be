@@ -59,7 +59,6 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                         'auth:admin:user',
                         'auth:view:user'
                     ],
-                'auth',
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
             )

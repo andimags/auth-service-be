@@ -21,7 +21,7 @@ export default function hasAnyPermission(
             }
 
             // Check for global roles first
-            const userHasAnyPermissionOnGlobalRoles = await (authorizedUser).hasAnyPermission(permissionRefNames, 'auth', 'global');
+            const userHasAnyPermissionOnGlobalRoles = await (authorizedUser).hasAnyPermission(permissionRefNames, 'global');
 
             if (userHasAnyPermissionOnGlobalRoles) {
                 req.isGlobalScope = true;
@@ -50,7 +50,7 @@ export default function hasAnyPermission(
 
             const userHasAnyPermissionOnChannelBasedRoles = await (
                 req.authorizedUser as User
-            ).hasAnyPermission(permissionRefNames, 'auth', 'global', channelId);
+            ).hasAnyPermission(permissionRefNames, 'global', channelId);
 
             if (userHasAnyPermissionOnChannelBasedRoles) {
                 req.isGlobalScope = false;

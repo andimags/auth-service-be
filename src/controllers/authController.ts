@@ -56,11 +56,8 @@ const generateToken = async (
         // console.log('[generateToken] isGlobalScope: ', req.isGlobalScope)
         // console.log('[generateToken] channel: ', req.channel)
 
-        const permissionNamespace = req.body['permission_namespace'];
-
         const permissions = await user.getPermissionRefNames(
             req.isGlobalScope ? 'global' : 'channel',
-            permissionNamespace,
             req.isGlobalScope ? undefined : req.channel?.id,
         );
 
@@ -138,10 +135,8 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
 
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
-        const permissionNamespace = req.body['permission_namespace'];
         const permissions = await user.getPermissionRefNames(
             req.isGlobalScope ? 'global' : 'channel',
-            permissionNamespace,
             req.isGlobalScope ? undefined : req.channel?.id,
         );
 
@@ -274,7 +269,6 @@ const hasAnyPermission = async (
             req.authorizedUser as User
         ).hasAnyPermission(
             req.body.permission_ref_names,
-            req.body.permission_namespace,
             req.body.role_scope,
         );
 
