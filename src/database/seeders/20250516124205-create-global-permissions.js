@@ -10,7 +10,6 @@ module.exports = {
         const permissionsWithTimestamps = globalPermissions.map(permission => ({
             ...permission,
             is_system: true,
-            namespace: 'auth',
             created_at: timestamp,
             updated_at: timestamp
         }));
