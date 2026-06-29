@@ -2,35 +2,35 @@
     {
         "name": "Manage Users",
         "description": "Full access to users module",
-        "ref_name": "admin:user",
+        "ref_name": "auth:admin:user",
         "module": "user",
         "access_level": "admin"
     },
     {
         "name": "View Users",
         "description": "Ability to view users",
-        "ref_name": "view:user",
+        "ref_name": "auth:view:user",
         "module": "user",
         "access_level": "read"
     },
     {
         "name": "Add Users",
         "description": "Ability to add users",
-        "ref_name": "add:user",
+        "ref_name": "auth:add:user",
         "module": "user",
         "access_level": "write"
     },
     {
         "name": "Update Users",
         "description": "Ability to update users",
-        "ref_name": "update:user",
+        "ref_name": "auth:update:user",
         "module": "user",
         "access_level": "write"
     },
     {
         "name": "Delete Users",
         "description": "Ability to delete users",
-        "ref_name": "delete:user",
+        "ref_name": "auth:delete:user",
         "module": "user",
         "access_level": "write"
     },
@@ -38,35 +38,35 @@
     {
         "name": "Manage Channels",
         "description": "Full access to channels module",
-        "ref_name": "admin:channel",
+        "ref_name": "auth:admin:channel",
         "module": "channel",
         "access_level": "admin"
     },
     {
         "name": "View Channels",
         "description": "Ability to view channels",
-        "ref_name": "view:channel",
+        "ref_name": "auth:view:channel",
         "module": "channel",
         "access_level": "read"
     },
     {
         "name": "Add Channels",
         "description": "Ability to add channels",
-        "ref_name": "add:channel",
+        "ref_name": "auth:add:channel",
         "module": "channel",
         "access_level": "write"
     },
     {
         "name": "Update Channels",
         "description": "Ability to update channels",
-        "ref_name": "update:channel",
+        "ref_name": "auth:update:channel",
         "module": "channel",
         "access_level": "write"
     },
     {
         "name": "Delete Channels",
         "description": "Ability to delete channels",
-        "ref_name": "delete:channel",
+        "ref_name": "auth:delete:channel",
         "module": "channel",
         "access_level": "write"
     },
@@ -74,35 +74,35 @@
     {
         "name": "Manage Roles",
         "description": "Full access to roles module",
-        "ref_name": "admin:role",
+        "ref_name": "auth:admin:role",
         "module": "role",
         "access_level": "admin"
     },
     {
         "name": "View Roles",
         "description": "Ability to view roles",
-        "ref_name": "view:role",
+        "ref_name": "auth:view:role",
         "module": "role",
         "access_level": "read"
     },
     {
         "name": "Add Roles",
         "description": "Ability to add roles",
-        "ref_name": "add:role",
+        "ref_name": "auth:add:role",
         "module": "role",
         "access_level": "write"
     },
     {
         "name": "Update Roles",
         "description": "Ability to update roles",
-        "ref_name": "update:role",
+        "ref_name": "auth:update:role",
         "module": "role",
         "access_level": "write"
     },
     {
         "name": "Delete Roles",
         "description": "Ability to delete roles",
-        "ref_name": "delete:role",
+        "ref_name": "auth:delete:role",
         "module": "role",
         "access_level": "write"
     },
@@ -110,35 +110,35 @@
     {
         "name": "Manage User Role",
         "description": "Full access to user role module",
-        "ref_name": "admin:user_role",
+        "ref_name": "auth:admin:user_role",
         "module": "user_role",
         "access_level": "admin"
     },
     {
         "name": "View User Role",
         "description": "Ability to view users' roles",
-        "ref_name": "view:user_role",
+        "ref_name": "auth:view:user_role",
         "module": "user_role",
         "access_level": "read"
     },
     {
         "name": "Assign User Role",
         "description": "Ability to assign roles to users",
-        "ref_name": "assign:user_role",
+        "ref_name": "auth:assign:user_role",
         "module": "user_role",
         "access_level": "write"
     },
     {
         "name": "Update User Role",
         "description": "Ability to update users' roles",
-        "ref_name": "update:user_role",
+        "ref_name": "auth:update:user_role",
         "module": "user_role",
         "access_level": "write"
     },
     {
         "name": "Remove User Role",
         "description": "Ability to remove users' roles",
-        "ref_name": "remove:user_role",
+        "ref_name": "auth:remove:user_role",
         "module": "user_role",
         "access_level": "write"
     },
@@ -146,35 +146,35 @@
     {
         "name": "Manage Role Policy",
         "description": "Full access to role policy module",
-        "ref_name": "admin:role_policy",
+        "ref_name": "auth:admin:role_policy",
         "module": "role_policy",
         "access_level": "admin"
     },
     {
         "name": "View Role Policy",
         "description": "Ability to view roles' policies",
-        "ref_name": "view:role_policy",
+        "ref_name": "auth:view:role_policy",
         "module": "role_policy",
         "access_level": "read"
     },
     {
         "name": "Assign Role Policy",
         "description": "Ability to assign policies to roles",
-        "ref_name": "assign:role_policy",
+        "ref_name": "auth:assign:role_policy",
         "module": "role_policy",
         "access_level": "write"
     },
     {
         "name": "Update Role Policy",
         "description": "Ability to update roles' policies",
-        "ref_name": "update:role_policy",
+        "ref_name": "auth:update:role_policy",
         "module": "role_policy",
         "access_level": "write"
     },
     {
         "name": "Remove Role Policy",
         "description": "Ability to remove roles' policies",
-        "ref_name": "remove:role_policy",
+        "ref_name": "auth:remove:role_policy",
         "module": "role_policy",
         "access_level": "write"
     },
@@ -182,35 +182,35 @@
     {
         "name": "Manage Policies",
         "description": "Full access to policies module",
-        "ref_name": "admin:policy",
+        "ref_name": "auth:admin:policy",
         "module": "policy",
         "access_level": "admin"
     },
     {
         "name": "View Policies",
         "description": "Ability to view policies",
-        "ref_name": "view:policy",
+        "ref_name": "auth:view:policy",
         "module": "policy",
         "access_level": "read"
     },
     {
         "name": "Add Policies",
         "description": "Ability to add policies",
-        "ref_name": "add:policy",
+        "ref_name": "auth:add:policy",
         "module": "policy",
         "access_level": "write"
     },
     {
         "name": "Update Policies",
         "description": "Ability to update policies",
-        "ref_name": "update:policy",
+        "ref_name": "auth:update:policy",
         "module": "policy",
         "access_level": "write"
     },
     {
         "name": "Delete Policies",
         "description": "Ability to delete policies",
-        "ref_name": "delete:policy",
+        "ref_name": "auth:delete:policy",
         "module": "policy",
         "access_level": "write"
     },
@@ -218,35 +218,35 @@
     {
         "name": "Manage Permissions",
         "description": "Full access to permissions module",
-        "ref_name": "admin:permission",
+        "ref_name": "auth:admin:permission",
         "module": "permission",
         "access_level": "admin"
     },
     {
         "name": "View Permissions",
         "description": "Ability to view permissions",
-        "ref_name": "view:permission",
+        "ref_name": "auth:view:permission",
         "module": "permission",
         "access_level": "read"
     },
     {
         "name": "Add Permissions",
         "description": "Ability to add permissions",
-        "ref_name": "add:permission",
+        "ref_name": "auth:add:permission",
         "module": "permission",
         "access_level": "write"
     },
     {
         "name": "Update Permissions",
         "description": "Ability to update permissions",
-        "ref_name": "update:permission",
+        "ref_name": "auth:update:permission",
         "module": "permission",
         "access_level": "write"
     },
     {
         "name": "Delete Permissions",
         "description": "Ability to delete permissions",
-        "ref_name": "delete:permission",
+        "ref_name": "auth:delete:permission",
         "module": "permission",
         "access_level": "write"
     },
@@ -254,35 +254,35 @@
     {
         "name": "Manage Policy Permission",
         "description": "Full access to policy permission module",
-        "ref_name": "admin:policy_permission",
+        "ref_name": "auth:admin:policy_permission",
         "module": "policy_permission",
         "access_level": "admin"
     },
     {
         "name": "View Policy Permission",
         "description": "Ability to view policies' permissions",
-        "ref_name": "view:policy_permission",
+        "ref_name": "auth:view:policy_permission",
         "module": "policy_permission",
         "access_level": "read"
     },
     {
         "name": "Assign Policy Permission",
         "description": "Ability to assign permissions to policies",
-        "ref_name": "assign:policy_permission",
+        "ref_name": "auth:assign:policy_permission",
         "module": "policy_permission",
         "access_level": "write"
     },
     {
         "name": "Update Policy Permission",
         "description": "Ability to update policies' permissions",
-        "ref_name": "update:policy_permission",
+        "ref_name": "auth:update:policy_permission",
         "module": "policy_permission",
         "access_level": "write"
     },
     {
         "name": "Remove Policy Permission",
         "description": "Ability to remove policies' permissions",
-        "ref_name": "remove:policy_permission",
+        "ref_name": "auth:remove:policy_permission",
         "module": "policy_permission",
         "access_level": "write"
     }

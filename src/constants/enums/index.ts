@@ -27,8 +27,3 @@ export enum RoleScopeType {
     global = 'global',
     channel = 'channel'
 }
-
-export enum PermissionNamespaceType {
-    auth = 'auth',
-    app = 'app'
-}

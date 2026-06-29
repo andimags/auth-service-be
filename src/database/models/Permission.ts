@@ -18,8 +18,7 @@ import {
     UpdatedAt
 } from 'sequelize-typescript';
 import {
-    PermissionAccessLevelType,
-    PermissionNamespaceType
+    PermissionAccessLevelType
 } from '../../constants/enums';
 import { AppError } from '../../middlewares/errorHandler';
 import Policy from './Policy';
@@ -43,7 +42,7 @@ export default class Permission extends Model {
     description: string;
 
     @AllowNull(false)
-    @Unique('unique_ref_name_namespace')
+    @Unique
     @Column(DataType.STRING)
     ref_name: string;
 
@@ -54,12 +53,6 @@ export default class Permission extends Model {
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(PermissionAccessLevelType)))
     access_level: string;
-
-    @AllowNull(false)
-    @Default('app')
-    @Unique('unique_ref_name_namespace')
-    @Column(DataType.ENUM(...Object.values(PermissionNamespaceType)))
-    namespace: string;
 
     @AllowNull(false)
     @Default(false)
@@ -84,33 +77,33 @@ export default class Permission extends Model {
 
     @BeforeCreate
     @BeforeUpdate
-    static preventCoreOrSystemPermissionMutation(permission: Permission) {
-        if (permission.is_system || permission.namespace === 'auth') {
+    static preventSystemPermissionMutation(permission: Permission) {
+        if (permission.is_system) {
             throw new AppError(
-                'Auth-core or system permissions must be seeded and cannot be created or modified manually',
+                'System permissions must be seeded and cannot be created or modified manually',
                 403
             );
         }
     }
 
     @BeforeUpdate
-    static preventCoreOrSystemPermissionSoftDelete(permission: Permission) {
+    static preventSystemPermissionSoftDelete(permission: Permission) {
         if (
-            (permission.is_system || permission.namespace === 'auth') &&
+            (permission.is_system) &&
             permission.changed('deleted_at')
         ) {
             throw new AppError(
-                'Auth-core or system permissions cannot be deleted',
+                'System permissions cannot be deleted',
                 403
             );
         }
     }
 
     @BeforeDestroy
-    static preventCoreOrSystemPermissionHardDelete(permission: Permission) {
-        if (permission.is_system || permission.namespace === 'auth') {
+    static preventSystemPermissionHardDelete(permission: Permission) {
+        if (permission.is_system) {
             throw new AppError(
-                'Auth-core or system permissions cannot be deleted',
+                'System permissions cannot be deleted',
                 403
             );
         }
