@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import Policy from '../database/models/Policy';
 import { AppError } from '../middlewares/errorHandler';
-import { findMissingPermissionIds } from '../services/permissionService';
+import { findMissingPermissions } from '../services/permissionService';
+import Permission from '../database/models/Permission';
 
 const getPolicyPermissions = async (
     req: Request,
@@ -30,22 +31,38 @@ const addPolicyPermissions = async (
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
-        const missingPermissionIds = await findMissingPermissionIds(
-            req.body.permission_ids
+        const missingPermissions = await findMissingPermissions(
+            req.body.permission_ref_names
         );
-        if (missingPermissionIds.length > 0)
+
+        if (missingPermissions.length > 0)
             throw new AppError(
-                `Permission IDs ${missingPermissionIds} do not exist`,
+                `Permission ref names ${missingPermissions} do not exist`,
                 404
             );
 
-        if (Array.isArray(req.body.permission_ids)) {
-            await targetPolicy.addPermissions(req.body.permission_ids);
-        } else {
-            await targetPolicy.addPermission(req.body.permission_ids);
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
+                missingPermissions,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
+                throw new AppError(
+                    `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
 
-        const permissions = await targetPolicy.getPermissions();
+        const permissions = await Permission.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.permission_ref_names) ? req.body.permission_ref_names : [req.body.permission_ref_names]
+            },
+        });
+
+        await targetPolicy.addPermissions(permissions);
 
         res.json(permissions);
     } catch (error: unknown) {
@@ -63,19 +80,38 @@ const replacePolicyPermissions = async (
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
-        const missingPermissionIds = await findMissingPermissionIds(
-            req.body.permission_ids
+        const missingPermissions = await findMissingPermissions(
+            req.body.permission_ref_names
         );
 
-        if (missingPermissionIds.length > 0)
+        if (missingPermissions.length > 0)
             throw new AppError(
-                `Permission IDs ${missingPermissionIds} do not exist`,
+                `Permission ref names ${missingPermissions} do not exist`,
                 404
             );
 
-        await targetPolicy.setPermissions(req.body.permission_ids);
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
+                missingPermissions,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
 
-        const permissions = await targetPolicy.getPermissions();
+            if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
+                throw new AppError(
+                    `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
+                    404
+                );
+            }
+        }
+
+        const permissions = await Permission.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.permission_ref_names) ? req.body.permission_ref_names : [req.body.permission_ref_names]
+            },
+        });
+
+        await targetPolicy.setPermissions(permissions);
 
         res.json(permissions);
     } catch (error: unknown) {
@@ -93,20 +129,38 @@ const destroyPolicyPermissions = async (
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
-        const missingPermissionIds = await findMissingPermissionIds(
+        const missingPermissions = await findMissingPermissions(
             req.body.permission_ids
         );
-        if (missingPermissionIds.length > 0)
+
+        if (missingPermissions.length > 0)
             throw new AppError(
-                `Permission IDs ${missingPermissionIds} do not exist`,
+                `Permission ref names ${missingPermissions} do not exist`,
                 404
             );
 
-        if (Array.isArray(req.body.permission_ids)) {
-            await targetPolicy.removePermissions(req.body.permission_ids);
-        } else {
-            await targetPolicy.removePermission(req.body.permission_ids);
+                if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
+                missingPermissions,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
+                throw new AppError(
+                    `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
+
+        const permissions = await Permission.findAll({
+            where: {
+                ref_name: Array.isArray(req.body.permission_ref_names) ? req.body.permission_ref_names : [req.body.permission_ref_names]
+            },
+        });
+
+        await targetPolicy.removePermissions(permissions);
 
         res.json({
             message: 'Policy permission successfully deleted'

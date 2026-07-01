@@ -94,18 +94,43 @@ export const getUserPermissions = async (
     return Array.from(permissionsSet);
 }
 
-export const findMissingPermissionIds = async (
-    permissionIds: number | number[] | string | string[]
-): Promise<(string | number)[]> => {
-    const ids = Array.isArray(permissionIds) ? permissionIds : [permissionIds];
+export const findMissingPermissions = async (
+    permissionRefNames: string | string[]
+): Promise<string[]> => {
+    const refNames = Array.isArray(permissionRefNames) ? permissionRefNames : [permissionRefNames];
 
     const existingPermissions = await Permission.findAll({
         where: {
-            id: ids
+            ref_name: refNames
         }
     });
 
-    const existingPermissionIds = new Set(existingPermissions.map(p => p.id));
+    const existingPermissionRefNames = new Set(existingPermissions.map(p => p.ref_name));
 
-    return ids.filter(id => !existingPermissionIds.has(Number(id)));
+    return refNames.filter(refName => !existingPermissionRefNames.has(refName));
+};
+
+export const getMissingUserPermissions = async (
+    user: User,
+    permissionRefNames: string | string[],
+    roleScope: 'global' | 'channel' | '*',
+    channelId?: number
+): Promise<string[]> => {
+    const requestedRefNames = Array.isArray(permissionRefNames)
+        ? permissionRefNames
+        : [permissionRefNames];
+
+    const userPermissions = await getUserPermissions(
+        user,
+        roleScope,
+        channelId
+    );
+
+    const userPermissionRefNames = new Set(
+        userPermissions.map(p => p.ref_name)
+    );
+
+    return requestedRefNames.filter(
+        refName => !userPermissionRefNames.has(refName)
+    );
 };
