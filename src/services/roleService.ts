@@ -1,4 +1,6 @@
+import { WhereOptions } from "sequelize";
 import Role from "../database/models/Role";
+import User from "../database/models/User";
 
 export async function findMissingRoles(
     roleRefNames: string | string[]
@@ -31,3 +33,38 @@ export async function findRolesNotInChannel(
     const rolesInChannelRefNames = new Set(rolesInChannel.map((role) => role.ref_name));
     return refNamesToCheck.filter((refName) => !rolesInChannelRefNames.has(refName));
 }
+
+export async function getUserRoles(
+    user: User,
+    roleScope: 'global' | 'channel' | '*',
+    channelId?: number
+): Promise<Role[]> {
+    return user.getRoles({
+        where: roleScope === 'channel' ? { channel_id: channelId } : undefined
+    });
+}
+
+export const getMissingUserRoles = async (
+    user: User,
+    permissionRefNames: string | string[],
+    roleScope: 'global' | 'channel' | '*',
+    channelId?: number
+): Promise<string[]> => {
+    const requestedRefNames = Array.isArray(permissionRefNames)
+        ? permissionRefNames
+        : [permissionRefNames];
+
+    const userRoles = await getUserRoles(
+        user,
+        roleScope,
+        channelId
+    );
+
+    const userRoleRefNames = new Set(
+        userRoles.map(r => r.ref_name)
+    );
+
+    return requestedRefNames.filter(
+        refName => !userRoleRefNames.has(refName)
+    );
+};

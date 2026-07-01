@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
+import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, findRolesNotInChannel } from '../services/roleService';
-import Role from '../database/models/Role';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (
@@ -56,6 +56,21 @@ const addUserRoles = async (
                 'You can only assign roles to users with a lower privilege level than yourself',
                 403
             );
+        }
+
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
+                missingRoles,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingRoles && authUserMissingRoles?.length > 0){
+                throw new AppError(
+                    `Role ref names ${authUserMissingRoles} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
 
         if(!req.isGlobalScope) {
@@ -114,6 +129,21 @@ const replaceUserRoles = async (
             );
         }
 
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
+                missingRoles,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingRoles && authUserMissingRoles?.length > 0){
+                throw new AppError(
+                    `Role ref names ${authUserMissingRoles} are not assignable by the auth user`,
+                    404
+                );
+            }
+        }
+        
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
                 req.body.role_ref_names,
@@ -167,6 +197,21 @@ const destroyUserRole = async (
                 'You can only assign roles to users with a lower privilege level than yourself',
                 403
             );
+        }
+
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
+                missingRoles,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingRoles && authUserMissingRoles?.length > 0){
+                throw new AppError(
+                    `Role ref names ${authUserMissingRoles} are not deletable by the auth user`,
+                    404
+                );
+            }
         }
 
         if(!req.isGlobalScope) {
