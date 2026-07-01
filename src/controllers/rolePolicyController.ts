@@ -54,19 +54,21 @@ const addRolePolicies = async (
                 404
             );
 
-        const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
-            missingPolicies,
-            req.isGlobalScope ? 'global' : 'channel',
-            req.isGlobalScope ? undefined : req.channel?.id,
-        )    
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+                missingPolicies,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
 
-        if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
-            throw new AppError(
-                `Policy ref names ${missingPolicies} do not exist`,
-                404
-            );
+            if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
+                throw new AppError(
+                    `Policy ref names ${authUserMissingPolicies} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
-
+        
         const policies = await Policy.findAll({
             where: {
                 ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
@@ -107,17 +109,19 @@ const replaceRolePolicies = async (
                 404
             );
 
-        const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
-            missingPolicies,
-            req.isGlobalScope ? 'global' : 'channel',
-            req.isGlobalScope ? undefined : req.channel?.id,
-        )    
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+                missingPolicies,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
 
-        if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
-            throw new AppError(
-                `Policy ref names ${missingPolicies} do not exist`,
-                404
-            );
+            if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
+                throw new AppError(
+                    `Policy ref names ${authUserMissingPolicies} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
 
         const policies = await Policy.findAll({
@@ -154,11 +158,27 @@ const destroyRolePolicies = async (
         const missingPolicies = await findMissingPolicies(
             req.body.policy_ref_names
         );
+
         if (missingPolicies.length > 0)
             throw new AppError(
                 `Policy ref names ${missingPolicies} do not exist`,
                 404
             );
+        
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+            const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+                missingPolicies,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
+            )    
+
+            if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
+                throw new AppError(
+                    `Policy ref names ${authUserMissingPolicies} are not assignable by the auth user`,
+                    404
+                );
+            }
+        }
 
         const policies = await Policy.findAll({
             where: {
