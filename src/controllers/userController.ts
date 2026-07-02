@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
-import { UserStatusType } from '../constants/enums';
+import { USER_LEVEL_RANK, UserLevelType, UserStatusType } from '../constants/enums';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -81,6 +81,18 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const targetLevel = req.body.level as UserLevelType;
+
+        if (
+            (USER_LEVEL_RANK[targetLevel] ?? 1) >=
+            (USER_LEVEL_RANK[req.authorizedUser!.level as UserLevelType])
+        ) {
+            throw new AppError(
+                `You cannot create a user with level '${req.body.level}'`,
+                403
+            );
+        }
+
         const newUser = await User.create(req.body);
 
         const user = newUser.toJSON();

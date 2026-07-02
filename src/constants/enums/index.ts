@@ -12,6 +12,15 @@ export enum UserLevelType {
     member = 'member'
 }
 
+export const USER_LEVEL_RANK: Readonly<Record<UserLevelType, number>> = {
+    [UserLevelType.root_superadmin]: 6,
+    [UserLevelType.superadmin]: 5,
+    [UserLevelType.admin]: 4,
+    [UserLevelType.manager]: 3,
+    [UserLevelType.moderator]: 2,
+    [UserLevelType.member]: 1,
+};
+
 export enum PermissionScopeType {
     global = 'global',
     channel = 'channel'

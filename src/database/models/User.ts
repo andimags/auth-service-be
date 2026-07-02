@@ -47,8 +47,6 @@ import hashPassword from '../../utils/hashPassword';
 import RefreshToken from './RefreshToken';
 import { isUserMorePrivileged } from '../../services/userService';
 import { getMissingUserPolicies } from '../../services/policyService';
-import { IPolicy } from './Policy';
-import { IPermission } from './Permission';
 import { getMissingUserRoles } from '../../services/roleService';
 
 @Scopes(() => ({
@@ -199,7 +197,7 @@ export default class User extends Model {
     password: string;
 
     @AllowNull(false)
-    @Default('member')
+    @Default(UserLevelType.member)
     @Column(DataType.ENUM(...Object.values(UserLevelType)))
     level: string;
 
