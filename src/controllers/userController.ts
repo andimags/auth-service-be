@@ -81,12 +81,12 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const targetLevel = req.body.level as UserLevelType;
+        const targetLevel = (req.body.level as UserLevelType) ?? UserLevelType.member;
 
-        if (
-            (USER_LEVEL_RANK[targetLevel] ?? 1) >=
-            (USER_LEVEL_RANK[req.authorizedUser!.level as UserLevelType])
-        ) {
+        const isMorePrivilegedThanNewLevel =
+            await req.authorizedUser!.isMorePrivilegedThanLevel(targetLevel);
+
+        if (!isMorePrivilegedThanNewLevel) {
             throw new AppError(
                 `You cannot create a user with level '${req.body.level}'`,
                 403
@@ -102,39 +102,56 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error: unknown) {
         next(error);
     }
-};
+}
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let targetUser = await User.findByPk(req.params.user_id);
+        const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
             throw new AppError('User not found', 404);
         }
 
-        // Skip these validations if user is updating herself
-        if (targetUser.id != req.authorizedUser?.id) {
-            const isAuthorizedUserMorePrivileged =
-                await req.authorizedUser?.isMorePrivileged(targetUser);
+        const authorizedUser = req.authorizedUser as User;
+        const isSelfUpdate = targetUser.id === authorizedUser.id;
 
-            if (!isAuthorizedUserMorePrivileged) {
+        if (!isSelfUpdate) {
+            const isMorePrivilegedThanTarget =
+                await authorizedUser.isMorePrivileged(targetUser);
+
+            if (!isMorePrivilegedThanTarget) {
                 throw new AppError(
-                    "You can't update a user with the same or higher privilege / role level than you",
+                    `You cannot update a user with level '${targetUser.level}'`,
                     403
                 );
             }
+
+            if (req.body.level) {
+                const isMorePrivilegedThanNewLevel =
+                    await authorizedUser.isMorePrivilegedThanLevel(
+                        req.body.level as UserLevelType
+                    );
+
+                if (!isMorePrivilegedThanNewLevel) {
+                    throw new AppError(
+                        `You cannot assign a user the level '${req.body.level}'`,
+                        403
+                    );
+                }
+            }
         } else {
-            // user cannot update their own status
+            // user cannot update their own status or level
             delete req.body.status;
+            delete req.body.level;
         }
 
-        await targetUser?.update(req.body);
+        await targetUser.update(req.body);
 
         res.json(targetUser);
     } catch (error: unknown) {
         next(error);
     }
-};
+}
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {

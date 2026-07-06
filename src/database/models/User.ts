@@ -45,7 +45,7 @@ import Role from './Role';
 import UserRole from './UserRole';
 import hashPassword from '../../utils/hashPassword';
 import RefreshToken from './RefreshToken';
-import { isUserMorePrivileged } from '../../services/userService';
+import { isLevelMorePrivileged, isUserMorePrivileged } from '../../services/userService';
 import { getMissingUserPolicies } from '../../services/policyService';
 import { getMissingUserRoles } from '../../services/roleService';
 
@@ -70,6 +70,10 @@ export default class User extends Model {
 
     async isMorePrivileged(user: User) {
         return await isUserMorePrivileged(this, user);
+    }
+
+    async isMorePrivilegedThanLevel(level: UserLevelType) {
+        return isLevelMorePrivileged(this.level as UserLevelType, level);
     }
 
     async getChannels() {

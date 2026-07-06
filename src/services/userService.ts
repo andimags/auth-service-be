@@ -1,15 +1,23 @@
-import { UserLevelType } from "../constants/enums";
+import { UserLevelType, USER_LEVEL_RANK } from "../constants/enums";
 import User from "../database/models/User";
 
-const userLevels = Object.values(UserLevelType);
+export function isLevelMorePrivileged(
+    higherLevel: UserLevelType,
+    lowerLevel: UserLevelType
+) {
+    const higherRank = USER_LEVEL_RANK[higherLevel];
+    const lowerRank = USER_LEVEL_RANK[lowerLevel];
 
-export async function isUserMorePrivileged(firstUser: User, secondUser: User){
-    const firstUserLevelIndex = userLevels.indexOf(firstUser.level as UserLevelType);
-    const secondUserLevelIndex = userLevels.indexOf(secondUser.level as UserLevelType);
-
-    if (firstUserLevelIndex === -1 || secondUserLevelIndex === -1) {
+    if (higherRank === undefined || lowerRank === undefined) {
         throw new Error('Invalid user level');
     }
 
-    return firstUserLevelIndex < secondUserLevelIndex;
+    return higherRank > lowerRank;
+}
+
+export async function isUserMorePrivileged(firstUser: User, secondUser: User) {
+    return isLevelMorePrivileged(
+        firstUser.level as UserLevelType,
+        secondUser.level as UserLevelType
+    );
 }
