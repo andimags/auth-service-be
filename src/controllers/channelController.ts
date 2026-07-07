@@ -9,7 +9,13 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const size = Number.parseInt(req.query.size as string);
 
         if(!req.query.page && !req.query.size){
-            const channels = await Channel.findAll();
+            const channels = await Channel.findAll({
+                ...(req.channel?.id && {
+                    where: {
+                        id: req.channel.id,
+                    },
+                }),
+            });
             res.json(channels);
             return;
         }
@@ -27,7 +33,12 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             size,
             {
                 searchTerm: searchTerm,
-                stringFields: ['name', 'description', 'ref_name']
+                stringFields: ['name', 'description', 'ref_name'],
+                baseWhere: {
+                    ...(req.channel?.id && {
+                        id: req.channel.id,
+                    }),
+                }
             },
             {
                 field: sortField,
@@ -46,13 +57,9 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel =
-            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
-            await req.authorizedUser?.hasAccessToChannel(channel.id);
-
-        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
+        if (!req.isGlobalScope && (req.channel?.id !== channel.id)) {
             throw new AppError(
-                'You can only view channels associated to your roles',
+                `Access is limited to the API key's channel`,
                 403
             );
         }
@@ -78,11 +85,9 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel =
-            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
-            await req.authorizedUser?.hasAccessToChannel(channel.id);
+        const isAllowed = req.isGlobalScope || (req.channel?.id === channel.id);
 
-        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
+        if (!req.isGlobalScope && !isAllowed) {
             throw new AppError(
                 "You can only update channels you're associated to",
                 403
@@ -103,13 +108,12 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         const channel = await Channel.findByPk(req.params.channel_id, {
             paranoid: false
         });
+        
         if (!channel) throw new AppError('Channel not found', 404);
 
-        const authorizedUserHasAccessToChannel =
-            req.authorizedUser?.isSuperadmin() || req.authorizedUser?.isRootSuperadmin() ||
-            await req.authorizedUser?.hasAccessToChannel(channel.id);
+        const isAllowed = req.isGlobalScope || (req.channel?.id === channel.id);
 
-        if (!req.isGlobalScope && !authorizedUserHasAccessToChannel) {
+        if (!req.isGlobalScope && !isAllowed) {
             throw new AppError(
                 "You can only delete channels you're associated to",
                 403

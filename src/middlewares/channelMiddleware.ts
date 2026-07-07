@@ -18,7 +18,7 @@ export const channelMiddleware = async (
             process.env.ACCESS_SECRET!
         ) as IDecodedToken;
 
-        req.channel = await Channel.findByPk(decoded.channel_id);
+        req.channel = await Channel.findByPk(decoded.channel_id) ?? undefined;
 
         next();
     } catch (error: any) {

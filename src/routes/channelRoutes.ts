@@ -24,7 +24,7 @@ channelRoutes.get(
 
 channelRoutes.post(
     '/',
-    hasAnyPermission(['auth:add:channel', 'auth:admin:channel']),
+    hasAnyPermission(['auth:add:channel', 'auth:admin:channel'], true),
     validationMiddleware(addValidator),
     channelController.add
 );
