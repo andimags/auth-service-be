@@ -25,10 +25,9 @@ export const checkApiKeyMiddleware = async (
             if (!channel) throw new AppError('Invalid API key', 401);
         }
 
-        console.log('[checkApiKeyMiddleware] isGlobalScope', !channel)
-        console.log('[checkApiKeyMiddleware] channel', channel)
-
         req.channel = channel ?? undefined;
+        console.log('checkApiKeyMiddleware - req.channel', req.channel)
+        console.log('req.isGlobalScope from checkApiKeyMiddleware', !channel)
         req.isGlobalScope = !channel;
 
         next();
