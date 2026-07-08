@@ -134,3 +134,24 @@ export const getMissingUserPermissions = async (
         refName => !userPermissionRefNames.has(refName)
     );
 };
+
+/* -------------------------------------------------------------------------- */
+/*      returns an array of ref_names where permission is_system is true      */
+/* -------------------------------------------------------------------------- */
+export async function findSystemPermissions(
+    permissionRefNames: string | string[]
+): Promise<string[]> {
+    const refNamesToCheck = Array.isArray(permissionRefNames)
+        ? permissionRefNames
+        : [permissionRefNames];
+
+    const permissions = await Permission.findAll({
+        where: {
+            ref_name: refNamesToCheck,
+            is_system: true,
+        },
+        attributes: ["ref_name"],
+    });
+
+    return permissions.map((permission) => permission.ref_name);
+}
