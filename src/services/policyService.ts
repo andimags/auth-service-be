@@ -138,3 +138,24 @@ export const getUserPolicies = async (
 
     return Array.from(policiesSet);
 }
+
+/* -------------------------------------------------------------------------- */
+/*           returns an array of ref_names where policy is_system is true     */
+/* -------------------------------------------------------------------------- */
+export async function findSystemPolicies(
+    policyRefNames: string | string[]
+): Promise<string[]> {
+    const refNamesToCheck = Array.isArray(policyRefNames)
+        ? policyRefNames
+        : [policyRefNames];
+
+    const policies = await Policy.findAll({
+        where: {
+            ref_name: refNamesToCheck,
+            is_system: true,
+        },
+        attributes: ["ref_name"],
+    });
+
+    return policies.map((policy) => policy.ref_name);
+}

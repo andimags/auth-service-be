@@ -2,6 +2,9 @@ import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, Be
 import {
     AllowNull,
     AutoIncrement,
+    BeforeCreate,
+    BeforeDestroy,
+    BeforeUpdate,
     BelongsToMany,
     Column,
     CreatedAt,
@@ -18,6 +21,7 @@ import Permission from './Permission';
 import PolicyPermission from './PolicyPermission';
 import Role from './Role';
 import RolePolicy from './RolePolicy';
+import { AppError } from '../../middlewares/errorHandler';
 
 @Table({
     tableName: 'policies',
@@ -83,6 +87,40 @@ export default class Policy extends Model {
         Permission,
         number
     >;
+
+    @BeforeCreate
+    @BeforeUpdate
+    static preventSystemPolicyMutation(policy: Policy) {
+        if (policy.is_system) {
+            throw new AppError(
+                'System policies must be seeded and cannot be created or modified manually',
+                403
+            );
+        }
+    }
+
+    @BeforeUpdate
+    static preventSystemPolicySoftDelete(policy: Policy) {
+        if (
+            (policy.is_system) &&
+            policy.changed('deleted_at')
+        ) {
+            throw new AppError(
+                'System policies cannot be deleted',
+                403
+            );
+        }
+    }
+
+    @BeforeDestroy
+    static preventSystemPolicyHardDelete(policy: Policy) {
+        if (policy.is_system) {
+            throw new AppError(
+                'System policies cannot be deleted',
+                403
+            );
+        }
+    } 
 }
 
 export type IPolicy = InferAttributes<Policy>;
