@@ -26,7 +26,6 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             page - 1,
             size,
             {
-                baseWhere: req.channel ? { channel_id: req.channel.id } : undefined,
                 searchTerm: searchTerm,
                 stringFields: ['name', 'description', 'ref_name']
             },
@@ -58,13 +57,6 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
 const add = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        if (!req.isGlobalScope && req.channel?.id != req.body.channel_id) {
-            throw new AppError(
-                'You can only add policies within your channel',
-                403
-            );
-        }
-
         const newPolicy = await Policy.create(req.body);
 
         res.json(newPolicy);
