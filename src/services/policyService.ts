@@ -3,6 +3,7 @@ import Policy, { IPolicy } from '../database/models/Policy';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { RoleScopeFilter } from '../types';
+import { HttpStatus } from '../constants/httpStatus';
 
 /* -------------------------------------------------------------------------- */
 /*       find policies that do not exist and return an array of ref_name      */
@@ -64,7 +65,7 @@ export const getUserPolicies = async (
     channelId?: number
 ): Promise<IPolicy[]> => {
     if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', 400);
+        throw new AppError('channelId is required when roleScope is channel', HttpStatus.BAD_REQUEST);
     }
 
     const whereOptions: WhereOptions = {};

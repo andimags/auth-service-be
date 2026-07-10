@@ -6,6 +6,7 @@ import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import * as authService from '../services/authService';
+import { HttpStatus } from '../constants/httpStatus';
 
 const generateToken = async (
     req: Request,
@@ -43,13 +44,13 @@ const generateToken = async (
 const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const oldRefreshToken = req.body['refresh_token'];
-        if (!oldRefreshToken) throw new AppError('Refresh token not found', 403);
+        if (!oldRefreshToken) throw new AppError('Refresh token not found', HttpStatus.FORBIDDEN);
         authService.assertRefreshSecretConfigured('Refresh token not found');
 
         const decoded = authService.decodeRefreshToken(oldRefreshToken);
 
         const user = await User.findByPk(decoded.id);
-        if (!user) throw new AppError('User not found', 404);
+        if (!user) throw new AppError('User not found', HttpStatus.NOT_FOUND);
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
             await authService.rotateTokens(user.id, decoded.jti, decoded.channel_id);
@@ -104,7 +105,7 @@ const verifyToken = (
 ): void => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
-        if (!token) throw new AppError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', HttpStatus.NOT_FOUND);
 
         const decoded = jwt.verify(token, process.env.ACCESS_SECRET!);
 
@@ -161,7 +162,7 @@ const hasAnyPermission = async (
 ): Promise<void> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
-        if (!token) throw new AppError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', HttpStatus.NOT_FOUND);
 
         const hasPermissions = await (
             req.authorizedUser!
@@ -175,7 +176,7 @@ const hasAnyPermission = async (
                 status: 1
             });
         } else {
-            throw new AppError('Unauthorized', 403);
+            throw new AppError('Unauthorized', HttpStatus.FORBIDDEN);
         }
     } catch (error: unknown) {
         next(error);

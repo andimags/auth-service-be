@@ -4,6 +4,7 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { WhereOptions } from 'sequelize';
 import { RoleScopeFilter } from '../types';
+import { HttpStatus } from '../constants/httpStatus';
 
 export const userHasPermissions = async (
     user: User,
@@ -49,7 +50,7 @@ export const getUserPermissions = async (
     channelId?: number
 ): Promise<IPermission[]> => {
     if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', 400);
+        throw new AppError('channelId is required when roleScope is channel', HttpStatus.BAD_REQUEST);
     }
 
     const roleWhereOptions: WhereOptions = {};

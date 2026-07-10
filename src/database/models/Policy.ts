@@ -22,6 +22,7 @@ import PolicyPermission from './PolicyPermission';
 import Role from './Role';
 import RolePolicy from './RolePolicy';
 import { AppError } from '../../middlewares/errorHandler';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Table({
     tableName: 'policies',
@@ -94,7 +95,7 @@ export default class Policy extends Model {
         if (policy.is_system) {
             throw new AppError(
                 'System policies must be seeded and cannot be created or modified manually',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -107,7 +108,7 @@ export default class Policy extends Model {
         ) {
             throw new AppError(
                 'System policies cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -117,7 +118,7 @@ export default class Policy extends Model {
         if (policy.is_system) {
             throw new AppError(
                 'System policies cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     } 

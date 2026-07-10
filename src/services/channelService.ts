@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import Channel from '../database/models/Channel';
+import { HttpStatus } from '../constants/httpStatus';
 
 /**
  *
@@ -12,7 +13,7 @@ import Channel from '../database/models/Channel';
  */
 export async function hasAccessToChannel(userId: number, channelId: number) {
     const user = await User.findByPk(userId);
-    if (!user) throw new AppError('User not found.', 404);
+    if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);
 
     const roles = await user?.getRoles({ where: { channel_id: channelId } });
 
@@ -28,7 +29,7 @@ export async function hasAccessToChannel(userId: number, channelId: number) {
 export async function getUserChannels(userId: number) {
     const user = await User.findByPk(userId);
 
-    if (!user) throw new AppError('User not found.', 404);
+    if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);
 
     const roles = await user.getRoles({
         where: { channel_id: { [Op.ne]: null } }

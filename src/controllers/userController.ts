@@ -3,6 +3,7 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { UserLevelType, UserStatusType } from '../constants/enums';
+import { HttpStatus } from '../constants/httpStatus';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -64,13 +65,13 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
             );
 
         if(!authHasPermission){
-            throw new AppError('You do not have the required permissions to perform this action', 403);
+            throw new AppError('You do not have the required permissions to perform this action', HttpStatus.FORBIDDEN);
         }
 
         const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
-            throw new AppError('User not found', 404);
+            throw new AppError('User not found', HttpStatus.NOT_FOUND);
         }
 
         res.json(targetUser);
@@ -89,7 +90,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
         if (!isMorePrivilegedThanNewLevel) {
             throw new AppError(
                 `You cannot create a user with level '${req.body.level}'`,
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -109,7 +110,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const targetUser = await User.findByPk(req.params.user_id);
 
         if (!targetUser) {
-            throw new AppError('User not found', 404);
+            throw new AppError('User not found', HttpStatus.NOT_FOUND);
         }
 
         const authorizedUser = req.authorizedUser!;
@@ -122,7 +123,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             if (!isMorePrivilegedThanTarget) {
                 throw new AppError(
                     `You cannot update a user with level '${targetUser.level}'`,
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
 
@@ -135,7 +136,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
                 if (!isMorePrivilegedThanNewLevel) {
                     throw new AppError(
                         `You cannot assign a user the level '${req.body.level}'`,
-                        403
+                        HttpStatus.FORBIDDEN
                     );
                 }
             }
@@ -161,7 +162,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
             paranoid: false
         });
 
-        if (!targetUser) throw new AppError('User not found', 404);
+        if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
 
         const authorizedUser = req.authorizedUser!;
         const isAuthorizedUserMorePrivileged =
@@ -170,7 +171,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
         if (!isAuthorizedUserMorePrivileged) {
             throw new AppError(
                 "You can't delete a user with the same or higher privilege / role level than you",
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 

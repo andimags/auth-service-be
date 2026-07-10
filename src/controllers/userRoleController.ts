@@ -3,6 +3,7 @@ import Role from '../database/models/Role';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, findRolesNotInChannel } from '../services/roleService';
+import { HttpStatus } from '../constants/httpStatus';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (
@@ -12,7 +13,7 @@ const getUserRoles = async (
 ) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
-        if (!targetUser) throw new AppError('User not found', 404);
+        if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
 
         let roles = null;
 
@@ -41,12 +42,12 @@ const addUserRoles = async (
 ) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
-        if (!targetUser) throw new AppError('User not found', 404);
+        if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
 
         const missingRoles = await findMissingRoles(req.body.role_ref_names);
 
         if (missingRoles.length > 0) {
-            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, HttpStatus.NOT_FOUND);
         }
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
@@ -54,7 +55,7 @@ const addUserRoles = async (
         if (!authUserIsMorePrivileged) {
             throw new AppError(
                 'You can only assign roles to users with a lower privilege level than yourself',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -68,7 +69,7 @@ const addUserRoles = async (
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
                     `Role ref names ${authUserMissingRoles} are not assignable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }
@@ -82,7 +83,7 @@ const addUserRoles = async (
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
                     `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be assigned`,
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
         }
@@ -111,13 +112,13 @@ const replaceUserRoles = async (
 ) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
-        if (!targetUser) throw new AppError('User not found', 404);
+        if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
         if (targetUser.username == 'superadmin')
-            throw new AppError("Superadmin's roles cannot be updated", 403);
+            throw new AppError("Superadmin's roles cannot be updated", HttpStatus.FORBIDDEN);
 
         const missingRoles = await findMissingRoles(req.body.role_ref_names);
         if (missingRoles.length > 0)
-            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, HttpStatus.NOT_FOUND);
 
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
@@ -125,7 +126,7 @@ const replaceUserRoles = async (
         if (!authUserIsMorePrivileged) {
             throw new AppError(
                 'You can only assign roles to users with a lower privilege level than yourself',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -139,7 +140,7 @@ const replaceUserRoles = async (
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
                     `Role ref names ${authUserMissingRoles} are not assignable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }
@@ -153,7 +154,7 @@ const replaceUserRoles = async (
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
                     `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be replaced`,
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
         }
@@ -182,20 +183,20 @@ const destroyUserRole = async (
 ) => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
-        if (!targetUser) throw new AppError('User not found', 404);
+        if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
         if (targetUser.username == 'superadmin')
-            throw new AppError("Superadmin's roles cannot be deleted", 403);
+            throw new AppError("Superadmin's roles cannot be deleted", HttpStatus.FORBIDDEN);
 
         const missingRoles = await findMissingRoles(req.body.role_ref_names);
         if (missingRoles.length > 0)
-            throw new AppError(`Role ref names ${missingRoles} do not exist`, 404);
+            throw new AppError(`Role ref names ${missingRoles} do not exist`, HttpStatus.NOT_FOUND);
 
         const authUserIsMorePrivileged = await req.authorizedUser?.isMorePrivileged(targetUser);
 
         if (!authUserIsMorePrivileged) {
             throw new AppError(
                 'You can only assign roles to users with a lower privilege level than yourself',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -209,7 +210,7 @@ const destroyUserRole = async (
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
                     `Role ref names ${authUserMissingRoles} are not deletable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }
@@ -223,7 +224,7 @@ const destroyUserRole = async (
             if (rolesNotInChannel.length > 0) {
                 throw new AppError(
                     `Role ref names ${rolesNotInChannel} do not belong to your channel and cannot be deleted`,
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
         }

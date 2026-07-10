@@ -23,6 +23,7 @@ import {
 import { AppError } from '../../middlewares/errorHandler';
 import Policy from './Policy';
 import PolicyPermission from './PolicyPermission';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Table({
     tableName: 'permissions'
@@ -81,7 +82,7 @@ export default class Permission extends Model {
         if (permission.is_system) {
             throw new AppError(
                 'System permissions must be seeded and cannot be created or modified manually',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -94,7 +95,7 @@ export default class Permission extends Model {
         ) {
             throw new AppError(
                 'System permissions cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -104,7 +105,7 @@ export default class Permission extends Model {
         if (permission.is_system) {
             throw new AppError(
                 'System permissions cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }

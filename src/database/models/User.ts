@@ -49,6 +49,7 @@ import { isLevelMorePrivileged, isUserMorePrivileged } from '../../services/user
 import { getMissingUserPolicies } from '../../services/policyService';
 import { getMissingUserRoles } from '../../services/roleService';
 import { RoleScopeFilter } from '../../types';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Scopes(() => ({
     withRoles: {
@@ -247,7 +248,7 @@ export default class User extends Model {
         ) {
             throw new AppError(
                 'There can only be one root superadmin user',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -270,7 +271,7 @@ export default class User extends Model {
         if (instance.isRootSuperadmin()) {
             throw new AppError(
                 'Root superadmin user cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import Channel from '../database/models/Channel';
 import { IDecodedToken } from '../types';
 import { AppError } from './errorHandler';
+import { HttpStatus } from '../constants/httpStatus';
 
 export const channelMiddleware = async (
     req: Request,
@@ -11,7 +12,7 @@ export const channelMiddleware = async (
 ): Promise<void> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
-        if (!token) throw new AppError('Token not found', 404);
+        if (!token) throw new AppError('Token not found', HttpStatus.NOT_FOUND);
 
         const decoded = jwt.verify(
             token,
@@ -24,6 +25,6 @@ export const channelMiddleware = async (
     } catch (error: unknown) {
         console.error('API key verification failed:', error instanceof Error ? error.message : error);
 
-        next(new AppError('Invalid API key', 403));
+        next(new AppError('Invalid API key', HttpStatus.FORBIDDEN));
     }
 };

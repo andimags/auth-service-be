@@ -7,6 +7,7 @@ import User from '../database/models/User';
 import sequelize from '../database/sequelize';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
+import { HttpStatus } from '../constants/httpStatus';
 
 interface TokenPair {
     accessToken: string;
@@ -18,10 +19,10 @@ export async function verifyCredentials(email: string, password: string): Promis
         attributes: { include: ['password'] },
         where: { email }
     });
-    if (!user) throw new AppError('User not found', 401);
+    if (!user) throw new AppError('User not found', HttpStatus.UNAUTHORIZED);
 
     const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) throw new AppError('Invalid email or password', 401);
+    if (!passwordMatches) throw new AppError('Invalid email or password', HttpStatus.UNAUTHORIZED);
 
     return user;
 }
@@ -51,14 +52,14 @@ export async function issueTokens(userId: number): Promise<TokenPair> {
 }
 
 export function assertRefreshSecretConfigured(message: string): void {
-    if (!process.env.REFRESH_SECRET) throw new AppError(message, 403);
+    if (!process.env.REFRESH_SECRET) throw new AppError(message, HttpStatus.FORBIDDEN);
 }
 
 export function decodeRefreshToken(rawToken: string): IDecodedToken {
     try {
         return jwt.verify(rawToken, process.env.REFRESH_SECRET!) as IDecodedToken;
     } catch {
-        throw new AppError('Invalid token', 401);
+        throw new AppError('Invalid token', HttpStatus.UNAUTHORIZED);
     }
 }
 
@@ -91,7 +92,7 @@ export async function rotateTokens(
         // rotated/deleted this token already. In that case, abort instead of issuing
         // another refresh token (prevents token "explosion").
         if (destroyedCount === 0) {
-            throw new AppError('Invalid token', 403);
+            throw new AppError('Invalid token', HttpStatus.FORBIDDEN);
         }
 
         await RefreshToken.create({

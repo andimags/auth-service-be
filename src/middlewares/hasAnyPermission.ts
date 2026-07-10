@@ -1,5 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AppError } from './errorHandler';
+import { HttpStatus } from '../constants/httpStatus';
 
 const errorMsg =
     'You do not have the required permissions to perform this action';
@@ -25,7 +26,7 @@ export default function hasAnyPermission(
                     );
 
                 if(!hasGlobalPermission){
-                    throw new AppError(errorMsg, 403);
+                    throw new AppError(errorMsg, HttpStatus.FORBIDDEN);
                 }
                 else{
                     return next();
@@ -43,7 +44,7 @@ export default function hasAnyPermission(
                 return next(); // Continue to next middleware/route handler
             }
 
-            throw new AppError(errorMsg, 403);
+            throw new AppError(errorMsg, HttpStatus.FORBIDDEN);
         } catch (error: unknown) {
             next(error);
         }

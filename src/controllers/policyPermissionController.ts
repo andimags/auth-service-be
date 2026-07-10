@@ -3,6 +3,7 @@ import Policy from '../database/models/Policy';
 import { AppError } from '../middlewares/errorHandler';
 import { findMissingPermissions, findSystemPermissions } from '../services/permissionService';
 import Permission from '../database/models/Permission';
+import { HttpStatus } from '../constants/httpStatus';
 
 const getPolicyPermissions = async (
     req: Request,
@@ -11,7 +12,7 @@ const getPolicyPermissions = async (
 ) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const permissions = await targetPolicy.getPermissions();
 
@@ -29,7 +30,7 @@ const addPolicyPermissions = async (
 ) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const missingPermissions = await findMissingPermissions(
             req.body.permission_ref_names
@@ -38,7 +39,7 @@ const addPolicyPermissions = async (
         if (missingPermissions.length > 0)
             throw new AppError(
                 `Permission ref names ${missingPermissions} do not exist`,
-                404
+                HttpStatus.NOT_FOUND
             );
 
         if (!req.isGlobalScope) {
@@ -47,7 +48,7 @@ const addPolicyPermissions = async (
             if (globalPermissions.length > 0) {
                 throw new AppError(
                     'Global permissions cannot be assigned using a channel-scoped API key',
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
         }
@@ -62,7 +63,7 @@ const addPolicyPermissions = async (
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(
                     `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }
@@ -89,7 +90,7 @@ const replacePolicyPermissions = async (
 ) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const missingPermissions = await findMissingPermissions(
             req.body.permission_ref_names
@@ -98,7 +99,7 @@ const replacePolicyPermissions = async (
         if (missingPermissions.length > 0)
             throw new AppError(
                 `Permission ref names ${missingPermissions} do not exist`,
-                404
+                HttpStatus.NOT_FOUND
             );
 
         const requestedRefNames: string[] = Array.isArray(req.body.permission_ref_names)
@@ -120,7 +121,7 @@ const replacePolicyPermissions = async (
             if (newGlobalPermissions.length > 0) {
                 throw new AppError(
                     'Global permissions cannot be updated using a channel-scoped API key',
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
 
@@ -131,7 +132,7 @@ const replacePolicyPermissions = async (
             if (removedGlobalPermissions.length > 0) {
                 throw new AppError(
                     `Global permissions ${removedGlobalPermissions} cannot be removed using a channel-scoped API key`,
-                    403
+                    HttpStatus.FORBIDDEN
                 );
             }
         }
@@ -146,7 +147,7 @@ const replacePolicyPermissions = async (
             if (authUserMissingPermissions && authUserMissingPermissions?.length > 0) {
                 throw new AppError(
                     `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }
@@ -171,7 +172,7 @@ const destroyPolicyPermissions = async (
 ) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const missingPermissions = await findMissingPermissions(
             req.body.permission_ids
@@ -180,7 +181,7 @@ const destroyPolicyPermissions = async (
         if (missingPermissions.length > 0)
             throw new AppError(
                 `Permission ref names ${missingPermissions} do not exist`,
-                404
+                HttpStatus.NOT_FOUND
             );
 
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
@@ -193,7 +194,7 @@ const destroyPolicyPermissions = async (
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(
                     `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
-                    404
+                    HttpStatus.NOT_FOUND
                 );
             }
         }

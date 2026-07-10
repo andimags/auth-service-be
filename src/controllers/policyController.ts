@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import Policy from '../database/models/Policy';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { HttpStatus } from '../constants/httpStatus';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -47,7 +48,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const find = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         res.json(targetPolicy);
     } catch (error: unknown) {
@@ -68,7 +69,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         await targetPolicy?.update(req.body);
 
@@ -82,7 +83,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const policy = await Policy.findByPk(req.params.policy_id);
-        if (!policy) throw new AppError('Policy not found', 404);
+        if (!policy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const shouldForce = req.query.force === 'true';
 

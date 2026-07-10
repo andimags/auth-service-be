@@ -3,6 +3,7 @@ import { PermissionAccessLevelType, PermissionScopeType } from '../constants/enu
 import Permission from '../database/models/Permission';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { HttpStatus } from '../constants/httpStatus';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -74,7 +75,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         const hasAccessToPermission = await req.authorizedUser?.hasPermissions(
             targetPermission.ref_name,
@@ -85,7 +86,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
         if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
                 'You are not authorized to view this permission',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -110,7 +111,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         const hasAccessToPermission = await (
             req.authorizedUser!
@@ -123,7 +124,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
                 'You are not authorized to update this permission',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -144,7 +145,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
                 paranoid: false
             }
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         await targetPermission?.destroy({ force: shouldForce });
 
