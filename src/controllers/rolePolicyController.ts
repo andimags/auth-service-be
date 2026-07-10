@@ -10,7 +10,7 @@ const getRolePolicies = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', HttpStatus.NOT_FOUND);
@@ -35,7 +35,7 @@ const addRolePolicies = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', HttpStatus.NOT_FOUND);
@@ -68,7 +68,7 @@ const addRolePolicies = async (
             }
         }
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 missingPolicies,
                 getScopeType(req.isGlobalScope),
@@ -102,7 +102,7 @@ const replaceRolePolicies = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', HttpStatus.NOT_FOUND);
@@ -158,7 +158,7 @@ const replaceRolePolicies = async (
             }
         }
 
-        if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
+        if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()) {
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 requestedRefNames,
                 getScopeType(req.isGlobalScope),
@@ -188,7 +188,7 @@ const destroyRolePolicies = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', HttpStatus.NOT_FOUND);
@@ -210,7 +210,7 @@ const destroyRolePolicies = async (
                 HttpStatus.NOT_FOUND
             );
         
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 missingPolicies,
                 getScopeType(req.isGlobalScope),
