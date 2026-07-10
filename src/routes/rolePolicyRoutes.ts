@@ -4,7 +4,7 @@ import hasAnyPermission from '../middlewares/hasAnyPermission';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { addValidator } from '../validators/role-policy/addValidator';
 import { deleteValidator } from '../validators/role-policy/deleteValidator';
-import { getValidator } from '../validators/role-policy/getValidator';
+import { findValidator } from '../validators/role-policy/findValidator';
 import { replaceValidator } from '../validators/role-policy/replaceValidator';
 
 const rolePolicyRoutes = Router();
@@ -12,7 +12,7 @@ const rolePolicyRoutes = Router();
 rolePolicyRoutes.get(
     '/role/:role_id',
     hasAnyPermission(['auth:view:role_policy', 'auth:admin:role_policy'], false),
-    validationMiddleware(getValidator),
+    validationMiddleware(findValidator),
     RolePolicyController.getRolePolicies
 );
 

@@ -1,6 +1,6 @@
 import { param } from 'express-validator';
 
-export const getValidator = [
+export const findValidator = [
     param('role_id')
         .notEmpty()
         .withMessage('Role ID is required')

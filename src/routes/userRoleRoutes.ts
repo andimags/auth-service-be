@@ -4,7 +4,7 @@ import hasAnyPermission from '../middlewares/hasAnyPermission';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { addValidator } from '../validators/user-role/addValidator';
 import { deleteValidator } from '../validators/user-role/deleteValidator';
-import { getValidator } from '../validators/user-role/getValidator';
+import { findValidator } from '../validators/user-role/findValidator';
 import { replaceValidator } from '../validators/user-role/replaceValidator';
 
 const userRoleRoutes = Router();
@@ -12,7 +12,7 @@ const userRoleRoutes = Router();
 userRoleRoutes.get(
     '/user/:user_id',
     hasAnyPermission(['auth:view:user_role', 'auth:admin:user_role'], false),
-    validationMiddleware(getValidator),
+    validationMiddleware(findValidator),
     userRoleController.getUserRoles
 );
 

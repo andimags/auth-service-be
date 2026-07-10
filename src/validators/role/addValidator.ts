@@ -1,5 +1,6 @@
 import { body } from 'express-validator';
 import { isUniqueField } from '../custom/isUniqueField';
+import { RoleScopeType } from '../../constants/enums';
 import Role from '../../database/models/Role';
 
 export const addValidator = [
@@ -32,6 +33,6 @@ export const addValidator = [
         .notEmpty()
         .withMessage('Scope is required')
         .bail()
-        .isIn(['global', 'channel'])
+        .isIn(Object.values(RoleScopeType))
         .withMessage("Scope value must only be either 'channel' or 'global'"),
 ];

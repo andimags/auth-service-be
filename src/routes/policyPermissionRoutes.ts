@@ -4,7 +4,7 @@ import hasAnyPermission from '../middlewares/hasAnyPermission';
 import { validationMiddleware } from '../middlewares/validationMiddleware';
 import { addValidator } from '../validators/policy-permission/addValidator';
 import { deleteValidator } from '../validators/policy-permission/deleteValidator';
-import { getValidator } from '../validators/policy-permission/getValidator';
+import { findValidator } from '../validators/policy-permission/findValidator';
 import { replaceValidator } from '../validators/policy-permission/replaceValidator';
 
 const policyPermissionRoutes = Router();
@@ -12,7 +12,7 @@ const policyPermissionRoutes = Router();
 policyPermissionRoutes.get(
     '/policy/:policy_id',
     hasAnyPermission(['auth:view:policy_permission', 'auth:admin:policy_permission'], false),
-    validationMiddleware(getValidator),
+    validationMiddleware(findValidator),
     PolicyPermissionController.getPolicyPermissions
 );
 

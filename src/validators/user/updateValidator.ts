@@ -1,4 +1,5 @@
 import { body, param } from 'express-validator';
+import { UserStatusType } from '../../constants/enums';
 import User from '../../database/models/User';
 
 export const updateValidator = [
@@ -77,7 +78,7 @@ export const updateValidator = [
         .optional()
         .notEmpty()
         .withMessage('Status cannot be empty')
-        .isIn(['active', 'inactive'])
+        .isIn(Object.values(UserStatusType))
         .withMessage('Status values must be either active or inactive only'),
 
     body('password')

@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import { UserStatusType } from '../../constants/enums';
 import User from '../../database/models/User';
 import { isUniqueField } from '../custom/isUniqueField';
 
@@ -43,7 +44,7 @@ export const addValidator = [
 
     body('status')
         .optional()
-        .isIn(['active', 'inactive'])
+        .isIn(Object.values(UserStatusType))
         .withMessage('Status values must be either active or inactive only'),
 
     body('password')
