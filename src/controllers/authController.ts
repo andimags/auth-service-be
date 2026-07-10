@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { ACCESS_TOKEN_TTL, ACCESS_TOKEN_TTL_MS, REFRESH_TOKEN_TTL, REFRESH_TOKEN_TTL_MS } from '../constants/auth';
 import Permission from '../database/models/Permission';
 import RefreshToken from '../database/models/RefreshToken';
 import Role from '../database/models/Role';
@@ -34,27 +35,23 @@ const generateToken = async (
         const accessToken = jwt.sign(
             { id: user.id },
             process.env.ACCESS_SECRET!,
-            { expiresIn: '2m' }
-            // { expiresIn: '1d' }
+            { expiresIn: ACCESS_TOKEN_TTL }
         );
 
         const refreshToken = jwt.sign(
             { id: user.id, jti },
             process.env.REFRESH_SECRET!,
-            { expiresIn: '7d' }
+            { expiresIn: REFRESH_TOKEN_TTL }
         );
 
         await RefreshToken.create({
             user_id: user.id,
             jti,
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL_MS)
         })
 
         const plainUser = user.toJSON();
         const { password, ...userWithoutPassword } = plainUser;
-
-        // console.log('[generateToken] isGlobalScope: ', req.isGlobalScope)
-        // console.log('[generateToken] channel: ', req.channel)
 
         const permissions = await user.getPermissionRefNames(
             req.isGlobalScope ? 'global' : 'channel',
@@ -67,11 +64,11 @@ const generateToken = async (
             tokens:{
                 access:{
                     value: accessToken,
-                    expires_at: Date.now() + 120 * 1000 // 2m
+                    expires_at: Date.now() + ACCESS_TOKEN_TTL_MS
                 },
                 refresh:{
                     value: refreshToken,
-                    expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7d
+                    expires_at: Date.now() + REFRESH_TOKEN_TTL_MS
                 }
             }
         });
@@ -104,13 +101,13 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
         const newAccessToken = jwt.sign(
             { id: user.id, channel_id: decoded.channel_id },
             process.env.ACCESS_SECRET!,
-            { expiresIn: '2m' }
+            { expiresIn: ACCESS_TOKEN_TTL }
         );
 
         const newRefreshToken = jwt.sign(
             { id: user.id, jti },
             process.env.REFRESH_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: REFRESH_TOKEN_TTL }
         );
 
         await sequelize.transaction(async (t) => {
@@ -129,7 +126,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
             await RefreshToken.create({
                 user_id: user.id,
                 jti,
-                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                expires_at: new Date(Date.now() + REFRESH_TOKEN_TTL_MS)
             }, { transaction: t });
         });
 
@@ -146,11 +143,11 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
             tokens:{
                 access:{
                     value: newAccessToken,
-                    expires_at: Date.now() + 120 * 1000 // 2m
+                    expires_at: Date.now() + ACCESS_TOKEN_TTL_MS
                 },
                 refresh:{
                     value: newRefreshToken,
-                    expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7d
+                    expires_at: Date.now() + REFRESH_TOKEN_TTL_MS
                 }
             }
         });

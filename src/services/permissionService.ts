@@ -3,11 +3,12 @@ import Policy, {IPolicy} from '../database/models/Policy';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { WhereOptions } from 'sequelize';
+import { RoleScopeFilter } from '../types';
 
 export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const permissions = await getUserPermissions(user, roleScope, channelId);
@@ -26,7 +27,7 @@ export const userHasPermissions = async (
 export const userHasAnyPermission = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const permissions = await getUserPermissions(user, roleScope, channelId);
@@ -45,7 +46,7 @@ export const userHasAnyPermission = async (
 
 export const getUserPermissions = async (
     user: User,
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPermission[]> => {
     if (roleScope === 'channel' && !channelId) {
@@ -113,7 +114,7 @@ export const findMissingPermissions = async (
 export const getMissingUserPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<string[]> => {
     const requestedRefNames = Array.isArray(permissionRefNames)

@@ -48,6 +48,7 @@ import RefreshToken from './RefreshToken';
 import { isLevelMorePrivileged, isUserMorePrivileged } from '../../services/userService';
 import { getMissingUserPolicies } from '../../services/policyService';
 import { getMissingUserRoles } from '../../services/roleService';
+import { RoleScopeFilter } from '../../types';
 
 @Scopes(() => ({
     withRoles: {
@@ -85,14 +86,14 @@ export default class User extends Model {
     }
 
     async getPermissions(
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getUserPermissions(this, roleScope, channelId);
     }
 
     async getPermissionRefNames(
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         const permissions = await this.getPermissions(
@@ -115,7 +116,7 @@ export default class User extends Model {
 
     async hasPermissions(
         permissionRefNames: string | string[],
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await userHasPermissions(this, permissionRefNames, roleScope, channelId);
@@ -123,7 +124,7 @@ export default class User extends Model {
 
     async hasAnyPermission(
         permissionRefNames: string | string[],
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await userHasAnyPermission(this, permissionRefNames, roleScope, channelId);
@@ -131,7 +132,7 @@ export default class User extends Model {
 
     async getMissingPolicies(
         policyRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserPolicies(
@@ -144,7 +145,7 @@ export default class User extends Model {
 
     async getMissingPermissions(
         permissionRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserPermissions(
@@ -157,7 +158,7 @@ export default class User extends Model {
 
     async getMissingRoles(
         roleRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserRoles(

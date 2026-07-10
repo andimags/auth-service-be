@@ -2,6 +2,7 @@ import { WhereOptions } from "sequelize";
 import Policy, { IPolicy } from "../database/models/Policy";
 import User from "../database/models/User";
 import { AppError } from "../middlewares/errorHandler";
+import { RoleScopeFilter } from "../types";
 
 /* -------------------------------------------------------------------------- */
 /*       find policies that do not exist and return an array of ref_name      */
@@ -35,7 +36,7 @@ export async function findMissingPolicies(
 export const getMissingUserPolicies = async (
     user: User,
     policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<string[]> => {
     const requestedRefNames = Array.isArray(policyRefNames)
@@ -60,7 +61,7 @@ export const getMissingUserPolicies = async (
 export const userHasPolicies = async (
     user: User,
     policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const policies = await getUserPolicies(user, roleScope, channelId);
@@ -81,7 +82,7 @@ export const userHasPolicies = async (
 export const userHasAnyPolicy = async (
     user: User,
     policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const policies = await getUserPolicies(user, roleScope, channelId);
@@ -101,7 +102,7 @@ export const userHasAnyPolicy = async (
 
 export const getUserPolicies = async (
     user: User,
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPolicy[]> => {
     if (roleScope === 'channel' && !channelId) {
