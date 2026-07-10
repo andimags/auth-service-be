@@ -8,7 +8,7 @@
         "dev": "nodemon --exec ts-node src/server.ts",
         "build": "tsc",
         "test": "jest",
-        "test:verbose": "npm run test -- --verbose=false --silent=false",
+        "test:verbose": "npm run test -- --verbose=true --silent=false",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix",
         "knip": "knip",
