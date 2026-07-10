@@ -6,7 +6,7 @@ import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -58,7 +58,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id, {
             include: [
@@ -81,7 +81,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         if(req.body.channel_id){
             const channel = await Channel.findByPk(req.body.channel_id);
@@ -106,7 +106,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', HttpStatus.NOT_FOUND);
@@ -123,11 +123,10 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         res.json(targetRole);
     } catch (error: unknown) {
         next(error);
-        return;
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const role = await Role.findByPk(req.params.role_id);
         if (!role) throw new AppError('Role not found', HttpStatus.NOT_FOUND);

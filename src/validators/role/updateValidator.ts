@@ -47,7 +47,6 @@ export const updateValidator = [
         .optional()
         .notEmpty()
         .withMessage('Level cannot be empty')
-        .withMessage('Level is required')
         .bail()
         .isInt({ min: 1 })
         .withMessage('Level must be integer and be greater or equal to 1')
