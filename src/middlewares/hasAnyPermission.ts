@@ -1,6 +1,7 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AppError } from './errorHandler';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const errorMsg =
     'You do not have the required permissions to perform this action';
@@ -36,7 +37,7 @@ export default function hasAnyPermission(
             const hasScopedPermission = await (authorizedUser)
                 .hasAnyPermission(
                     permissionRefNames,
-                    req.isGlobalScope ? 'global' : 'channel',
+                    getScopeType(req.isGlobalScope),
                     req.channel?.id ?? undefined
                 );
 

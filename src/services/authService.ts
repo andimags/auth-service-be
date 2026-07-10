@@ -8,6 +8,7 @@ import sequelize from '../database/sequelize';
 import { AppError } from '../middlewares/errorHandler';
 import { IDecodedToken } from '../types';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 interface TokenPair {
     accessToken: string;
@@ -117,7 +118,7 @@ export async function getAuthResponsePayload(
     const { password: _password, ...userWithoutPassword } = user.toJSON();
 
     const permissions = await user.getPermissionRefNames(
-        isGlobalScope ? 'global' : 'channel',
+        getScopeType(isGlobalScope),
         isGlobalScope ? undefined : channelId
     );
 

@@ -4,6 +4,7 @@ import Permission from '../database/models/Permission';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -79,7 +80,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         const hasAccessToPermission = await req.authorizedUser?.hasPermissions(
             targetPermission.ref_name,
-            req.isGlobalScope ? 'global' : 'channel',
+            getScopeType(req.isGlobalScope),
             req.isGlobalScope ? undefined : req.channel?.id
         );
 
@@ -117,7 +118,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             req.authorizedUser!
         ).hasPermissions(
             targetPermission.ref_name,
-            req.isGlobalScope ? 'global' : 'channel',
+            getScopeType(req.isGlobalScope),
             req.isGlobalScope ? undefined : req.channel?.id
         );
 

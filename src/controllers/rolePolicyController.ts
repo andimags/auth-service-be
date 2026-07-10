@@ -4,6 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import { findMissingPolicies, findSystemPolicies } from '../services/policyService';
 import Policy from '../database/models/Policy';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const getRolePolicies = async (
     req: Request,
@@ -70,7 +71,7 @@ const addRolePolicies = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 missingPolicies,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 
@@ -160,7 +161,7 @@ const replaceRolePolicies = async (
         if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 requestedRefNames,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );
             if (authUserMissingPolicies && authUserMissingPolicies?.length > 0) {
@@ -212,7 +213,7 @@ const destroyRolePolicies = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
                 missingPolicies,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 

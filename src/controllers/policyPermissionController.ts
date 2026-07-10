@@ -4,6 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import { findMissingPermissions, findSystemPermissions } from '../services/permissionService';
 import Permission from '../database/models/Permission';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const getPolicyPermissions = async (
     req: Request,
@@ -56,7 +57,7 @@ const addPolicyPermissions = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 missingPermissions,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 
@@ -140,7 +141,7 @@ const replacePolicyPermissions = async (
         if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 requestedRefNames,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );
 
@@ -187,7 +188,7 @@ const destroyPolicyPermissions = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 missingPermissions,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 

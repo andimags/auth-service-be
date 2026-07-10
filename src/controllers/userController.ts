@@ -4,6 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { UserLevelType, UserStatusType } from '../constants/enums';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -60,7 +61,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                     'auth:admin:user',
                     'auth:view:user'
                 ],
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );
 

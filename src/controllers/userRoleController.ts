@@ -4,6 +4,7 @@ import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import { findMissingRoles, findRolesNotInChannel } from '../services/roleService';
 import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 // Fetch all roles assigned to a user
 const getUserRoles = async (
@@ -62,7 +63,7 @@ const addUserRoles = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 
@@ -133,7 +134,7 @@ const replaceUserRoles = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 
@@ -203,7 +204,7 @@ const destroyUserRole = async (
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
-                req.isGlobalScope ? 'global' : 'channel',
+                getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
             );    
 
