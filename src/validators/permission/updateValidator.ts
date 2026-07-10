@@ -35,6 +35,6 @@ export const updateValidator = [
         .bail()
         .isIn(['read', 'write', 'admin'])
         .withMessage(
-            "Access level value must only be either 'read', 'write', or 'admin"
+            "Access level value must only be either 'read', 'write', or 'admin'"
         )
 ];

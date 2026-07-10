@@ -6,7 +6,7 @@ import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
 import { getScopeType } from '../utils/getScopeType';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -71,7 +71,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
@@ -97,7 +97,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const permission = await Permission.create(req.body);
 
@@ -107,7 +107,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
@@ -137,7 +137,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const shouldForce = req.query.force === 'true';
         const targetPermission = await Permission.findByPk(
