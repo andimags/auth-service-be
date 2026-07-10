@@ -4,7 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -45,7 +45,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
@@ -56,7 +56,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const newPolicy = await Policy.create(req.body);
 
@@ -66,7 +66,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
@@ -76,11 +76,10 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         res.json(targetPolicy);
     } catch (error: unknown) {
         next(error);
-        return;
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const policy = await Policy.findByPk(req.params.policy_id);
         if (!policy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
