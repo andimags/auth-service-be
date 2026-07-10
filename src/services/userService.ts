@@ -74,7 +74,7 @@ export async function applyUserUpdate(
     }
 
     if (requestedChanges.level) {
-        const isMorePrivilegedThanNewLevel = await authorizedUser.isMorePrivilegedThanLevel(
+        const isMorePrivilegedThanNewLevel = authorizedUser.isMorePrivilegedThanLevel(
             requestedChanges.level as UserLevelType
         );
 

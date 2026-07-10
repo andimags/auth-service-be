@@ -68,8 +68,11 @@ export default class User extends Model {
         return [this.first_name, this.last_name].join(' ');
     }
 
-    async isMorePrivileged(user: User) {
-        return await isUserMorePrivileged(this, user);
+    // Kept async so the 5 existing `await user.isMorePrivileged(...)` call
+    // sites across the codebase stay valid; isUserMorePrivileged itself is synchronous.
+    // eslint-disable-next-line require-await
+    async isMorePrivileged(user: User): Promise<boolean> {
+        return isUserMorePrivileged(this, user);
     }
 
     isMorePrivilegedThanLevel(level: UserLevelType): boolean {

@@ -78,7 +78,7 @@ const add = async (req: Request, res: Response, next: NextFunction): Promise<voi
         const targetLevel = (req.body.level as UserLevelType) ?? UserLevelType.member;
 
         const isMorePrivilegedThanNewLevel =
-            await req.authorizedUser!.isMorePrivilegedThanLevel(targetLevel);
+            req.authorizedUser!.isMorePrivilegedThanLevel(targetLevel);
 
         if (!isMorePrivilegedThanNewLevel) {
             throw new AppError(
