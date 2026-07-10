@@ -59,7 +59,7 @@ export const getMissingUserPolicies = async (
     );
 };
 
-export const getUserPolicies = async (
+const getUserPolicies = async (
     user: User,
     roleScope: RoleScopeFilter,
     channelId?: number

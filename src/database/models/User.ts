@@ -4,9 +4,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin,
-    InferAttributes,
-    InferCreationAttributes
+    BelongsToManySetAssociationsMixin
 } from 'sequelize';
 import {
     AllowNull,
@@ -276,6 +274,3 @@ export default class User extends Model {
         }
     }
 }
-
-export type IUser = InferAttributes<User>;
-export type IUserCreation = InferCreationAttributes<User>;

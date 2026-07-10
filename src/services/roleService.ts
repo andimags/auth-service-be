@@ -34,7 +34,7 @@ export async function findRolesNotInChannel(
     return refNamesToCheck.filter((refName) => !rolesInChannelRefNames.has(refName));
 }
 
-export function getUserRoles(
+function getUserRoles(
     user: User,
     roleScope: RoleScopeFilter,
     channelId?: number

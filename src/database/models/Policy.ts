@@ -1,4 +1,4 @@
-import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, BelongsToManyGetAssociationsMixin, BelongsToManyRemoveAssociationMixin, BelongsToManyRemoveAssociationsMixin, BelongsToManySetAssociationsMixin, InferAttributes, InferCreationAttributes } from 'sequelize';
+import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, BelongsToManyGetAssociationsMixin, BelongsToManyRemoveAssociationMixin, BelongsToManyRemoveAssociationsMixin, BelongsToManySetAssociationsMixin, InferAttributes } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
@@ -125,4 +125,3 @@ export default class Policy extends Model {
 }
 
 export type IPolicy = InferAttributes<Policy>;
-export type IPolicyCreation = InferCreationAttributes<Policy>;

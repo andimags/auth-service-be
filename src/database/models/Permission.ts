@@ -1,4 +1,4 @@
-import { BelongsToManyGetAssociationsMixin, InferAttributes, InferCreationAttributes } from 'sequelize';
+import { BelongsToManyGetAssociationsMixin, InferAttributes } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
@@ -112,4 +112,3 @@ export default class Permission extends Model {
 }
 
 export type IPermission = InferAttributes<Permission>;
-export type IPermissionCreation = InferCreationAttributes<Permission>;

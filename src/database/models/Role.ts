@@ -23,9 +23,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin,
-    InferAttributes,
-    InferCreationAttributes
+    BelongsToManySetAssociationsMixin
 } from 'sequelize';
 import { RoleScopeType } from '../../constants/enums';
 import Channel from './Channel';
@@ -109,5 +107,3 @@ export default class Role extends Model {
     }
 }
 
-export type IRole = InferAttributes<Role>;
-export type IRoleCreation = InferCreationAttributes<Role>;
