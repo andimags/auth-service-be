@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { PermissionAccessLevelType, PermissionScopeType } from '../constants/enums';
 import Permission from '../database/models/Permission';
-import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 
@@ -20,7 +19,6 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         const scopeFilter = (req.query.scope as string) || undefined;
         const accessLevelFilter = (req.query.access_level as string) || undefined;
         const isSystemFilter = (req.query.is_system as string) || undefined;
-        console.log('isSystemFilter', isSystemFilter)
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
             typeof req.query.sort_desc === 'string'
@@ -115,7 +113,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
         if (!targetPermission) throw new AppError('Permission not found', 404);
 
         const hasAccessToPermission = await (
-            req.authorizedUser as User
+            req.authorizedUser!
         ).hasPermissions(
             targetPermission.ref_name,
             req.isGlobalScope ? 'global' : 'channel',

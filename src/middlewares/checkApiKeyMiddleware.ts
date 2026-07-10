@@ -26,8 +26,6 @@ export const checkApiKeyMiddleware = async (
         }
 
         req.channel = channel ?? undefined;
-        console.log('checkApiKeyMiddleware - req.channel', req.channel)
-        console.log('req.isGlobalScope from checkApiKeyMiddleware', !channel)
         req.isGlobalScope = !channel;
 
         next();

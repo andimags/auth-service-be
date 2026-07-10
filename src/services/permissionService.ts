@@ -31,7 +31,6 @@ export const userHasAnyPermission = async (
     channelId?: number
 ): Promise<boolean> => {
     const permissions = await getUserPermissions(user, roleScope, channelId);
-    console.log('users permissions: ', permissions);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
         ? permissionRefNames

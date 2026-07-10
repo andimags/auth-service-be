@@ -86,11 +86,7 @@ const destroyToken = async (req: Request, res: Response, next: NextFunction) => 
         const oldRefreshToken = req.body['refresh_token'];
         const decoded = authService.decodeRefreshToken(oldRefreshToken);
 
-        console.log('decoded.jti', decoded.jti);
-
         const deletedCount = await authService.revokeRefreshToken(decoded.jti);
-
-        console.log('destroyToken deletedCount', deletedCount);
 
         res.json({
             message: "Logout successful",
@@ -105,7 +101,7 @@ const verifyToken = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
@@ -124,7 +120,7 @@ const me = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         const roles = await Role.findAll({
             attributes: ['id', 'ref_name', 'scope', 'level', 'channel_id'],
@@ -162,26 +158,17 @@ const hasAnyPermission = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
 
-        console.log("hello,", req.body.role_scope);
-
-        // const decoded = jwt.verify(
-        //     token,
-        //     process.env.ACCESS_SECRET!
-        // ) as IDecodedToken;
-
         const hasPermissions = await (
-            req.authorizedUser as User
+            req.authorizedUser!
         ).hasAnyPermission(
             req.body.permission_ref_names,
             req.body.role_scope,
         );
-
-        console.log('hasPermissions', hasPermissions);
 
         if (hasPermissions) {
             res.json({

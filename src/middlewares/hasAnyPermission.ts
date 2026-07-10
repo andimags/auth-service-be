@@ -1,5 +1,4 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
-import User from '../database/models/User';
 import { AppError } from './errorHandler';
 
 const errorMsg =
@@ -11,10 +10,9 @@ export default function hasAnyPermission(
 ): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authorizedUser = req.authorizedUser as User;
+            const authorizedUser = req.authorizedUser!;
 
             if(req.isGlobalScope && (authorizedUser.isSuperadmin() || authorizedUser.isRootSuperadmin())) {
-                console.log('User is superadmin, bypassing permission checks');
                 return next();
             }
 
@@ -27,9 +25,6 @@ export default function hasAnyPermission(
                 );
 
                 if(!hasGlobalPermission){
-                    console.warn(
-                        'Only users with global role for this permission must be allowed'
-                    );
                     throw new AppError(errorMsg, 403);
                 }
                 else{

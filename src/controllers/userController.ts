@@ -112,7 +112,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', 404);
         }
 
-        const authorizedUser = req.authorizedUser as User;
+        const authorizedUser = req.authorizedUser!;
         const isSelfUpdate = targetUser.id === authorizedUser.id;
 
         if (!isSelfUpdate) {
@@ -163,7 +163,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
 
         if (!targetUser) throw new AppError('User not found', 404);
 
-        const authorizedUser = req.authorizedUser as User;
+        const authorizedUser = req.authorizedUser!;
         const isAuthorizedUserMorePrivileged =
             await authorizedUser?.isMorePrivileged(targetUser);
 
