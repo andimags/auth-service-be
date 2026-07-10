@@ -68,9 +68,9 @@ export default class Permission extends Model {
     @DeletedAt
     deleted_at: Date;
 
-    // Associatons
+    // Associations
     @BelongsToMany(() => Policy, () => PolicyPermission)
-    roles: Policy[];
+    policies: Policy[];
 
     // Mixins
     declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
