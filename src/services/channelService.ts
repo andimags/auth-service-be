@@ -11,7 +11,7 @@ import { HttpStatus } from '../constants/httpStatus';
  *
  * Returns true if user has roles associated to this specific channel
  */
-export async function hasAccessToChannel(userId: number, channelId: number) {
+export async function hasAccessToChannel(userId: number, channelId: number): Promise<boolean> {
     const user = await User.findByPk(userId);
     if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);
 
@@ -26,7 +26,7 @@ export async function hasAccessToChannel(userId: number, channelId: number) {
  *
  * Get channels associated to the target user's roles.
  */
-export async function getUserChannels(userId: number) {
+export async function getUserChannels(userId: number): Promise<Channel[]> {
     const user = await User.findByPk(userId);
 
     if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);

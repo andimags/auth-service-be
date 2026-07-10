@@ -4,7 +4,7 @@ import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -53,7 +53,7 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', HttpStatus.NOT_FOUND);
@@ -71,7 +71,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.create(req.body);
 
@@ -81,7 +81,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.findByPk(req.params.channel_id);
         if (!channel) throw new AppError('Channel not found', HttpStatus.NOT_FOUND);
@@ -103,7 +103,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const shouldForce = req.query.force === 'true';
         const channel = await Channel.findByPk(req.params.channel_id, {
