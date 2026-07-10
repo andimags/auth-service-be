@@ -110,11 +110,16 @@ export function revokeRefreshToken(jti: string | undefined): Promise<number> {
     return RefreshToken.destroy({ where: { jti } });
 }
 
+interface AuthResponsePayload {
+    user: Omit<ReturnType<User['toJSON']>, 'password'>;
+    permissions: string[];
+}
+
 export async function getAuthResponsePayload(
     user: User,
     isGlobalScope: boolean,
     channelId?: number
-) {
+): Promise<AuthResponsePayload> {
     const { password: _password, ...userWithoutPassword } = user.toJSON();
 
     const permissions = await user.getPermissionRefNames(

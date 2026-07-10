@@ -12,7 +12,7 @@ const generateToken = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const user = await authService.verifyCredentials(req.body.email, req.body.password);
         const { accessToken, refreshToken } = await authService.issueTokens(user.id);
@@ -41,7 +41,7 @@ const generateToken = async (
     }
 };
 
-const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+const refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const oldRefreshToken = req.body['refresh_token'];
         if (!oldRefreshToken) throw new AppError('Refresh token not found', HttpStatus.FORBIDDEN);
@@ -80,7 +80,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
-const destroyToken = async (req: Request, res: Response, next: NextFunction) => {
+const destroyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         authService.assertRefreshSecretConfigured('REFRESH_SECRET on env not set');
 
