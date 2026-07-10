@@ -14,7 +14,7 @@ export const addValidator = [
 
     body('email')
         .notEmpty()
-        .withMessage('Username is required')
+        .withMessage('Email is required')
         .bail()
         .isEmail()
         .withMessage('Email has invalid format')

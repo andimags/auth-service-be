@@ -5,8 +5,9 @@ import paginate from '../utils/paginate';
 import { UserLevelType, UserStatusType } from '../constants/enums';
 import { HttpStatus } from '../constants/httpStatus';
 import { getScopeType } from '../utils/getScopeType';
+import { applyUserUpdate, canViewUser } from '../services/userService';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const size = parseInt(req.query.size as string) || 10;
@@ -47,25 +48,16 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const authHasPermission = 
-            req.authorizedUser?.isSuperadmin()
-                ||
-            req.authorizedUser?.isRootSuperadmin()
-                ||
-            req.authorizedUser?.id.toString() == req.params.user_id 
-                ||
-            await req.authorizedUser?.hasAnyPermission(
-                [
-                    'auth:admin:user',
-                    'auth:view:user'
-                ],
-                getScopeType(req.isGlobalScope),
-                req.isGlobalScope ? undefined : req.channel?.id,
-            );
+        const canView = await canViewUser(
+            req.authorizedUser!,
+            req.params.user_id,
+            getScopeType(req.isGlobalScope),
+            req.isGlobalScope ? undefined : req.channel?.id
+        );
 
-        if(!authHasPermission){
+        if (!canView) {
             throw new AppError('You do not have the required permissions to perform this action', HttpStatus.FORBIDDEN);
         }
 
@@ -81,7 +73,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetLevel = (req.body.level as UserLevelType) ?? UserLevelType.member;
 
@@ -106,7 +98,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
 
@@ -114,38 +106,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
             throw new AppError('User not found', HttpStatus.NOT_FOUND);
         }
 
-        const authorizedUser = req.authorizedUser!;
-        const isSelfUpdate = targetUser.id === authorizedUser.id;
-
-        if (!isSelfUpdate) {
-            const isMorePrivilegedThanTarget =
-                await authorizedUser.isMorePrivileged(targetUser);
-
-            if (!isMorePrivilegedThanTarget) {
-                throw new AppError(
-                    `You cannot update a user with level '${targetUser.level}'`,
-                    HttpStatus.FORBIDDEN
-                );
-            }
-
-            if (req.body.level) {
-                const isMorePrivilegedThanNewLevel =
-                    await authorizedUser.isMorePrivilegedThanLevel(
-                        req.body.level as UserLevelType
-                    );
-
-                if (!isMorePrivilegedThanNewLevel) {
-                    throw new AppError(
-                        `You cannot assign a user the level '${req.body.level}'`,
-                        HttpStatus.FORBIDDEN
-                    );
-                }
-            }
-        } else {
-            // user cannot update their own status or level
-            delete req.body.status;
-            delete req.body.level;
-        }
+        await applyUserUpdate(req.authorizedUser!, targetUser, req.body);
 
         await targetUser.update(req.body);
 
@@ -155,7 +116,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const shouldForce = req.query.force === 'true';
 
