@@ -58,48 +58,6 @@ export const getMissingUserPolicies = async (
     );
 };
 
-export const userHasPolicies = async (
-    user: User,
-    policyRefNames: string | string[],
-    roleScope: RoleScopeFilter,
-    channelId?: number
-): Promise<boolean> => {
-    const policies = await getUserPolicies(user, roleScope, channelId);
-
-    const requiredPolicies = Array.isArray(policyRefNames)
-        ? policyRefNames
-        : [policyRefNames];
-
-    return requiredPolicies.every(refName =>
-        policies.some((policy: IPolicy) => {
-            if (policy.ref_name !== refName) {
-                return false;
-            }
-        })
-    );
-};
-
-export const userHasAnyPolicy = async (
-    user: User,
-    policyRefNames: string | string[],
-    roleScope: RoleScopeFilter,
-    channelId?: number
-): Promise<boolean> => {
-    const policies = await getUserPolicies(user, roleScope, channelId);
-
-    const requiredPolicies = Array.isArray(policyRefNames)
-        ? policyRefNames
-        : [policyRefNames];
-
-    return requiredPolicies.some(refName =>
-        policies.some((policy: IPolicy) => {
-            if (policy.ref_name !== refName) {
-                return false;
-            }
-        })
-    );
-};
-
 export const getUserPolicies = async (
     user: User,
     roleScope: RoleScopeFilter,
