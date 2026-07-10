@@ -11,7 +11,7 @@ const getUserRoles = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
@@ -40,7 +40,7 @@ const addUserRoles = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
@@ -60,7 +60,7 @@ const addUserRoles = async (
             );
         }
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
                 getScopeType(req.isGlobalScope),
@@ -110,7 +110,7 @@ const replaceUserRoles = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
@@ -131,7 +131,7 @@ const replaceUserRoles = async (
             );
         }
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
                 getScopeType(req.isGlobalScope),
@@ -181,7 +181,7 @@ const destroyUserRole = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetUser = await User.findByPk(req.params.user_id);
         if (!targetUser) throw new AppError('User not found', HttpStatus.NOT_FOUND);
@@ -201,7 +201,7 @@ const destroyUserRole = async (
             );
         }
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
                 missingRoles,
                 getScopeType(req.isGlobalScope),
