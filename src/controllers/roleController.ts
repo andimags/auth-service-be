@@ -86,7 +86,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
             const channel = await Channel.findByPk(req.body.channel_id);
 
             if (!channel) {
-                throw new AppError("Channel does not exist", 400);
+                throw new AppError('Channel does not exist', 400);
             }
         }
 

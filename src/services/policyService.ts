@@ -1,8 +1,8 @@
-import { WhereOptions } from "sequelize";
-import Policy, { IPolicy } from "../database/models/Policy";
-import User from "../database/models/User";
-import { AppError } from "../middlewares/errorHandler";
-import { RoleScopeFilter } from "../types";
+import { WhereOptions } from 'sequelize';
+import Policy, { IPolicy } from '../database/models/Policy';
+import User from '../database/models/User';
+import { AppError } from '../middlewares/errorHandler';
+import { RoleScopeFilter } from '../types';
 
 /* -------------------------------------------------------------------------- */
 /*       find policies that do not exist and return an array of ref_name      */
@@ -18,7 +18,7 @@ export async function findMissingPolicies(
         where: {
             ref_name: refNamesToCheck,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     const existingPolicyRefNames = new Set(
@@ -96,7 +96,7 @@ export const getUserPolicies = async (
     });
 
     return Array.from(policiesSet);
-}
+};
 
 /* -------------------------------------------------------------------------- */
 /*           returns an array of ref_names where policy is_system is true     */
@@ -113,7 +113,7 @@ export async function findSystemPolicies(
             ref_name: refNamesToCheck,
             is_system: true,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     return policies.map((policy) => policy.ref_name);

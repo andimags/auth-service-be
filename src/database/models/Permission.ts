@@ -32,45 +32,45 @@ export default class Permission extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    name: string;
+        name: string;
 
     @Column(DataType.STRING)
-    description: string;
+        description: string;
 
     @AllowNull(false)
     @Unique
     @Column(DataType.STRING)
-    ref_name: string;
+        ref_name: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    module: string;
+        module: string;
 
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(PermissionAccessLevelType)))
-    access_level: string;
+        access_level: string;
 
     @AllowNull(false)
     @Default(false)
     @Column(DataType.BOOLEAN)
-    is_system: boolean;
+        is_system: boolean;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
     // Associations
     @BelongsToMany(() => Policy, () => PolicyPermission)
-    policies: Policy[];
+        policies: Policy[];
 
     // Mixins
     declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;

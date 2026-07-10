@@ -1,7 +1,6 @@
-import { WhereOptions } from "sequelize";
-import Role from "../database/models/Role";
-import User from "../database/models/User";
-import { RoleScopeFilter } from "../types";
+import Role from '../database/models/Role';
+import User from '../database/models/User';
+import { RoleScopeFilter } from '../types';
 
 export async function findMissingRoles(
     roleRefNames: string | string[]
@@ -35,7 +34,7 @@ export async function findRolesNotInChannel(
     return refNamesToCheck.filter((refName) => !rolesInChannelRefNames.has(refName));
 }
 
-export async function getUserRoles(
+export function getUserRoles(
     user: User,
     roleScope: RoleScopeFilter,
     channelId?: number

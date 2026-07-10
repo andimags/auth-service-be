@@ -22,28 +22,28 @@ export default class RefreshToken extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @ForeignKey(() => User)
     @Column
-    user_id: number;
+        user_id: number;
 
     @Unique
     @AllowNull(false)
     @Column(DataType.STRING)
-    jti: string;
+        jti: string;
 
     @AllowNull(false)
     @Column(DataType.DATE)
-    expires_at: Date;
+        expires_at: Date;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     // Associations
     @BelongsTo(() => User)
-    user: User; 
+        user: User; 
 
     // Hooks
     @BeforeValidate

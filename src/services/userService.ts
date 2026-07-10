@@ -1,5 +1,5 @@
-import { UserLevelType, USER_LEVEL_RANK } from "../constants/enums";
-import User from "../database/models/User";
+import { UserLevelType, USER_LEVEL_RANK } from '../constants/enums';
+import User from '../database/models/User';
 
 export function isLevelMorePrivileged(
     higherLevel: UserLevelType,
@@ -15,7 +15,7 @@ export function isLevelMorePrivileged(
     return higherRank > lowerRank;
 }
 
-export async function isUserMorePrivileged(firstUser: User, secondUser: User) {
+export function isUserMorePrivileged(firstUser: User, secondUser: User): boolean {
     return isLevelMorePrivileged(
         firstUser.level as UserLevelType,
         secondUser.level as UserLevelType

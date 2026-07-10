@@ -1,5 +1,4 @@
 import { body } from 'express-validator';
-import { isUniqueCompositeField } from '../custom/isUniqueCompositeField';
 import Permission from '../../database/models/Permission';
 import { isUniqueField } from '../custom/isUniqueField';
 

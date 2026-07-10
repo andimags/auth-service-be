@@ -104,7 +104,7 @@ export async function rotateTokens(
     return { accessToken, refreshToken };
 }
 
-export async function revokeRefreshToken(jti: string | undefined): Promise<number> {
+export function revokeRefreshToken(jti: string | undefined): Promise<number> {
     return RefreshToken.destroy({ where: { jti } });
 }
 
@@ -113,7 +113,7 @@ export async function getAuthResponsePayload(
     isGlobalScope: boolean,
     channelId?: number
 ) {
-    const { password, ...userWithoutPassword } = user.toJSON();
+    const { password: _password, ...userWithoutPassword } = user.toJSON();
 
     const permissions = await user.getPermissionRefNames(
         isGlobalScope ? 'global' : 'channel',

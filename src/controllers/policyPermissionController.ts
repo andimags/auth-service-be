@@ -46,7 +46,7 @@ const addPolicyPermissions = async (
 
             if (globalPermissions.length > 0) {
                 throw new AppError(
-                    "Global permissions cannot be assigned using a channel-scoped API key",
+                    'Global permissions cannot be assigned using a channel-scoped API key',
                     403
                 );
             }
@@ -57,7 +57,7 @@ const addPolicyPermissions = async (
                 missingPermissions,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(
@@ -86,73 +86,73 @@ const replacePolicyPermissions = async (
     req: Request,
     res: Response,
     next: NextFunction
-    ) => {
+) => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', 404);
 
         const missingPermissions = await findMissingPermissions(
-        req.body.permission_ref_names
+            req.body.permission_ref_names
         );
 
         if (missingPermissions.length > 0)
-        throw new AppError(
-            `Permission ref names ${missingPermissions} do not exist`,
-            404
-        );
+            throw new AppError(
+                `Permission ref names ${missingPermissions} do not exist`,
+                404
+            );
 
         const requestedRefNames: string[] = Array.isArray(req.body.permission_ref_names)
-        ? req.body.permission_ref_names
-        : [req.body.permission_ref_names];
+            ? req.body.permission_ref_names
+            : [req.body.permission_ref_names];
 
         if (!req.isGlobalScope) {
         // Permissions currently attached to the policy, before any changes
-        const currentPermissions = await targetPolicy.getPermissions();
-        const currentGlobalRefNames = currentPermissions
-            .filter((p) => p.is_system) // adjust to match findSystemPermissions' definition
-            .map((p) => p.ref_name);
+            const currentPermissions = await targetPolicy.getPermissions();
+            const currentGlobalRefNames = currentPermissions
+                .filter((p) => p.is_system) // adjust to match findSystemPermissions' definition
+                .map((p) => p.ref_name);
 
-        // New global permissions being introduced -> not allowed
-        const requestedGlobalPermissions = await findSystemPermissions(requestedRefNames);
-        const newGlobalPermissions = requestedGlobalPermissions.filter(
-            (refName) => !currentGlobalRefNames.includes(refName)
-        );
-        if (newGlobalPermissions.length > 0) {
-            throw new AppError(
-            "Global permissions cannot be updated using a channel-scoped API key",
-            403
+            // New global permissions being introduced -> not allowed
+            const requestedGlobalPermissions = await findSystemPermissions(requestedRefNames);
+            const newGlobalPermissions = requestedGlobalPermissions.filter(
+                (refName) => !currentGlobalRefNames.includes(refName)
             );
-        }
+            if (newGlobalPermissions.length > 0) {
+                throw new AppError(
+                    'Global permissions cannot be updated using a channel-scoped API key',
+                    403
+                );
+            }
 
-        // Existing global permissions being dropped (omitted from the request) -> not allowed
-        const removedGlobalPermissions = currentGlobalRefNames.filter(
-            (refName) => !requestedRefNames.includes(refName)
-        );
-        if (removedGlobalPermissions.length > 0) {
-            throw new AppError(
-            `Global permissions ${removedGlobalPermissions} cannot be removed using a channel-scoped API key`,
-            403
+            // Existing global permissions being dropped (omitted from the request) -> not allowed
+            const removedGlobalPermissions = currentGlobalRefNames.filter(
+                (refName) => !requestedRefNames.includes(refName)
             );
-        }
+            if (removedGlobalPermissions.length > 0) {
+                throw new AppError(
+                    `Global permissions ${removedGlobalPermissions} cannot be removed using a channel-scoped API key`,
+                    403
+                );
+            }
         }
 
         if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
-        const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
-            requestedRefNames,
-            req.isGlobalScope ? 'global' : 'channel',
-            req.isGlobalScope ? undefined : req.channel?.id,
-        );
-
-        if (authUserMissingPermissions && authUserMissingPermissions?.length > 0) {
-            throw new AppError(
-            `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
-            404
+            const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
+                requestedRefNames,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
             );
-        }
+
+            if (authUserMissingPermissions && authUserMissingPermissions?.length > 0) {
+                throw new AppError(
+                    `Permission ref names ${authUserMissingPermissions} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
 
         const permissions = await Permission.findAll({
-        where: { ref_name: requestedRefNames },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetPolicy.setPermissions(permissions);
@@ -183,12 +183,12 @@ const destroyPolicyPermissions = async (
                 404
             );
 
-                if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 missingPermissions,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(

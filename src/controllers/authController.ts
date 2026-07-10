@@ -89,7 +89,7 @@ const destroyToken = async (req: Request, res: Response, next: NextFunction) => 
         const deletedCount = await authService.revokeRefreshToken(decoded.jti);
 
         res.json({
-            message: "Logout successful",
+            message: 'Logout successful',
             deleted_refresh_token_rows: deletedCount
         });
     } catch (error) {
@@ -97,11 +97,11 @@ const destroyToken = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
-const verifyToken = async (
+const verifyToken = (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<void> => {
+): void => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);

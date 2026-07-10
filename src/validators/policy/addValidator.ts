@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { isUniqueField } from '../custom/isUniqueField'
+import { isUniqueField } from '../custom/isUniqueField';
 import Policy from '../../database/models/Policy';
 
 export const addValidator = [

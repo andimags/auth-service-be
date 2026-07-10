@@ -19,16 +19,16 @@ export default function hasAnyPermission(
             // If requireGlobalRole == true, only global roles are allowed
             if (requireGlobalRole) {
                 const hasGlobalPermission = await (authorizedUser)
-                .hasAnyPermission(
-                    permissionRefNames,
-                    'global'
-                );
+                    .hasAnyPermission(
+                        permissionRefNames,
+                        'global'
+                    );
 
                 if(!hasGlobalPermission){
                     throw new AppError(errorMsg, 403);
                 }
                 else{
-                    return next()
+                    return next();
                 }
             }
 

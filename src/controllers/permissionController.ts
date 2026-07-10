@@ -33,27 +33,27 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
                 searchTerm: searchTerm,
                 stringFields: ['name', 'description', 'ref_name'],
                 enumFilter:  [
-                ...(scopeFilter
-                    ? [{
-                        field: "scope",
-                        value: scopeFilter,
-                        allowedValues: Object.values(PermissionScopeType) as string[],
-                    }]
-                    : []),
-                ...(accessLevelFilter
-                    ? [{
-                        field: "access_level",
-                        value: accessLevelFilter,
-                        allowedValues: Object.values(PermissionAccessLevelType) as string[],
-                    }]
-                    : []),
-                ...(isSystemFilter
-                    ? [{
-                        field: "is_system",
-                        value: isSystemFilter,
-                        allowedValues: ['true', 'false'],
-                    }]
-                    : []),
+                    ...(scopeFilter
+                        ? [{
+                            field: 'scope',
+                            value: scopeFilter,
+                            allowedValues: Object.values(PermissionScopeType) as string[],
+                        }]
+                        : []),
+                    ...(accessLevelFilter
+                        ? [{
+                            field: 'access_level',
+                            value: accessLevelFilter,
+                            allowedValues: Object.values(PermissionAccessLevelType) as string[],
+                        }]
+                        : []),
+                    ...(isSystemFilter
+                        ? [{
+                            field: 'is_system',
+                            value: isSystemFilter,
+                            allowedValues: ['true', 'false'],
+                        }]
+                        : []),
                 ]
             },
             {

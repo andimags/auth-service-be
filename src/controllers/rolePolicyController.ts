@@ -60,7 +60,7 @@ const addRolePolicies = async (
 
             if (globalPolicies.length > 0) {
                 throw new AppError(
-                    "Global policies cannot be assigned using a channel-scoped API key",
+                    'Global policies cannot be assigned using a channel-scoped API key',
                     403
                 );
             }
@@ -71,7 +71,7 @@ const addRolePolicies = async (
                 missingPolicies,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
                 throw new AppError(
@@ -100,78 +100,78 @@ const replaceRolePolicies = async (
     req: Request,
     res: Response,
     next: NextFunction
-    ) => {
+) => {
     try {
         const targetRole = await Role.findByPk(req.params.role_id);
         if (!targetRole) throw new AppError('Role not found', 404);
 
         if (!req.isGlobalScope && targetRole?.channel_id != req.channel?.id) {
-        throw new AppError(
-            'Unauthorized to replace permissions to this role',
-            403
-        );
+            throw new AppError(
+                'Unauthorized to replace permissions to this role',
+                403
+            );
         }
 
         const missingPolicies = await findMissingPolicies(
-        req.body.policy_ref_names
+            req.body.policy_ref_names
         );
         if (missingPolicies.length > 0)
-        throw new AppError(
-            `Policy ref names ${missingPolicies} do not exist`,
-            404
-        );
+            throw new AppError(
+                `Policy ref names ${missingPolicies} do not exist`,
+                404
+            );
 
         const requestedRefNames: string[] = Array.isArray(req.body.policy_ref_names)
-        ? req.body.policy_ref_names
-        : [req.body.policy_ref_names];
+            ? req.body.policy_ref_names
+            : [req.body.policy_ref_names];
 
         if (!req.isGlobalScope) {
         // Policies currently attached to the role, before any changes
-        const currentPolicies = await targetRole.getPolicies();
-        const currentGlobalRefNames = currentPolicies
-            .filter((p) => p.is_system) // adjust to match findSystemPolicies' definition
-            .map((p) => p.ref_name);
+            const currentPolicies = await targetRole.getPolicies();
+            const currentGlobalRefNames = currentPolicies
+                .filter((p) => p.is_system) // adjust to match findSystemPolicies' definition
+                .map((p) => p.ref_name);
 
-        // New global policies being introduced -> not allowed
-        const requestedGlobalPolicies = await findSystemPolicies(requestedRefNames);
-        const newGlobalPolicies = requestedGlobalPolicies.filter(
-            (refName) => !currentGlobalRefNames.includes(refName)
-        );
-        if (newGlobalPolicies.length > 0) {
-            throw new AppError(
-            "Global policies cannot be updated using a channel-scoped API key",
-            403
+            // New global policies being introduced -> not allowed
+            const requestedGlobalPolicies = await findSystemPolicies(requestedRefNames);
+            const newGlobalPolicies = requestedGlobalPolicies.filter(
+                (refName) => !currentGlobalRefNames.includes(refName)
             );
-        }
+            if (newGlobalPolicies.length > 0) {
+                throw new AppError(
+                    'Global policies cannot be updated using a channel-scoped API key',
+                    403
+                );
+            }
 
-        // Existing global policies being dropped (omitted from the request) -> not allowed
-        const removedGlobalPolicies = currentGlobalRefNames.filter(
-            (refName) => !requestedRefNames.includes(refName)
-        );
-        if (removedGlobalPolicies.length > 0) {
-            throw new AppError(
-            `Global policies ${removedGlobalPolicies} cannot be removed using a channel-scoped API key`,
-            403
+            // Existing global policies being dropped (omitted from the request) -> not allowed
+            const removedGlobalPolicies = currentGlobalRefNames.filter(
+                (refName) => !requestedRefNames.includes(refName)
             );
-        }
+            if (removedGlobalPolicies.length > 0) {
+                throw new AppError(
+                    `Global policies ${removedGlobalPolicies} cannot be removed using a channel-scoped API key`,
+                    403
+                );
+            }
         }
 
         if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
-        const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
-            requestedRefNames,
-            req.isGlobalScope ? 'global' : 'channel',
-            req.isGlobalScope ? undefined : req.channel?.id,
-        );
-        if (authUserMissingPolicies && authUserMissingPolicies?.length > 0) {
-            throw new AppError(
-            `Policy ref names ${authUserMissingPolicies} are not assignable by the auth user`,
-            404
+            const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
+                requestedRefNames,
+                req.isGlobalScope ? 'global' : 'channel',
+                req.isGlobalScope ? undefined : req.channel?.id,
             );
-        }
+            if (authUserMissingPolicies && authUserMissingPolicies?.length > 0) {
+                throw new AppError(
+                    `Policy ref names ${authUserMissingPolicies} are not assignable by the auth user`,
+                    404
+                );
+            }
         }
 
         const policies = await Policy.findAll({
-        where: { ref_name: requestedRefNames },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetRole.setPolicies(policies);
@@ -213,7 +213,7 @@ const destroyRolePolicies = async (
                 missingPolicies,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
                 throw new AppError(

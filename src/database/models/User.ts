@@ -73,7 +73,7 @@ export default class User extends Model {
         return await isUserMorePrivileged(this, user);
     }
 
-    async isMorePrivilegedThanLevel(level: UserLevelType) {
+    isMorePrivilegedThanLevel(level: UserLevelType): boolean {
         return isLevelMorePrivileged(this.level as UserLevelType, level);
     }
 
@@ -102,7 +102,7 @@ export default class User extends Model {
         );
 
         return [...new Set(
-        permissions.map(p => p.ref_name).filter(Boolean)
+            permissions.map(p => p.ref_name).filter(Boolean)
         )];
     }
 
@@ -140,7 +140,7 @@ export default class User extends Model {
             policyRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
     async getMissingPermissions(
@@ -153,7 +153,7 @@ export default class User extends Model {
             permissionRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
     async getMissingRoles(
@@ -166,7 +166,7 @@ export default class User extends Model {
             roleRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
 
@@ -174,53 +174,53 @@ export default class User extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    username: string;
+        username: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    email: string;
+        email: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    first_name: string;
+        first_name: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    last_name: string;
+        last_name: string;
 
     @AllowNull(false)
     @Default('active')
     @Column(DataType.ENUM(...Object.values(UserStatusType)))
-    status: string;
+        status: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    password: string;
+        password: string;
 
     @AllowNull(false)
     @Default(UserLevelType.member)
     @Column(DataType.ENUM(...Object.values(UserLevelType)))
-    level: string;
+        level: string;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
     // Associations
     @BelongsToMany(() => Role, () => UserRole)
-    roles: Role[];
+        roles: Role[];
 
     @HasMany(() => RefreshToken, 'user_id')
-    refreshTokens: RefreshToken[];
+        refreshTokens: RefreshToken[];
         
     // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;

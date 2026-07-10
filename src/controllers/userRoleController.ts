@@ -63,7 +63,7 @@ const addUserRoles = async (
                 missingRoles,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
@@ -134,7 +134,7 @@ const replaceUserRoles = async (
                 missingRoles,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
@@ -204,7 +204,7 @@ const destroyUserRole = async (
                 missingRoles,
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )    
+            );    
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(

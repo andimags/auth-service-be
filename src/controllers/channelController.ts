@@ -59,7 +59,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
 
         if (!req.isGlobalScope && (req.channel?.id !== channel.id)) {
             throw new AppError(
-                `Access is limited to the API key's channel`,
+                'Access is limited to the API key\'s channel',
                 403
             );
         }

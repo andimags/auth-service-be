@@ -19,7 +19,7 @@ export const userHasPermissions = async (
 
     return requiredPermissions.every(refName =>
         permissions.some((permission: IPermission) => {
-            return permission.ref_name === refName
+            return permission.ref_name === refName;
         })
     );
 };
@@ -38,7 +38,7 @@ export const userHasAnyPermission = async (
 
     return requiredPermissions.some(refName =>
         permissions.some((permission: IPermission) => {
-            return permission.ref_name === refName
+            return permission.ref_name === refName;
         })
     );
 };
@@ -92,7 +92,7 @@ export const getUserPermissions = async (
     });
 
     return Array.from(permissionsSet);
-}
+};
 
 export const findMissingPermissions = async (
     permissionRefNames: string | string[]
@@ -150,7 +150,7 @@ export async function findSystemPermissions(
             ref_name: refNamesToCheck,
             is_system: true,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     return permissions.map((permission) => permission.ref_name);

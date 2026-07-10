@@ -17,20 +17,20 @@ import Role from './Role';
 export default class RolePolicy extends Model {
     @ForeignKey(() => Policy)
     @Column
-    policy_id: number;
+        policy_id: number;
     @BelongsTo(() => Policy, {
         onDelete: 'CASCADE'
     })
-    policy: Policy;
+        policy: Policy;
 
     @ForeignKey(() => Role)
     @Column
-    role_id: number;
+        role_id: number;
     @BelongsTo(() => Role, {
         onDelete: 'CASCADE'
     })
-    role: Role;
+        role: Role;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 }

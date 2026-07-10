@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
-import { USER_LEVEL_RANK, UserLevelType, UserStatusType } from '../constants/enums';
+import { UserLevelType, UserStatusType } from '../constants/enums';
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -56,12 +56,12 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
                 ||
             await req.authorizedUser?.hasAnyPermission(
                 [
-                        'auth:admin:user',
-                        'auth:view:user'
-                    ],
+                    'auth:admin:user',
+                    'auth:view:user'
+                ],
                 req.isGlobalScope ? 'global' : 'channel',
                 req.isGlobalScope ? undefined : req.channel?.id,
-            )
+            );
 
         if(!authHasPermission){
             throw new AppError('You do not have the required permissions to perform this action', 403);
@@ -102,7 +102,7 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error: unknown) {
         next(error);
     }
-}
+};
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -151,7 +151,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error: unknown) {
         next(error);
     }
-}
+};
 
 const destroy = async (req: Request, res: Response, next: NextFunction) => {
     try {
