@@ -1,5 +1,5 @@
 import { body, param } from 'express-validator';
-import { isIntegerOrArrayOfIntegers } from '../custom/isIntegerOrArrayOfIntegers';
+import { isStringOrArrayOfStrings } from '../custom/isStringOrArrayOfStrings';
 
 export const deleteValidator = [
     param('policy_id')
@@ -9,9 +9,9 @@ export const deleteValidator = [
         .isInt()
         .withMessage('Policy ID must be integer'),
 
-    body('permission_ids')
+    body('permission_ref_names')
         .notEmpty()
-        .withMessage('Permission IDs are required')
+        .withMessage('Permission ref names are required')
         .bail()
-        .custom(isIntegerOrArrayOfIntegers('permission IDs'))
+        .custom(isStringOrArrayOfStrings('permission ref names'))
 ];

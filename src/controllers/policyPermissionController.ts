@@ -10,7 +10,7 @@ const getPolicyPermissions = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
@@ -28,7 +28,7 @@ const addPolicyPermissions = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
@@ -54,7 +54,7 @@ const addPolicyPermissions = async (
             }
         }
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 missingPermissions,
                 getScopeType(req.isGlobalScope),
@@ -88,7 +88,7 @@ const replacePolicyPermissions = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
@@ -138,7 +138,7 @@ const replacePolicyPermissions = async (
             }
         }
 
-        if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin) {
+        if (!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()) {
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 requestedRefNames,
                 getScopeType(req.isGlobalScope),
@@ -170,13 +170,13 @@ const destroyPolicyPermissions = async (
     req: Request,
     res: Response,
     next: NextFunction
-) => {
+): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
         if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const missingPermissions = await findMissingPermissions(
-            req.body.permission_ids
+            req.body.permission_ref_names
         );
 
         if (missingPermissions.length > 0)
@@ -185,7 +185,7 @@ const destroyPolicyPermissions = async (
                 HttpStatus.NOT_FOUND
             );
 
-        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin){
+        if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
                 missingPermissions,
                 getScopeType(req.isGlobalScope),
