@@ -6,7 +6,7 @@ export const checkApiKeyMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         // Channel checking
         const apiKey = req.header('x-api-key');
@@ -31,9 +31,9 @@ export const checkApiKeyMiddleware = async (
         req.isGlobalScope = !channel;
 
         next();
-    } catch (error: any) {
-        console.error('API key verification failed:', error.message ?? error);
+    } catch (error: unknown) {
+        console.error('API key verification failed:', error instanceof Error ? error.message : error);
 
-        throw new AppError('Invalid API key', 403);
+        next(new AppError('Invalid API key', 403));
     }
 };

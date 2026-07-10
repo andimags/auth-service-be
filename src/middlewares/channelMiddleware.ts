@@ -8,7 +8,7 @@ export const channelMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', 404);
@@ -21,9 +21,9 @@ export const channelMiddleware = async (
         req.channel = await Channel.findByPk(decoded.channel_id) ?? undefined;
 
         next();
-    } catch (error: any) {
-        console.error('API key verification failed:', error.message ?? error);
+    } catch (error: unknown) {
+        console.error('API key verification failed:', error instanceof Error ? error.message : error);
 
-        throw new AppError('Invalid API key', 403);
+        next(new AppError('Invalid API key', 403));
     }
 };

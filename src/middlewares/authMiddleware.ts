@@ -31,8 +31,8 @@ export const authMiddleware = async (
         req.authorizedUser = await User.findByPk(decoded.id) ?? undefined;
 
         next();
-    } catch (error: any) {
-        console.error('Token verification failed:', error.message ?? error);
+    } catch (error: unknown) {
+        console.error('Token verification failed:', error instanceof Error ? error.message : error);
         next(new AppError('Invalid or expired token', 401));
     }
 };

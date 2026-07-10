@@ -20,13 +20,13 @@ export default function hasAnyPermission(
 
             // If requireGlobalRole == true, only global roles are allowed
             if (requireGlobalRole) {
-                const userHasAnyPermission = await (authorizedUser)
+                const hasGlobalPermission = await (authorizedUser)
                 .hasAnyPermission(
-                    permissionRefNames, 
+                    permissionRefNames,
                     'global'
                 );
 
-                if(!userHasAnyPermission){
+                if(!hasGlobalPermission){
                     console.warn(
                         'Only users with global role for this permission must be allowed'
                     );
@@ -37,14 +37,14 @@ export default function hasAnyPermission(
                 }
             }
 
-            const userHasAnyPermission = await (authorizedUser)
+            const hasScopedPermission = await (authorizedUser)
                 .hasAnyPermission(
-                    permissionRefNames, 
+                    permissionRefNames,
                     req.isGlobalScope ? 'global' : 'channel',
                     req.channel?.id ?? undefined
                 );
 
-            if (userHasAnyPermission) {
+            if (hasScopedPermission) {
                 return next(); // Continue to next middleware/route handler
             }
 
