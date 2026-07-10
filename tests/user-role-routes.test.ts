@@ -59,7 +59,7 @@ describe('Role Permission Routes', () => {
             const targetUser = await User.create(await generateUserData());
             const role = await createRole(['admin:role_permission']);
 
-            await targetUser?.setRoles(role);
+            await targetUser?.setRoles([role]);
 
             const response = await superadminAuth.agent
                 .get(`${API_BASE_URL}/${targetUser.id}`)
@@ -181,7 +181,7 @@ describe('Role Permission Routes', () => {
                 5
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
@@ -226,7 +226,7 @@ describe('Role Permission Routes', () => {
                 3
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
@@ -366,7 +366,7 @@ describe('Role Permission Routes', () => {
                 5
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
@@ -411,7 +411,7 @@ describe('Role Permission Routes', () => {
                 3
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this
@@ -515,7 +515,7 @@ describe('Role Permission Routes', () => {
                 targetUserPermission.ref_name
             ]);
 
-            await targetUser.setRoles(targetUserRole);
+            await targetUser.setRoles([targetUserRole]);
 
             const payload = {
                 role_ids: targetUserRole.id
@@ -612,7 +612,7 @@ describe('Role Permission Routes', () => {
                 5
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Role level for payload must be highter than the auth user's role assigned to them to mock auth user assigning role higher than theirs to target user
@@ -657,7 +657,7 @@ describe('Role Permission Routes', () => {
                 3
             );
 
-            await customAuthUser.user?.setRoles(authUserRole);
+            await customAuthUser.user?.setRoles([authUserRole]);
 
             const targetUser = await User.create(await generateUserData());
             // Make target role to have low level than the auth user role, so auth user will be able to update this

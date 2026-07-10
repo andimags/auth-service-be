@@ -3,6 +3,7 @@ import request from 'supertest';
 import app from '../src/app';
 import { PermissionAccessLevelType } from '../src/constants/enums';
 import Permission from '../src/database/models/Permission';
+import Policy from '../src/database/models/Policy';
 import Role from '../src/database/models/Role';
 import User from '../src/database/models/User';
 import { AppError } from '../src/middlewares/errorHandler';
@@ -95,28 +96,16 @@ export const createAuthUser = async (apiKey = 'global') => {
     };
 };
 
-// Helper function to clean up user roles and permissions
+// Helper function to clean up user roles, and the policies/permissions those roles own
 export const cleanupUserRoles = async (user: User) => {
     const roles = await user.getRoles();
 
-    for (const role of roles) {
-        // Avoid deleting global permissions
-        const permissions = await role.getPermissions({
-            where: { scope: 'channel' }
-        });
-        console.log('xxx', permissions);
-
-        for (const permission of permissions) {
-            await role.removePermissions([permission]);
-            await permission.destroy({ force: true });
-        }
-
-        await user.removeRoles([role]);
-        await role.destroy({ force: true });
-    }
+    await user.removeRoles(roles);
+    await forceDeleteInstances(roles);
 };
 
-// Helper function to create channel-scoped role with existing global permissions
+// Helper function to create a channel-scoped role, granting it existing permissions
+// via a freshly-created policy (roles reach permissions through policies, not directly)
 export const createRole = async (
     permissionRefNames: string[],
     channelId?: number,
@@ -138,7 +127,14 @@ export const createRole = async (
         throw new AppError('Some permissions not found');
     }
 
-    await role.addPermissions(permissions);
+    const policy = await Policy.create({
+        name: 'Test Policy',
+        ref_name: `test_policy_${Date.now()}`
+    });
+
+    await policy.addPermissions(permissions);
+    await role.addPolicies([policy]);
+
     return role;
 };
 
@@ -146,19 +142,29 @@ export const createRole = async (
  *
  * @param instances
  *
- * You are passing an array of objects.
- * Each object must have a .destroy() method.
- * The .destroy() method must accept an object like { force: true } and return a Promise.
- * In other words: it's describing Sequelize model instances.
+ * You are passing an array of Sequelize model instances (each has a
+ * .destroy({ force }) method). Seeded/system records (is_system: true) are
+ * skipped, since the models themselves reject hard-deleting those. Roles and
+ * policies are cascaded: destroying a role also destroys its own non-system
+ * policies, and destroying a policy also destroys its own non-system permissions.
  */
 export async function forceDeleteInstances(
     instances: Array<{
         destroy: (options: { force: boolean }) => Promise<void>;
+        is_system?: boolean;
     }>
 ) {
     for (const instance of instances) {
-        if (instance instanceof Permission && instance.scope == 'global') {
+        if (instance.is_system) {
             continue;
+        }
+
+        if (instance instanceof Role) {
+            await forceDeleteInstances(await instance.getPolicies());
+        }
+
+        if (instance instanceof Policy) {
+            await forceDeleteInstances(await instance.getPermissions());
         }
 
         if (instance?.destroy) {
