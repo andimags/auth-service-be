@@ -1,9 +1,7 @@
-import { WhereOptions } from 'sequelize';
 import Policy, { IPolicy } from '../database/models/Policy';
 import User from '../database/models/User';
-import { AppError } from '../middlewares/errorHandler';
 import { RoleScopeFilter } from '../types';
-import { HttpStatus } from '../constants/httpStatus';
+import { resolveRoleScopeWhere } from '../utils/resolveRoleScopeWhere';
 
 /* -------------------------------------------------------------------------- */
 /*       find policies that do not exist and return an array of ref_name      */
@@ -64,19 +62,7 @@ const getUserPolicies = async (
     roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPolicy[]> => {
-    if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', HttpStatus.BAD_REQUEST);
-    }
-
-    const whereOptions: WhereOptions = {};
-
-    if (roleScope !== '*') {
-        whereOptions.scope = roleScope;
-    }
-
-    if (roleScope === 'channel') {
-        whereOptions.channel_id = channelId!;
-    }
+    const whereOptions = resolveRoleScopeWhere(roleScope, channelId);
 
     const roles = await user.getRoles({
         where: whereOptions,

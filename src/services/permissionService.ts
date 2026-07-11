@@ -1,10 +1,9 @@
+import { WhereOptions } from 'sequelize';
 import Permission, {IPermission} from '../database/models/Permission';
 import Policy, {IPolicy} from '../database/models/Policy';
 import User from '../database/models/User';
-import { AppError } from '../middlewares/errorHandler';
-import { WhereOptions } from 'sequelize';
 import { RoleScopeFilter } from '../types';
-import { HttpStatus } from '../constants/httpStatus';
+import { resolveRoleScopeWhere } from '../utils/resolveRoleScopeWhere';
 
 export const userHasPermissions = async (
     user: User,
@@ -49,19 +48,7 @@ export const getUserPermissions = async (
     roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPermission[]> => {
-    if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', HttpStatus.BAD_REQUEST);
-    }
-
-    const roleWhereOptions: WhereOptions = {};
-
-    if (roleScope === 'global' || roleScope === 'channel') {
-        roleWhereOptions.scope = roleScope;
-    }
-
-    if (roleScope === 'channel') {
-        roleWhereOptions.channel_id = channelId!;
-    }
+    const roleWhereOptions = resolveRoleScopeWhere(roleScope, channelId);
 
     const permissionWhereOptions: WhereOptions = {};
 
