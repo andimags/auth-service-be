@@ -30,6 +30,8 @@
         "@types/jsonwebtoken": "^9.0.9",
         "@types/node": "^22.14.1",
         "@types/supertest": "^6.0.3",
+        "@types/swagger-jsdoc": "^6.0.4",
+        "@types/swagger-ui-express": "^4.1.8",
         "@types/validator": "^13.15.0",
         "@typescript-eslint/eslint-plugin": "^8.63.0",
         "@typescript-eslint/parser": "^8.63.0",
@@ -59,6 +61,8 @@
         "reflect-metadata": "^0.2.2",
         "sequelize": "^6.37.7",
         "sequelize-typescript": "^2.1.6",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1",
         "uuid": "^11.1.0"
     }
 }
