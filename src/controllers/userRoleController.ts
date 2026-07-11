@@ -36,6 +36,9 @@ const getUserRoles = async (
 };
 
 // Assign one or more roles to a user
+// NOTE: unlike replaceUserRoles/destroyUserRole below, this has no
+// "superadmin's roles cannot be modified" guard. Not confirmed as intentional —
+// see ENGINEERING_AUDIT.md. Left as-is pending a product decision.
 const addUserRoles = async (
     req: Request,
     res: Response,
@@ -60,12 +63,20 @@ const addUserRoles = async (
             );
         }
 
+        const requestedRefNames: string[] = Array.isArray(req.body.role_ref_names)
+            ? req.body.role_ref_names
+            : [req.body.role_ref_names];
+
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: this previously passed missingRoles, which is always [] here
+            // (the length > 0 check above already threw otherwise) — so this
+            // "caller can't grant a role they don't hold themselves" check was a
+            // complete no-op. Must check against the actual requested ref names.
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
-                missingRoles,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
@@ -77,7 +88,7 @@ const addUserRoles = async (
 
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ref_names,
+                requestedRefNames,
                 req.channel!.id
             );
 
@@ -90,9 +101,7 @@ const addUserRoles = async (
         }
 
         const roles = await Role.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
-            }
+            where: { ref_name: requestedRefNames }
         });
 
         await targetUser.addRoles(roles);
@@ -131,12 +140,20 @@ const replaceUserRoles = async (
             );
         }
 
+        const requestedRefNames: string[] = Array.isArray(req.body.role_ref_names)
+            ? req.body.role_ref_names
+            : [req.body.role_ref_names];
+
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: this previously passed missingRoles, which is always [] here
+            // (the length > 0 check above already threw otherwise) — so this
+            // "caller can't grant a role they don't hold themselves" check was a
+            // complete no-op. Must check against the actual requested ref names.
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
-                missingRoles,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
@@ -145,10 +162,10 @@ const replaceUserRoles = async (
                 );
             }
         }
-        
+
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ref_names,
+                requestedRefNames,
                 req.channel!.id
             );
 
@@ -161,9 +178,7 @@ const replaceUserRoles = async (
         }
 
         const roles = await Role.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
-            }
+            where: { ref_name: requestedRefNames }
         });
 
         await targetUser.setRoles(roles);
@@ -201,12 +216,20 @@ const destroyUserRole = async (
             );
         }
 
+        const requestedRefNames: string[] = Array.isArray(req.body.role_ref_names)
+            ? req.body.role_ref_names
+            : [req.body.role_ref_names];
+
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: this previously passed missingRoles, which is always [] here
+            // (the length > 0 check above already threw otherwise) — so this
+            // "caller can't remove a role they don't hold themselves" check was a
+            // complete no-op. Must check against the actual requested ref names.
             const authUserMissingRoles = await req.authorizedUser?.getMissingRoles(
-                missingRoles,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingRoles && authUserMissingRoles?.length > 0){
                 throw new AppError(
@@ -218,7 +241,7 @@ const destroyUserRole = async (
 
         if(!req.isGlobalScope) {
             const rolesNotInChannel = await findRolesNotInChannel(
-                req.body.role_ref_names,
+                requestedRefNames,
                 req.channel!.id
             );
 
@@ -231,9 +254,7 @@ const destroyUserRole = async (
         }
 
         const roles = await Role.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.role_ref_names) ? req.body.role_ref_names : [req.body.role_ref_names]
-            }
+            where: { ref_name: requestedRefNames }
         });
 
         await targetUser.removeRoles(roles);

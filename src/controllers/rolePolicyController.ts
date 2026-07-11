@@ -57,8 +57,12 @@ const addRolePolicies = async (
                 HttpStatus.NOT_FOUND
             );
 
+        const requestedRefNames: string[] = Array.isArray(req.body.policy_ref_names)
+            ? req.body.policy_ref_names
+            : [req.body.policy_ref_names];
+
         if (!req.isGlobalScope) {
-            const globalPolicies = await findSystemPolicies(req.body.policy_ref_names);
+            const globalPolicies = await findSystemPolicies(requestedRefNames);
 
             if (globalPolicies.length > 0) {
                 throw new AppError(
@@ -69,11 +73,15 @@ const addRolePolicies = async (
         }
 
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: this previously passed missingPolicies, which is always []
+            // here (the length > 0 check above already threw otherwise) — so this
+            // "caller can't grant a policy they don't hold themselves" check was a
+            // complete no-op. Must check against the actual requested ref names.
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
-                missingPolicies,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
                 throw new AppError(
@@ -82,11 +90,9 @@ const addRolePolicies = async (
                 );
             }
         }
-        
+
         const policies = await Policy.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
-            },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetRole.addPolicies(policies);
@@ -210,12 +216,19 @@ const destroyRolePolicies = async (
                 HttpStatus.NOT_FOUND
             );
         
+        const requestedRefNames: string[] = Array.isArray(req.body.policy_ref_names)
+            ? req.body.policy_ref_names
+            : [req.body.policy_ref_names];
+
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: see addRolePolicies above — was passing the
+            // already-guaranteed-empty missingPolicies instead of the actual
+            // requested ref names, making this check a no-op.
             const authUserMissingPolicies = await req.authorizedUser?.getMissingPolicies(
-                missingPolicies,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingPolicies && authUserMissingPolicies?.length > 0){
                 throw new AppError(
@@ -226,9 +239,7 @@ const destroyRolePolicies = async (
         }
 
         const policies = await Policy.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.policy_ref_names) ? req.body.policy_ref_names : [req.body.policy_ref_names]
-            },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetRole.removePolicies(policies);

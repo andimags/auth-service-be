@@ -43,8 +43,17 @@ const addPolicyPermissions = async (
                 HttpStatus.NOT_FOUND
             );
 
+        const requestedRefNames: string[] = Array.isArray(req.body.permission_ref_names)
+            ? req.body.permission_ref_names
+            : [req.body.permission_ref_names];
+
         if (!req.isGlobalScope) {
-            const globalPermissions = await findSystemPermissions(req.body.policy_ref_names);
+            // Bug fix: this previously read req.body.policy_ref_names (copy-pasted
+            // from rolePolicyController), which this endpoint's request body never
+            // has — findSystemPermissions(undefined) always returned [], so this
+            // guard silently never fired and a channel-scoped API key could smuggle
+            // system/global permissions onto a policy. See ENGINEERING_AUDIT.md.
+            const globalPermissions = await findSystemPermissions(requestedRefNames);
 
             if (globalPermissions.length > 0) {
                 throw new AppError(
@@ -55,11 +64,15 @@ const addPolicyPermissions = async (
         }
 
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: this previously passed missingPermissions, which is always []
+            // here (the length > 0 check above already threw otherwise) — so this
+            // "caller can't grant a permission they don't hold themselves" check was
+            // a complete no-op. Must check against the actual requested ref names.
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
-                missingPermissions,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(
@@ -70,9 +83,7 @@ const addPolicyPermissions = async (
         }
 
         const permissions = await Permission.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.permission_ref_names) ? req.body.permission_ref_names : [req.body.permission_ref_names]
-            },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetPolicy.addPermissions(permissions);
@@ -185,12 +196,19 @@ const destroyPolicyPermissions = async (
                 HttpStatus.NOT_FOUND
             );
 
+        const requestedRefNames: string[] = Array.isArray(req.body.permission_ref_names)
+            ? req.body.permission_ref_names
+            : [req.body.permission_ref_names];
+
         if(!req.authorizedUser?.isSuperadmin() && !req.authorizedUser?.isRootSuperadmin()){
+            // Bug fix: see addPolicyPermissions above — was passing the
+            // already-guaranteed-empty missingPermissions instead of the actual
+            // requested ref names, making this check a no-op.
             const authUserMissingPermissions = await req.authorizedUser?.getMissingPermissions(
-                missingPermissions,
+                requestedRefNames,
                 getScopeType(req.isGlobalScope),
                 req.isGlobalScope ? undefined : req.channel?.id,
-            );    
+            );
 
             if(authUserMissingPermissions && authUserMissingPermissions?.length > 0){
                 throw new AppError(
@@ -201,9 +219,7 @@ const destroyPolicyPermissions = async (
         }
 
         const permissions = await Permission.findAll({
-            where: {
-                ref_name: Array.isArray(req.body.permission_ref_names) ? req.body.permission_ref_names : [req.body.permission_ref_names]
-            },
+            where: { ref_name: requestedRefNames },
         });
 
         await targetPolicy.removePermissions(permissions);

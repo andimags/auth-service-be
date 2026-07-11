@@ -12,7 +12,16 @@ const getAll = async (req: Request, res: Response, next: NextFunction): Promise<
         const size = Number.parseInt(req.query.size as string);
 
         if(!req.query.page && !req.query.size){
-            const roles = await Role.findAll();
+            // Bug fix: unlike the paginated branch below (and unlike
+            // channelController's equivalent unpaginated branch), this queried with
+            // no channel filter at all — a channel-scoped API key hitting this
+            // endpoint without page/size params could see every role across every
+            // channel, not just their own.
+            const roles = await Role.findAll({
+                ...(req.channel?.id && {
+                    where: { channel_id: req.channel.id },
+                }),
+            });
             res.json(roles);
             return;
         }
