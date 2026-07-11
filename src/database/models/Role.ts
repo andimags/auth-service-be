@@ -23,9 +23,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin,
-    InferAttributes,
-    InferCreationAttributes
+    BelongsToManySetAssociationsMixin
 } from 'sequelize';
 import { RoleScopeType } from '../../constants/enums';
 import Channel from './Channel';
@@ -47,48 +45,48 @@ export default class Role extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    name: string;
+        name: string;
 
     @Column(DataType.STRING)
-    description: string;
+        description: string;
 
     @AllowNull(false)
     @Unique
     @Column(DataType.STRING)
-    ref_name: string;
+        ref_name: string;
 
     @ForeignKey(() => Channel)
     @Column
-    channel_id: number;
+        channel_id: number;
 
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(RoleScopeType)))
-    scope: string;
+        scope: string;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
     // Associations
     @BelongsTo(() => Channel, {
         onDelete: 'CASCADE',
     })
-    channel: Channel;
+        channel: Channel;
 
     @BelongsToMany(() => User, () => UserRole)
-    users: User[];
+        users: User[];
 
     @BelongsToMany(() => Policy, () => RolePolicy)
-    policies: Policy[];
+        policies: Policy[];
 
     // Mixins
     declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
@@ -109,5 +107,3 @@ export default class Role extends Model {
     }
 }
 
-export type IRole = InferAttributes<Role>;
-export type IRoleCreation = InferCreationAttributes<Role>;

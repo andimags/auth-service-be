@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
-import { PermissionAccessLevelType, PermissionScopeType } from '../constants/enums';
+import { PermissionAccessLevelType } from '../constants/enums';
 import Permission from '../database/models/Permission';
-import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -17,10 +18,8 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         const searchTerm = (req.query.search as string) || undefined;
-        const scopeFilter = (req.query.scope as string) || undefined;
         const accessLevelFilter = (req.query.access_level as string) || undefined;
         const isSystemFilter = (req.query.is_system as string) || undefined;
-        console.log('isSystemFilter', isSystemFilter)
         const sortField = (req.query.sort_field as string) || undefined;
         const sortDesc =
             typeof req.query.sort_desc === 'string'
@@ -34,28 +33,25 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
             {
                 searchTerm: searchTerm,
                 stringFields: ['name', 'description', 'ref_name'],
+                // Bug fix: this previously also accepted a `scope` query filter
+                // (field: 'scope'), but Permission has no scope column (unlike
+                // Role/Policy) — passing ?scope= would build a WHERE clause on a
+                // nonexistent column and 500 at the DB layer.
                 enumFilter:  [
-                ...(scopeFilter
-                    ? [{
-                        field: "scope",
-                        value: scopeFilter,
-                        allowedValues: Object.values(PermissionScopeType) as string[],
-                    }]
-                    : []),
-                ...(accessLevelFilter
-                    ? [{
-                        field: "access_level",
-                        value: accessLevelFilter,
-                        allowedValues: Object.values(PermissionAccessLevelType) as string[],
-                    }]
-                    : []),
-                ...(isSystemFilter
-                    ? [{
-                        field: "is_system",
-                        value: isSystemFilter,
-                        allowedValues: ['true', 'false'],
-                    }]
-                    : []),
+                    ...(accessLevelFilter
+                        ? [{
+                            field: 'access_level',
+                            value: accessLevelFilter,
+                            allowedValues: Object.values(PermissionAccessLevelType) as string[],
+                        }]
+                        : []),
+                    ...(isSystemFilter
+                        ? [{
+                            field: 'is_system',
+                            value: isSystemFilter,
+                            allowedValues: ['true', 'false'],
+                        }]
+                        : []),
                 ]
             },
             {
@@ -71,23 +67,28 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+// NOTE: find/update additionally require the caller to hold the *target*
+// permission's own ref_name (when channel-scoped) on top of the route-level
+// auth:view/update:permission gate. add/destroy below have no equivalent check
+// and rely solely on the route-level gate. Not confirmed intentional — see
+// ENGINEERING_AUDIT.md.
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         const hasAccessToPermission = await req.authorizedUser?.hasPermissions(
             targetPermission.ref_name,
-            req.isGlobalScope ? 'global' : 'channel',
+            getScopeType(req.isGlobalScope),
             req.isGlobalScope ? undefined : req.channel?.id
         );
 
         if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
                 'You are not authorized to view this permission',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -97,7 +98,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const permission = await Permission.create(req.body);
 
@@ -107,25 +108,25 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPermission = await Permission.findByPk(
             req.params.permission_id
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         const hasAccessToPermission = await (
-            req.authorizedUser as User
+            req.authorizedUser!
         ).hasPermissions(
             targetPermission.ref_name,
-            req.isGlobalScope ? 'global' : 'channel',
+            getScopeType(req.isGlobalScope),
             req.isGlobalScope ? undefined : req.channel?.id
         );
 
         if (!req.isGlobalScope && !hasAccessToPermission) {
             throw new AppError(
                 'You are not authorized to update this permission',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -137,7 +138,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const shouldForce = req.query.force === 'true';
         const targetPermission = await Permission.findByPk(
@@ -146,7 +147,7 @@ const destroy = async (req: Request, res: Response, next: NextFunction) => {
                 paranoid: false
             }
         );
-        if (!targetPermission) throw new AppError('Permission not found', 404);
+        if (!targetPermission) throw new AppError('Permission not found', HttpStatus.NOT_FOUND);
 
         await targetPermission?.destroy({ force: shouldForce });
 

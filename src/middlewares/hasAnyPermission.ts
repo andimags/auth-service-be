@@ -1,6 +1,7 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express';
-import User from '../database/models/User';
 import { AppError } from './errorHandler';
+import { HttpStatus } from '../constants/httpStatus';
+import { getScopeType } from '../utils/getScopeType';
 
 const errorMsg =
     'You do not have the required permissions to perform this action';
@@ -11,44 +12,40 @@ export default function hasAnyPermission(
 ): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const authorizedUser = req.authorizedUser as User;
+            const authorizedUser = req.authorizedUser!;
 
             if(req.isGlobalScope && (authorizedUser.isSuperadmin() || authorizedUser.isRootSuperadmin())) {
-                console.log('User is superadmin, bypassing permission checks');
                 return next();
             }
 
             // If requireGlobalRole == true, only global roles are allowed
             if (requireGlobalRole) {
-                const userHasAnyPermission = await (authorizedUser)
-                .hasAnyPermission(
-                    permissionRefNames, 
-                    'global'
-                );
-
-                if(!userHasAnyPermission){
-                    console.warn(
-                        'Only users with global role for this permission must be allowed'
+                const hasGlobalPermission = await (authorizedUser)
+                    .hasAnyPermission(
+                        permissionRefNames,
+                        'global'
                     );
-                    throw new AppError(errorMsg, 403);
+
+                if(!hasGlobalPermission){
+                    throw new AppError(errorMsg, HttpStatus.FORBIDDEN);
                 }
                 else{
-                    return next()
+                    return next();
                 }
             }
 
-            const userHasAnyPermission = await (authorizedUser)
+            const hasScopedPermission = await (authorizedUser)
                 .hasAnyPermission(
-                    permissionRefNames, 
-                    req.isGlobalScope ? 'global' : 'channel',
+                    permissionRefNames,
+                    getScopeType(req.isGlobalScope),
                     req.channel?.id ?? undefined
                 );
 
-            if (userHasAnyPermission) {
+            if (hasScopedPermission) {
                 return next(); // Continue to next middleware/route handler
             }
 
-            throw new AppError(errorMsg, 403);
+            throw new AppError(errorMsg, HttpStatus.FORBIDDEN);
         } catch (error: unknown) {
             next(error);
         }

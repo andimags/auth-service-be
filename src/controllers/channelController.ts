@@ -2,8 +2,9 @@ import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { HttpStatus } from '../constants/httpStatus';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -52,15 +53,15 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.findByPk(req.params.channel_id);
-        if (!channel) throw new AppError('Channel not found', 404);
+        if (!channel) throw new AppError('Channel not found', HttpStatus.NOT_FOUND);
 
         if (!req.isGlobalScope && (req.channel?.id !== channel.id)) {
             throw new AppError(
-                `Access is limited to the API key's channel`,
-                403
+                'Access is limited to the API key\'s channel',
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -70,7 +71,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.create(req.body);
 
@@ -80,17 +81,17 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const channel = await Channel.findByPk(req.params.channel_id);
-        if (!channel) throw new AppError('Channel not found', 404);
+        if (!channel) throw new AppError('Channel not found', HttpStatus.NOT_FOUND);
 
         const isAllowed = req.isGlobalScope || (req.channel?.id === channel.id);
 
         if (!req.isGlobalScope && !isAllowed) {
             throw new AppError(
                 "You can only update channels you're associated to",
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 
@@ -102,21 +103,21 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const shouldForce = req.query.force === 'true';
         const channel = await Channel.findByPk(req.params.channel_id, {
             paranoid: false
         });
         
-        if (!channel) throw new AppError('Channel not found', 404);
+        if (!channel) throw new AppError('Channel not found', HttpStatus.NOT_FOUND);
 
         const isAllowed = req.isGlobalScope || (req.channel?.id === channel.id);
 
         if (!req.isGlobalScope && !isAllowed) {
             throw new AppError(
                 "You can only delete channels you're associated to",
-                403
+                HttpStatus.FORBIDDEN
             );
         }
 

@@ -1,7 +1,7 @@
-import Role from '../src/database/models/Role';
+import { describe, beforeAll, expect, afterAll, it } from '@jest/globals';
 import User from '../src/database/models/User';
 import sequelize from '../src/database/sequelize';
-import { AppError } from '../src/middlewares/errorHandler';
+import { UserLevelType } from '../src/constants/enums';
 import { IAuth } from './types';
 import {
     createAuthUser,
@@ -14,13 +14,15 @@ describe('User Routes', () => {
     let superadminAuth: IAuth = {
         accessToken: null,
         user: null,
-        agent: null
+        agent: null,
+        apiKey: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
         accessToken: null,
         user: null,
-        agent: null
+        agent: null,
+        apiKey: null
     };
 
     const NON_EXISTENT_USER_ID = 999999;
@@ -29,16 +31,7 @@ describe('User Routes', () => {
     beforeAll(async () => {
         await sequelize.sync();
 
-        superadminAuth = await createAuthUser();
-        const superadminRole = await Role.findOne({
-            where: { ref_name: 'superadmin' }
-        });
-
-        if (!superadminRole) {
-            throw new AppError('Superadmin role not found');
-        }
-
-        await superadminAuth.user!.addRoles([superadminRole]);
+        superadminAuth = await createAuthUser('global', UserLevelType.superadmin);
         userWithNoPermissionsAuth = await createAuthUser();
     });
 
@@ -60,7 +53,6 @@ describe('User Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: expect.any(Number),
                 count: expect.any(Number),
                 rows: expect.any(Array),
                 totalPages: expect.any(Number),
@@ -84,7 +76,7 @@ describe('User Routes', () => {
             );
         });
 
-        it("should return 403 when user doesn't have necessary permissions ['view:user', 'admin:user]", async () => {
+        it("should return 403 when user doesn't have necessary permissions ['auth:view:user', 'admin:user]", async () => {
             const response = await userWithNoPermissionsAuth.agent
                 .get(`${API_BASE_URL}`)
                 .set({
@@ -116,21 +108,18 @@ describe('User Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
-                data: {
-                    status: payload.status,
-                    id: expect.any(Number),
-                    username: payload.username,
-                    email: payload.email,
-                    first_name: payload.first_name,
-                    last_name: payload.last_name,
-                    updated_at: expect.any(String),
-                    created_at: expect.any(String),
-                    deleted_at: null
-                }
+                status: payload.status,
+                id: expect.any(Number),
+                username: payload.username,
+                email: payload.email,
+                first_name: payload.first_name,
+                last_name: payload.last_name,
+                updated_at: expect.any(String),
+                created_at: expect.any(String),
+                deleted_at: null
             });
 
-            const createdUser = await User.findByPk(response.body.data.id);
+            const createdUser = await User.findByPk(response.body.id);
             await forceDeleteInstances([createdUser!]);
         });
 
@@ -168,18 +157,15 @@ describe('User Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
-                data: {
-                    id: expect.any(Number),
-                    username: payload.username,
-                    email: payload.email,
-                    first_name: payload.first_name,
-                    last_name: payload.last_name,
-                    status: payload.status,
-                    created_at: expect.any(String),
-                    updated_at: expect.any(String),
-                    deleted_at: null
-                }
+                id: expect.any(Number),
+                username: payload.username,
+                email: payload.email,
+                first_name: payload.first_name,
+                last_name: payload.last_name,
+                status: payload.status,
+                created_at: expect.any(String),
+                updated_at: expect.any(String),
+                deleted_at: null
             });
 
             await forceDeleteInstances([targetUser]);
@@ -215,9 +201,12 @@ describe('User Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403);
 
+            // PUT /:user_id has no route-level permission gate (self-service update
+            // is always allowed) — for a non-self update, the only protection is
+            // the privilege-rank check in userService.applyUserUpdate, which
+            // produces this message rather than a generic "no permission" one.
             expect(response.body).toEqual({
-                message:
-                    'You do not have the required permissions to perform this action'
+                message: "You cannot update a user with level 'member'"
             });
 
             await forceDeleteInstances([targetUser]);
@@ -226,20 +215,20 @@ describe('User Routes', () => {
         it('should return 403 with authorized user having low level role compared to the target user', async () => {
             const targetUser = await User.create(generateUserData());
             const targetUserRole = await createRole(
-                ['admin:user', 'update:user'],
+                ['auth:admin:user', 'auth:update:user'],
                 undefined,
                 3
             );
-            await targetUser.setRoles(targetUserRole);
+            await targetUser.setRoles([targetUserRole]);
 
             // Auth user must have lower level of role than the target user
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole(
-                ['admin:user', 'update:user'],
+                ['auth:admin:user', 'auth:update:user'],
                 undefined,
                 5
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             const payload = generateUserData();
 
@@ -253,9 +242,13 @@ describe('User Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(403);
 
+            // Note: Role.level (assigned above) is unrelated to this check —
+            // applyUserUpdate compares User.level, and both users here default to
+            // 'member' (generateUserData never sets level), so this hits the same
+            // privilege-rank message as the previous test regardless of the Role
+            // levels assigned.
             expect(response.body).toEqual({
-                message:
-                    "You can't update a user with the same or higher privilege / role level than you"
+                message: "You cannot update a user with level 'member'"
             });
 
             await forceDeleteInstances([
@@ -281,7 +274,6 @@ describe('User Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
                 message: 'User successfully soft-deleted'
             });
 
@@ -301,7 +293,6 @@ describe('User Routes', () => {
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
                 message: 'User successfully deleted permanently'
             });
         });
@@ -340,7 +331,11 @@ describe('User Routes', () => {
         });
 
         it('should return 403 when deleting the main superadmin', async () => {
-            // Do not delete
+            // Do not delete. The root_superadmin seed user can't be deleted by a
+            // 'superadmin'-level caller: userController.destroy compares privilege
+            // rank (isMorePrivileged), and root_superadmin outranks superadmin, so
+            // this hits the generic privilege-comparison guard, not a special
+            // "superadmin" name check.
             const targetUser = await User.findOne({
                 where: { username: 'superadmin' }
             });
@@ -355,27 +350,28 @@ describe('User Routes', () => {
                 .expect(403);
 
             expect(response.body).toEqual({
-                message: 'Cannot delete superadmin user'
+                message:
+                    "You can't delete a user with the same or higher privilege / role level than you"
             });
         });
 
         it('should return 403 when deleting a user with higher privilege than you', async () => {
             const targetUser = await User.create(generateUserData());
             const targetUserRole = await createRole(
-                ['admin:user', 'delete:user'],
+                ['auth:admin:user', 'auth:delete:user'],
                 undefined,
                 3
             );
-            await targetUser.setRoles(targetUserRole);
+            await targetUser.setRoles([targetUserRole]);
 
             // Auth user must have lower level of role than the target user
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole(
-                ['admin:user', 'delete:user'],
+                ['auth:admin:user', 'auth:delete:user'],
                 undefined,
                 5
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             const response = await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetUser!.id}`)

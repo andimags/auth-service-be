@@ -1,6 +1,6 @@
 import { param } from 'express-validator';
 
-export const getValidator = [
+export const findValidator = [
     param('policy_id')
         .notEmpty()
         .withMessage('Policy ID is required')

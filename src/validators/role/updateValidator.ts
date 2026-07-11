@@ -1,4 +1,5 @@
 import { body, param } from 'express-validator';
+import { RoleScopeType } from '../../constants/enums';
 import { checkUniqueRefNameScope } from './checkUniqueRefNameScope';
 
 export const updateValidator = [
@@ -39,14 +40,13 @@ export const updateValidator = [
         .notEmpty()
         .withMessage('Scope cannot be empty')
         .bail()
-        .isIn(['global', 'channel'])
+        .isIn(Object.values(RoleScopeType))
         .withMessage("Scope value must only be either 'channel' or 'global'"),
 
     body('level')
         .optional()
         .notEmpty()
         .withMessage('Level cannot be empty')
-        .withMessage('Level is required')
         .bail()
         .isInt({ min: 1 })
         .withMessage('Level must be integer and be greater or equal to 1')

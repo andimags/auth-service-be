@@ -1,5 +1,4 @@
 import { body } from 'express-validator';
-import { isUniqueCompositeField } from '../custom/isUniqueCompositeField';
 import Permission from '../../database/models/Permission';
 import { isUniqueField } from '../custom/isUniqueField';
 
@@ -36,6 +35,6 @@ export const addValidator = [
         .bail()
         .isIn(['read', 'write', 'admin'])
         .withMessage(
-            "Access level value must only be either 'read', 'write', or 'admin"
+            "Access level value must only be either 'read', 'write', or 'admin'"
         )
 ];

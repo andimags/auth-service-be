@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 export const generateTokenValidator = [
     body('email')
         .notEmpty()
-        .withMessage('Username is required')
+        .withMessage('Email is required')
         .bail()
         .isEmail()
         .withMessage('Email has invalid format'),

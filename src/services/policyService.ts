@@ -1,7 +1,7 @@
-import { WhereOptions } from "sequelize";
-import Policy, { IPolicy } from "../database/models/Policy";
-import User from "../database/models/User";
-import { AppError } from "../middlewares/errorHandler";
+import Policy, { IPolicy } from '../database/models/Policy';
+import User from '../database/models/User';
+import { RoleScopeFilter } from '../types';
+import { resolveRoleScopeWhere } from '../utils/resolveRoleScopeWhere';
 
 /* -------------------------------------------------------------------------- */
 /*       find policies that do not exist and return an array of ref_name      */
@@ -17,7 +17,7 @@ export async function findMissingPolicies(
         where: {
             ref_name: refNamesToCheck,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     const existingPolicyRefNames = new Set(
@@ -35,7 +35,7 @@ export async function findMissingPolicies(
 export const getMissingUserPolicies = async (
     user: User,
     policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<string[]> => {
     const requestedRefNames = Array.isArray(policyRefNames)
@@ -57,66 +57,12 @@ export const getMissingUserPolicies = async (
     );
 };
 
-export const userHasPolicies = async (
+const getUserPolicies = async (
     user: User,
-    policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
-    channelId?: number
-): Promise<boolean> => {
-    const policies = await getUserPolicies(user, roleScope, channelId);
-
-    const requiredPolicies = Array.isArray(policyRefNames)
-        ? policyRefNames
-        : [policyRefNames];
-
-    return requiredPolicies.every(refName =>
-        policies.some((policy: IPolicy) => {
-            if (policy.ref_name !== refName) {
-                return false;
-            }
-        })
-    );
-};
-
-export const userHasAnyPolicy = async (
-    user: User,
-    policyRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
-    channelId?: number
-): Promise<boolean> => {
-    const policies = await getUserPolicies(user, roleScope, channelId);
-
-    const requiredPolicies = Array.isArray(policyRefNames)
-        ? policyRefNames
-        : [policyRefNames];
-
-    return requiredPolicies.some(refName =>
-        policies.some((policy: IPolicy) => {
-            if (policy.ref_name !== refName) {
-                return false;
-            }
-        })
-    );
-};
-
-export const getUserPolicies = async (
-    user: User,
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPolicy[]> => {
-    if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', 400);
-    }
-
-    const whereOptions: WhereOptions = {};
-
-    if (roleScope !== '*') {
-        whereOptions.scope = roleScope;
-    }
-
-    if (roleScope === 'channel') {
-        whereOptions.channel_id = channelId!;
-    }
+    const whereOptions = resolveRoleScopeWhere(roleScope, channelId);
 
     const roles = await user.getRoles({
         where: whereOptions,
@@ -137,7 +83,7 @@ export const getUserPolicies = async (
     });
 
     return Array.from(policiesSet);
-}
+};
 
 /* -------------------------------------------------------------------------- */
 /*           returns an array of ref_names where policy is_system is true     */
@@ -154,7 +100,7 @@ export async function findSystemPolicies(
             ref_name: refNamesToCheck,
             is_system: true,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     return policies.map((policy) => policy.ref_name);

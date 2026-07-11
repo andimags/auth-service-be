@@ -2,8 +2,17 @@ import { NextFunction, Request, Response } from 'express';
 import Policy from '../database/models/Policy';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
+import { HttpStatus } from '../constants/httpStatus';
 
-const getAll = async (req: Request, res: Response, next: NextFunction) => {
+// Unlike Role/Channel, Policy has no channel_id column and add/update/destroy below
+// perform no channel-ownership check — any caller with the permission (global or
+// channel-scoped) can mutate any Policy. This mirrors the schema (Policy is a
+// shared, channel-agnostic resource that Roles attach to per-channel via
+// RolePolicy) rather than being an oversight, but it does mean a channel-scoped
+// API key can affect Policies used by other channels' roles. See
+// ENGINEERING_AUDIT.md ("Policy scope-check absence") for the blast-radius note.
+
+const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);
         const size = Number.parseInt(req.query.size as string);
@@ -44,10 +53,10 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const find = async (req: Request, res: Response, next: NextFunction) => {
+const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         res.json(targetPolicy);
     } catch (error: unknown) {
@@ -55,7 +64,7 @@ const find = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const add = async (req: Request, res: Response, next: NextFunction) => {
+const add = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const newPolicy = await Policy.create(req.body);
 
@@ -65,24 +74,23 @@ const add = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const update = async (req: Request, res: Response, next: NextFunction) => {
+const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPolicy = await Policy.findByPk(req.params.policy_id);
-        if (!targetPolicy) throw new AppError('Policy not found', 404);
+        if (!targetPolicy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         await targetPolicy?.update(req.body);
 
         res.json(targetPolicy);
     } catch (error: unknown) {
         next(error);
-        return;
     }
 };
 
-const destroy = async (req: Request, res: Response, next: NextFunction) => {
+const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const policy = await Policy.findByPk(req.params.policy_id);
-        if (!policy) throw new AppError('Policy not found', 404);
+        if (!policy) throw new AppError('Policy not found', HttpStatus.NOT_FOUND);
 
         const shouldForce = req.query.force === 'true';
 

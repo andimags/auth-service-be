@@ -4,9 +4,7 @@ import {
     BelongsToManyGetAssociationsMixin,
     BelongsToManyRemoveAssociationMixin,
     BelongsToManyRemoveAssociationsMixin,
-    BelongsToManySetAssociationsMixin,
-    InferAttributes,
-    InferCreationAttributes
+    BelongsToManySetAssociationsMixin
 } from 'sequelize';
 import {
     AllowNull,
@@ -48,6 +46,8 @@ import RefreshToken from './RefreshToken';
 import { isLevelMorePrivileged, isUserMorePrivileged } from '../../services/userService';
 import { getMissingUserPolicies } from '../../services/policyService';
 import { getMissingUserRoles } from '../../services/roleService';
+import { RoleScopeFilter } from '../../types';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Scopes(() => ({
     withRoles: {
@@ -68,11 +68,14 @@ export default class User extends Model {
         return [this.first_name, this.last_name].join(' ');
     }
 
-    async isMorePrivileged(user: User) {
-        return await isUserMorePrivileged(this, user);
+    // Kept async so the 5 existing `await user.isMorePrivileged(...)` call
+    // sites across the codebase stay valid; isUserMorePrivileged itself is synchronous.
+    // eslint-disable-next-line require-await
+    async isMorePrivileged(user: User): Promise<boolean> {
+        return isUserMorePrivileged(this, user);
     }
 
-    async isMorePrivilegedThanLevel(level: UserLevelType) {
+    isMorePrivilegedThanLevel(level: UserLevelType): boolean {
         return isLevelMorePrivileged(this.level as UserLevelType, level);
     }
 
@@ -85,14 +88,14 @@ export default class User extends Model {
     }
 
     async getPermissions(
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getUserPermissions(this, roleScope, channelId);
     }
 
     async getPermissionRefNames(
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         const permissions = await this.getPermissions(
@@ -101,7 +104,7 @@ export default class User extends Model {
         );
 
         return [...new Set(
-        permissions.map(p => p.ref_name).filter(Boolean)
+            permissions.map(p => p.ref_name).filter(Boolean)
         )];
     }
 
@@ -115,7 +118,7 @@ export default class User extends Model {
 
     async hasPermissions(
         permissionRefNames: string | string[],
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await userHasPermissions(this, permissionRefNames, roleScope, channelId);
@@ -123,7 +126,7 @@ export default class User extends Model {
 
     async hasAnyPermission(
         permissionRefNames: string | string[],
-        roleScope: 'global' | 'channel' | '*',
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await userHasAnyPermission(this, permissionRefNames, roleScope, channelId);
@@ -131,7 +134,7 @@ export default class User extends Model {
 
     async getMissingPolicies(
         policyRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserPolicies(
@@ -139,12 +142,12 @@ export default class User extends Model {
             policyRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
     async getMissingPermissions(
         permissionRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserPermissions(
@@ -152,12 +155,12 @@ export default class User extends Model {
             permissionRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
     async getMissingRoles(
         roleRefNames: string | string[],
-        roleScope: "global" | "channel" | "*",
+        roleScope: RoleScopeFilter,
         channelId?: number
     ) {
         return await getMissingUserRoles(
@@ -165,7 +168,7 @@ export default class User extends Model {
             roleRefNames,
             roleScope,
             channelId
-        )
+        );
     }
 
 
@@ -173,53 +176,53 @@ export default class User extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    username: string;
+        username: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    email: string;
+        email: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    first_name: string;
+        first_name: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    last_name: string;
+        last_name: string;
 
     @AllowNull(false)
     @Default('active')
     @Column(DataType.ENUM(...Object.values(UserStatusType)))
-    status: string;
+        status: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    password: string;
+        password: string;
 
     @AllowNull(false)
     @Default(UserLevelType.member)
     @Column(DataType.ENUM(...Object.values(UserLevelType)))
-    level: string;
+        level: string;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
     // Associations
     @BelongsToMany(() => Role, () => UserRole)
-    roles: Role[];
+        roles: Role[];
 
     @HasMany(() => RefreshToken, 'user_id')
-    refreshTokens: RefreshToken[];
+        refreshTokens: RefreshToken[];
         
     // Mixins
     declare getRoles: BelongsToManyGetAssociationsMixin<Role>;
@@ -246,7 +249,7 @@ export default class User extends Model {
         ) {
             throw new AppError(
                 'There can only be one root superadmin user',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -269,11 +272,8 @@ export default class User extends Model {
         if (instance.isRootSuperadmin()) {
             throw new AppError(
                 'Root superadmin user cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
 }
-
-export type IUser = InferAttributes<User>;
-export type IUserCreation = InferCreationAttributes<User>;

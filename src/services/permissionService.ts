@@ -1,13 +1,14 @@
+import { WhereOptions } from 'sequelize';
 import Permission, {IPermission} from '../database/models/Permission';
 import Policy, {IPolicy} from '../database/models/Policy';
 import User from '../database/models/User';
-import { AppError } from '../middlewares/errorHandler';
-import { WhereOptions } from 'sequelize';
+import { RoleScopeFilter } from '../types';
+import { resolveRoleScopeWhere } from '../utils/resolveRoleScopeWhere';
 
 export const userHasPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const permissions = await getUserPermissions(user, roleScope, channelId);
@@ -18,7 +19,7 @@ export const userHasPermissions = async (
 
     return requiredPermissions.every(refName =>
         permissions.some((permission: IPermission) => {
-            return permission.ref_name === refName
+            return permission.ref_name === refName;
         })
     );
 };
@@ -26,11 +27,10 @@ export const userHasPermissions = async (
 export const userHasAnyPermission = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<boolean> => {
     const permissions = await getUserPermissions(user, roleScope, channelId);
-    console.log('users permissions: ', permissions);
 
     const requiredPermissions = Array.isArray(permissionRefNames)
         ? permissionRefNames
@@ -38,29 +38,17 @@ export const userHasAnyPermission = async (
 
     return requiredPermissions.some(refName =>
         permissions.some((permission: IPermission) => {
-            return permission.ref_name === refName
+            return permission.ref_name === refName;
         })
     );
 };
 
 export const getUserPermissions = async (
     user: User,
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<IPermission[]> => {
-    if (roleScope === 'channel' && !channelId) {
-        throw new AppError('channelId is required when roleScope is channel', 400);
-    }
-
-    const roleWhereOptions: WhereOptions = {};
-
-    if (roleScope === 'global' || roleScope === 'channel') {
-        roleWhereOptions.scope = roleScope;
-    }
-
-    if (roleScope === 'channel') {
-        roleWhereOptions.channel_id = channelId!;
-    }
+    const roleWhereOptions = resolveRoleScopeWhere(roleScope, channelId);
 
     const permissionWhereOptions: WhereOptions = {};
 
@@ -92,7 +80,7 @@ export const getUserPermissions = async (
     });
 
     return Array.from(permissionsSet);
-}
+};
 
 export const findMissingPermissions = async (
     permissionRefNames: string | string[]
@@ -113,7 +101,7 @@ export const findMissingPermissions = async (
 export const getMissingUserPermissions = async (
     user: User,
     permissionRefNames: string | string[],
-    roleScope: 'global' | 'channel' | '*',
+    roleScope: RoleScopeFilter,
     channelId?: number
 ): Promise<string[]> => {
     const requestedRefNames = Array.isArray(permissionRefNames)
@@ -150,7 +138,7 @@ export async function findSystemPermissions(
             ref_name: refNamesToCheck,
             is_system: true,
         },
-        attributes: ["ref_name"],
+        attributes: ['ref_name'],
     });
 
     return permissions.map((permission) => permission.ref_name);

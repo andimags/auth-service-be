@@ -1,5 +1,5 @@
-import { AxiosError } from "axios";
-import { ErrorRequestHandler } from "express";
+import { AxiosError } from 'axios';
+import { ErrorRequestHandler } from 'express';
 
 export class AppError extends Error {
     statusCode: number;
@@ -16,7 +16,7 @@ export class AppError extends Error {
     }
 }
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     console.error(err);
 
     let statusCode = 500;

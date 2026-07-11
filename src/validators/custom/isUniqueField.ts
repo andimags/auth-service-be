@@ -14,7 +14,6 @@ export const isUniqueField = (
 
         if (existing) {
             const currentId = req.params?.[paramName as string] ?? null;
-            console.log('currentId', currentId);
 
             // If updating and IDs don't match → throw error
             if (!currentId || String(existing['id']) !== String(currentId)) {

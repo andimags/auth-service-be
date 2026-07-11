@@ -1,3 +1,4 @@
+import { describe, beforeAll, expect, afterAll, it } from '@jest/globals';
 import request from 'supertest';
 import app from '../src/app';
 import User from '../src/database/models/User';
@@ -6,6 +7,7 @@ import { forceDeleteInstances, generateUserData } from './utils';
 
 describe('Auth Routes', () => {
     let accessToken: string;
+    let refreshToken: string;
     let authUser: User | null;
 
     const AGENT = request.agent(app); // preserves cookies
@@ -25,7 +27,11 @@ describe('Auth Routes', () => {
                 password: DEFAULT_PASSWORD,
             });
 
-        accessToken = res.body.access_token;
+        // Bug fix: the response shape is { user, permissions, tokens: { access:
+        // { value, expires_at }, refresh: { value, expires_at } } } — there is no
+        // top-level access_token/status field.
+        accessToken = res.body.tokens?.access?.value;
+        refreshToken = res.body.tokens?.refresh?.value;
     });
 
     afterAll(async () => {
@@ -47,9 +53,10 @@ describe('Auth Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body).toHaveProperty('status');
-            expect(response.body.status).toBe(1);
-            expect(response.body).toHaveProperty('access_token');
+            expect(response.body).toHaveProperty('user');
+            expect(response.body).toHaveProperty('permissions');
+            expect(response.body).toHaveProperty('tokens.access.value');
+            expect(response.body).toHaveProperty('tokens.refresh.value');
         });
 
         it('should return 401 with invalid credentials (user not existing)', async () => {
@@ -89,14 +96,16 @@ describe('Auth Routes', () => {
 
     describe('GET /api/auth/verify-token', () => {
         it('should return 200 with valid token', async () => {
+            // Bug fix: this route also runs checkApiKeyMiddleware, which needs
+            // x-api-key — without it every request 403s before reaching the
+            // controller. Response shape is { decoded }, no top-level status field.
             const response = await request(app)
                 .get(`${API_BASE_URL}/verify-token`)
                 .set('Authorization', `Bearer ${accessToken}`)
+                .set('x-api-key', 'global')
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body).toHaveProperty('status');
-            expect(response.body.status).toBe(1);
             expect(response.body).toHaveProperty('decoded');
         });
 
@@ -113,16 +122,26 @@ describe('Auth Routes', () => {
         });
     });
 
-    describe('GET /api/auth/refresh-token', () => {
+    describe('POST /api/auth/refresh-token', () => {
         it('should return 200 with refreshed token', async () => {
-            const response = await AGENT.get(
-                `${API_BASE_URL}/refresh-token`
-            ).expect('Content-Type', /json/);
-            // .expect(200);
+            // Bug fix: refresh-token is a POST route reading refresh_token from the
+            // body — this previously sent a GET with no body, which doesn't match
+            // any route and falls through into the global authMiddleware (hence the
+            // "Unauthorized: No token provided" failure).
+            const response = await AGENT.post(`${API_BASE_URL}/refresh-token`)
+                .set({
+                    'x-api-key': 'global'
+                })
+                .send({
+                    refresh_token: refreshToken
+                })
+                .expect('Content-Type', /json/)
+                .expect(200);
 
-            expect(response.body).toHaveProperty('status');
-            expect(response.body.status).toBe(1);
-            expect(response.body).toHaveProperty('access_token');
+            expect(response.body).toHaveProperty('user');
+            expect(response.body).toHaveProperty('permissions');
+            expect(response.body).toHaveProperty('tokens.access.value');
+            expect(response.body).toHaveProperty('tokens.refresh.value');
         });
 
         // it('should return 403 refreshed token', async () => {
@@ -138,17 +157,17 @@ describe('Auth Routes', () => {
     // describe('GET /api/auth/has-any-permission', () => {
     //     it('should return 200 with refreshed token', async () => {
     //         const customAuthUser: IAuth = await createAuthUser();
-    //         const customAuthUserRole = await createRole(['view:user']);
+    //         const customAuthUserRole = await createRole(['auth:view:user']);
     //         await customAuthUser.user?.setRoles(customAuthUserRole);
 
     //         const payload = {
-    //             permission_ref_names: 'view:user',
+    //             permission_ref_names: 'auth:view:user',
     //             permission_scope: 'global'
     //         };
 
     //         const response = await AGENT
     //             .get(`${API_BASE_URL}/has-any-permission`)
-    //             .set(createAuthHeaders(customAuthUser.accessToken!))
+    //             .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
     //             .send(payload)
     //             .expect('Content-Type', /json/)
     //             // .expect(200);
@@ -164,13 +183,13 @@ describe('Auth Routes', () => {
     //         const customAuthUser: IAuth = await createAuthUser();
 
     //         const payload = {
-    //             permission_ref_names: 'view:user',
+    //             permission_ref_names: 'auth:view:user',
     //             permission_scope: 'global'
     //         };
 
     //         const response = await AGENT
     //             .get(`${API_BASE_URL}/has-any-permission`)
-    //             .set(createAuthHeaders(customAuthUser.accessToken!))
+    //             .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
     //             .send(payload)
     //             .expect('Content-Type', /json/)
     //             .expect(403);

@@ -1,16 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
 import Channel from '../database/models/Channel';
 import { AppError } from './errorHandler';
+import { HttpStatus } from '../constants/httpStatus';
 
 export const checkApiKeyMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
     try {
         // Channel checking
         const apiKey = req.header('x-api-key');
-        if (!apiKey) throw new AppError('API Key not found', 401);
+        if (!apiKey) throw new AppError('API Key not found', HttpStatus.UNAUTHORIZED);
 
         let channel = null;
 
@@ -22,18 +23,16 @@ export const checkApiKeyMiddleware = async (
                 }
             });
 
-            if (!channel) throw new AppError('Invalid API key', 401);
+            if (!channel) throw new AppError('Invalid API key', HttpStatus.UNAUTHORIZED);
         }
 
         req.channel = channel ?? undefined;
-        console.log('checkApiKeyMiddleware - req.channel', req.channel)
-        console.log('req.isGlobalScope from checkApiKeyMiddleware', !channel)
         req.isGlobalScope = !channel;
 
         next();
-    } catch (error: any) {
-        console.error('API key verification failed:', error.message ?? error);
+    } catch (error: unknown) {
+        console.error('API key verification failed:', error instanceof Error ? error.message : error);
 
-        throw new AppError('Invalid API key', 403);
+        next(new AppError('Invalid API key', HttpStatus.FORBIDDEN));
     }
 };

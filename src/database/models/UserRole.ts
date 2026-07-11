@@ -17,20 +17,20 @@ import User from './User';
 export default class UserRole extends Model {
     @ForeignKey(() => User)
     @Column
-    user_id: number;
+        user_id: number;
     @BelongsTo(() => User, {
         onDelete: 'CASCADE'
     })
-    user: User;
+        user: User;
 
     @ForeignKey(() => Role)
     @Column
-    role_id: number;
+        role_id: number;
     @BelongsTo(() => Role, {
         onDelete: 'CASCADE'
     })
-    role: Role;
+        role: Role;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 }

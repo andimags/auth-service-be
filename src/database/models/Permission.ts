@@ -1,4 +1,4 @@
-import { BelongsToManyGetAssociationsMixin, InferAttributes, InferCreationAttributes } from 'sequelize';
+import { BelongsToManyGetAssociationsMixin, InferAttributes } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
@@ -23,6 +23,7 @@ import {
 import { AppError } from '../../middlewares/errorHandler';
 import Policy from './Policy';
 import PolicyPermission from './PolicyPermission';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Table({
     tableName: 'permissions'
@@ -32,45 +33,45 @@ export default class Permission extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    name: string;
+        name: string;
 
     @Column(DataType.STRING)
-    description: string;
+        description: string;
 
     @AllowNull(false)
     @Unique
     @Column(DataType.STRING)
-    ref_name: string;
+        ref_name: string;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    module: string;
+        module: string;
 
     @AllowNull(false)
     @Column(DataType.ENUM(...Object.values(PermissionAccessLevelType)))
-    access_level: string;
+        access_level: string;
 
     @AllowNull(false)
     @Default(false)
     @Column(DataType.BOOLEAN)
-    is_system: boolean;
+        is_system: boolean;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
-    // Associatons
+    // Associations
     @BelongsToMany(() => Policy, () => PolicyPermission)
-    roles: Policy[];
+        policies: Policy[];
 
     // Mixins
     declare getPolicies: BelongsToManyGetAssociationsMixin<Policy>;
@@ -81,7 +82,7 @@ export default class Permission extends Model {
         if (permission.is_system) {
             throw new AppError(
                 'System permissions must be seeded and cannot be created or modified manually',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -94,7 +95,7 @@ export default class Permission extends Model {
         ) {
             throw new AppError(
                 'System permissions cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -104,11 +105,10 @@ export default class Permission extends Model {
         if (permission.is_system) {
             throw new AppError(
                 'System permissions cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
 }
 
 export type IPermission = InferAttributes<Permission>;
-export type IPermissionCreation = InferCreationAttributes<Permission>;

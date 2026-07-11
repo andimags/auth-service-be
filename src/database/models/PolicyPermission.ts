@@ -17,20 +17,20 @@ import Policy from './Policy';
 export default class PolicyPermission extends Model {
     @ForeignKey(() => Policy)
     @Column
-    policy_id: number;
+        policy_id: number;
     @BelongsTo(() => Policy, {
         onDelete: 'CASCADE'
     })
-    policy: Policy;
+        policy: Policy;
 
     @ForeignKey(() => Permission)
     @Column
-    permission_id: number;
+        permission_id: number;
     @BelongsTo(() => Permission, {
         onDelete: 'CASCADE'
     })
-    permission: Permission;
+        permission: Permission;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 }

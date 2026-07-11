@@ -1,4 +1,4 @@
-import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, BelongsToManyGetAssociationsMixin, BelongsToManyRemoveAssociationMixin, BelongsToManyRemoveAssociationsMixin, BelongsToManySetAssociationsMixin, InferAttributes, InferCreationAttributes } from 'sequelize';
+import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, BelongsToManyGetAssociationsMixin, BelongsToManyRemoveAssociationMixin, BelongsToManyRemoveAssociationsMixin, BelongsToManySetAssociationsMixin, InferAttributes } from 'sequelize';
 import {
     AllowNull,
     AutoIncrement,
@@ -22,6 +22,7 @@ import PolicyPermission from './PolicyPermission';
 import Role from './Role';
 import RolePolicy from './RolePolicy';
 import { AppError } from '../../middlewares/errorHandler';
+import { HttpStatus } from '../../constants/httpStatus';
 
 @Table({
     tableName: 'policies',
@@ -30,40 +31,40 @@ export default class Policy extends Model {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.INTEGER)
-    id: number;
+        id: number;
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    name: string;
+        name: string;
 
     @Column(DataType.STRING)
-    description: string;
+        description: string;
 
     @AllowNull(false)
     @Unique
     @Column(DataType.STRING)
-    ref_name: string;
+        ref_name: string;
 
     @AllowNull(false)
     @Default(false)
     @Column(DataType.BOOLEAN)
-    is_system: boolean;
+        is_system: boolean;
 
     @CreatedAt
-    created_at: Date;
+        created_at: Date;
 
     @UpdatedAt
-    updated_at: Date;
+        updated_at: Date;
 
     @DeletedAt
-    deleted_at: Date;
+        deleted_at: Date;
 
     // Associations
     @BelongsToMany(() => Permission, () => PolicyPermission)
-    permissions: Permission[];
+        permissions: Permission[];
 
     @BelongsToMany(() => Role, () => RolePolicy)
-    roles: Role[];
+        roles: Role[];
 
     // Mixins
     declare getPermissions: BelongsToManyGetAssociationsMixin<Permission>;
@@ -94,7 +95,7 @@ export default class Policy extends Model {
         if (policy.is_system) {
             throw new AppError(
                 'System policies must be seeded and cannot be created or modified manually',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -107,7 +108,7 @@ export default class Policy extends Model {
         ) {
             throw new AppError(
                 'System policies cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     }
@@ -117,11 +118,10 @@ export default class Policy extends Model {
         if (policy.is_system) {
             throw new AppError(
                 'System policies cannot be deleted',
-                403
+                HttpStatus.FORBIDDEN
             );
         }
     } 
 }
 
 export type IPolicy = InferAttributes<Policy>;
-export type IPolicyCreation = InferCreationAttributes<Policy>;

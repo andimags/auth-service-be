@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import User from '../database/models/User';
 import { AppError } from '../middlewares/errorHandler';
 import Channel from '../database/models/Channel';
+import { HttpStatus } from '../constants/httpStatus';
 
 /**
  *
@@ -10,9 +11,9 @@ import Channel from '../database/models/Channel';
  *
  * Returns true if user has roles associated to this specific channel
  */
-export async function hasAccessToChannel(userId: number, channelId: number) {
+export async function hasAccessToChannel(userId: number, channelId: number): Promise<boolean> {
     const user = await User.findByPk(userId);
-    if (!user) throw new AppError('User not found.', 404);
+    if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);
 
     const roles = await user?.getRoles({ where: { channel_id: channelId } });
 
@@ -25,10 +26,10 @@ export async function hasAccessToChannel(userId: number, channelId: number) {
  *
  * Get channels associated to the target user's roles.
  */
-export async function getUserChannels(userId: number) {
+export async function getUserChannels(userId: number): Promise<Channel[]> {
     const user = await User.findByPk(userId);
 
-    if (!user) throw new AppError('User not found.', 404);
+    if (!user) throw new AppError('User not found.', HttpStatus.NOT_FOUND);
 
     const roles = await user.getRoles({
         where: { channel_id: { [Op.ne]: null } }
