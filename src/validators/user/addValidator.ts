@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { UserStatusType } from '../../constants/enums';
+import { UserLevelType, UserStatusType } from '../../constants/enums';
 import User from '../../database/models/User';
 import { isUniqueField } from '../custom/isUniqueField';
 
@@ -46,6 +46,15 @@ export const addValidator = [
         .optional()
         .isIn(Object.values(UserStatusType))
         .withMessage('Status values must be either active or inactive only'),
+
+    // Was previously unvalidated: a malformed level made isLevelMorePrivileged()
+    // (called in userController.add before User.create) throw a plain Error,
+    // which errorHandler surfaces as a 500 instead of a clean 400. The privilege
+    // rank check itself still fully gates which *valid* level can be assigned.
+    body('level')
+        .optional()
+        .isIn(Object.values(UserLevelType))
+        .withMessage('Level must be a valid user level'),
 
     body('password')
         .notEmpty()

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { PermissionAccessLevelType, PermissionScopeType } from '../constants/enums';
+import { PermissionAccessLevelType } from '../constants/enums';
 import Permission from '../database/models/Permission';
 import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
@@ -18,7 +18,6 @@ const getAll = async (req: Request, res: Response, next: NextFunction): Promise<
         }
 
         const searchTerm = (req.query.search as string) || undefined;
-        const scopeFilter = (req.query.scope as string) || undefined;
         const accessLevelFilter = (req.query.access_level as string) || undefined;
         const isSystemFilter = (req.query.is_system as string) || undefined;
         const sortField = (req.query.sort_field as string) || undefined;
@@ -34,14 +33,11 @@ const getAll = async (req: Request, res: Response, next: NextFunction): Promise<
             {
                 searchTerm: searchTerm,
                 stringFields: ['name', 'description', 'ref_name'],
+                // Bug fix: this previously also accepted a `scope` query filter
+                // (field: 'scope'), but Permission has no scope column (unlike
+                // Role/Policy) — passing ?scope= would build a WHERE clause on a
+                // nonexistent column and 500 at the DB layer.
                 enumFilter:  [
-                    ...(scopeFilter
-                        ? [{
-                            field: 'scope',
-                            value: scopeFilter,
-                            allowedValues: Object.values(PermissionScopeType) as string[],
-                        }]
-                        : []),
                     ...(accessLevelFilter
                         ? [{
                             field: 'access_level',
@@ -71,6 +67,11 @@ const getAll = async (req: Request, res: Response, next: NextFunction): Promise<
 };
 
 
+// NOTE: find/update additionally require the caller to hold the *target*
+// permission's own ref_name (when channel-scoped) on top of the route-level
+// auth:view/update:permission gate. add/destroy below have no equivalent check
+// and rely solely on the route-level gate. Not confirmed intentional — see
+// ENGINEERING_AUDIT.md.
 const find = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const targetPermission = await Permission.findByPk(

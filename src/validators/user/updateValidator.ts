@@ -1,5 +1,5 @@
 import { body, param } from 'express-validator';
-import { UserStatusType } from '../../constants/enums';
+import { UserLevelType, UserStatusType } from '../../constants/enums';
 import User from '../../database/models/User';
 
 export const updateValidator = [
@@ -80,6 +80,14 @@ export const updateValidator = [
         .withMessage('Status cannot be empty')
         .isIn(Object.values(UserStatusType))
         .withMessage('Status values must be either active or inactive only'),
+
+    // See addValidator.ts for why this is validated: an unvalidated malformed
+    // level throws a plain Error inside applyUserUpdate's privilege check,
+    // surfacing as a 500 instead of a clean 400.
+    body('level')
+        .optional()
+        .isIn(Object.values(UserLevelType))
+        .withMessage('Level must be a valid user level'),
 
     body('password')
         .optional()
