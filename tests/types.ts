@@ -5,4 +5,5 @@ export interface IAuth {
     accessToken: string | null;
     user: User | null;
     agent: TestAgent | null;
+    apiKey: string | null;
 }

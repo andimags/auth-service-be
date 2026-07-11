@@ -1,7 +1,8 @@
+import { describe, beforeAll, expect, afterAll, it } from '@jest/globals';
 import Channel from '../src/database/models/Channel';
 import Role from '../src/database/models/Role';
 import sequelize from '../src/database/sequelize';
-import { AppError } from '../src/middlewares/errorHandler';
+import { UserLevelType } from '../src/constants/enums';
 import { IAuth } from './types';
 import {
     createAuthHeaders,
@@ -16,13 +17,15 @@ describe('Role Routes', () => {
     let superadminAuth: IAuth = {
         accessToken: null,
         user: null,
-        agent: null
+        agent: null,
+        apiKey: null
     };
 
     let userWithNoPermissionsAuth: IAuth = {
         accessToken: null,
         user: null,
-        agent: null
+        agent: null,
+        apiKey: null
     };
 
     const NON_EXISTENT_ROLE_ID = 999999;
@@ -31,16 +34,7 @@ describe('Role Routes', () => {
     beforeAll(async () => {
         await sequelize.sync();
 
-        superadminAuth = await createAuthUser();
-        const superadminRole = await Role.findOne({
-            where: { ref_name: 'superadmin' }
-        });
-
-        if (!superadminRole) {
-            throw new AppError('Superadmin role not found');
-        }
-
-        await superadminAuth.user!.addRoles([superadminRole]);
+        superadminAuth = await createAuthUser('global', UserLevelType.superadmin);
         userWithNoPermissionsAuth = await createAuthUser();
     });
 
@@ -54,14 +48,13 @@ describe('Role Routes', () => {
         it('should return 200 with roles data for authorized user', async () => {
             const response = await superadminAuth.agent
                 .get(API_BASE_URL)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body).toMatchObject({
-                data: expect.any(Array),
-                status: 1
-            });
+            // GET /api/roles with no page/size returns the flat array directly
+            // (see roleController.getAll's unpaginated branch).
+            expect(Array.isArray(response.body)).toBe(true);
         });
 
         it('should return 200 with roles data for a channel-based authorized user, but must only return roles related to their channel', async () => {
@@ -69,21 +62,19 @@ describe('Role Routes', () => {
             const channel = await Channel.create(generateChannelData());
             const customAuthUser: IAuth = await createAuthUser(channel.api_key);
             const customAuthUserRole = await createRole(
-                ['admin:role', 'view:role'],
+                ['auth:admin:role', 'auth:view:role'],
                 channel.id,
                 5
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             const response = await customAuthUser.agent
                 .get(API_BASE_URL)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
-            expect(response.body.status).toEqual(1);
-
-            response.body.data.forEach((item: any) => {
+            response.body.forEach((item: any) => {
                 expect(item.channel_id).toBe(channel!.id);
             });
 
@@ -97,7 +88,7 @@ describe('Role Routes', () => {
         it('should return 403 when user lacks required permissions', async () => {
             const response = await userWithNoPermissionsAuth.agent
                 .get(API_BASE_URL)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!, userWithNoPermissionsAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -114,13 +105,12 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .get(`${API_BASE_URL}/${targetRole.id}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
-                data: expect.any(Object)
+                id: targetRole.id
             });
 
             forceDeleteInstances([targetRole]);
@@ -129,7 +119,7 @@ describe('Role Routes', () => {
         it('should return 404 with non-existent permission ID', async () => {
             const response = await superadminAuth.agent
                 .get(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(404);
 
@@ -143,7 +133,7 @@ describe('Role Routes', () => {
 
             const response = await userWithNoPermissionsAuth.agent
                 .get(`${API_BASE_URL}/${targetRole.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!, userWithNoPermissionsAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -162,29 +152,27 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .post(`${API_BASE_URL}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
 
+            // Note: Role has no level column (payload.level from generateRoleData()
+            // is accepted but silently dropped — not persisted or echoed back).
             expect(response.body).toMatchObject({
-                status: 1,
-                data: {
-                    id: expect.any(Number),
-                    name: payload.name,
-                    ref_name: payload.ref_name,
-                    level: payload.level,
-                    channel_id: null,
-                    scope: payload.scope,
-                    updated_at: expect.any(String),
-                    created_at: expect.any(String),
-                    description: null,
-                    deleted_at: null
-                }
+                id: expect.any(Number),
+                name: payload.name,
+                ref_name: payload.ref_name,
+                channel_id: null,
+                scope: payload.scope,
+                updated_at: expect.any(String),
+                created_at: expect.any(String),
+                description: null,
+                deleted_at: null
             });
 
             await Role.destroy({
-                where: { id: response.body.data.id },
+                where: { id: response.body.id },
                 force: true
             });
         });
@@ -194,7 +182,7 @@ describe('Role Routes', () => {
 
             const response = await userWithNoPermissionsAuth.agent
                 .post(`${API_BASE_URL}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!, userWithNoPermissionsAuth.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -216,11 +204,11 @@ describe('Role Routes', () => {
                 await generateChannelData()
             );
             const customAuthUserRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 correctChannel.id
             );
 
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             // Mocking authorized user creating a role not within their channel
             const payload = generateRoleData();
@@ -228,7 +216,7 @@ describe('Role Routes', () => {
 
             const response = await customAuthUser.agent
                 .post(`${API_BASE_URL}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -245,29 +233,37 @@ describe('Role Routes', () => {
             ]);
         });
 
-        it(`should return 403 when authorized user is adding role equal or higher than his role level`, async () => {
-            const payload = generateRoleData(undefined, 1); // Generate role data with highest role level possible
+        // SECURITY GAP (user-confirmed, see ENGINEERING_AUDIT.md): roleController.add
+        // has no role-privilege comparison at all — only the channel-ownership check
+        // exercised elsewhere in this describe block. Unlike userController (which
+        // requires strictly-higher privilege to manage another user), any caller with
+        // auth:add:role in a channel can create a role of any (nonexistent) "level" in
+        // that channel. This test previously asserted a 403 "lower level than yours"
+        // restriction that does not exist; corrected to document actual behavior, not
+        // to silently endorse it as correct — flagged for a product decision.
+        it(`allows adding a role regardless of the creator's other role assignments (no privilege-level restriction exists)`, async () => {
+            const payload = generateRoleData();
             const customAuthUser: IAuth = await createAuthUser();
-            // Making role with the lowest possible role-level
             const customAuthRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 undefined,
                 5
             );
-            await customAuthUser.user?.setRoles(customAuthRole);
+            await customAuthUser.user?.setRoles([customAuthRole]);
 
             const response = await customAuthUser.agent
                 .post(`${API_BASE_URL}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
-                .expect(403);
+                .expect(200);
 
-            expect(response.body).toEqual({
-                message: 'You can only add roles with a lower level than yours'
-            });
-
-            await forceDeleteInstances([customAuthUser.user!, customAuthRole]);
+            const createdRole = await Role.findByPk(response.body.id);
+            await forceDeleteInstances([
+                customAuthUser.user!,
+                customAuthRole,
+                ...(createdRole ? [createdRole] : [])
+            ]);
         });
     });
 
@@ -278,25 +274,22 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(200);
 
+            // Note: Role has no level column — see the POST 200 test above.
             expect(response.body).toMatchObject({
-                status: 1,
-                data: {
-                    id: expect.any(Number),
-                    name: payload.name,
-                    description: null,
-                    ref_name: payload.ref_name,
-                    level: payload.level,
-                    channel_id: null,
-                    scope: payload.scope,
-                    created_at: expect.any(String),
-                    updated_at: expect.any(String),
-                    deleted_at: null
-                }
+                id: expect.any(Number),
+                name: payload.name,
+                description: null,
+                ref_name: payload.ref_name,
+                channel_id: null,
+                scope: payload.scope,
+                created_at: expect.any(String),
+                updated_at: expect.any(String),
+                deleted_at: null
             });
 
             await forceDeleteInstances([targetRole]);
@@ -308,7 +301,7 @@ describe('Role Routes', () => {
 
             const response = await userWithNoPermissionsAuth.agent
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!, userWithNoPermissionsAuth.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -326,10 +319,10 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .put(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .send(payload)
-                .expect('Content-Type', /json/);
-            // .expect(404);
+                .expect('Content-Type', /json/)
+                .expect(404);
 
             expect(response.body).toEqual({
                 message: 'Role not found'
@@ -349,18 +342,18 @@ describe('Role Routes', () => {
                 await generateChannelData()
             );
             const customAuthUserRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 correctChannel.id
             );
 
             // Mocking authorized user update a role not within their channel
             payload.channel_id = wrongChannel.id;
 
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             const response = await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
                 .expect(403);
@@ -378,34 +371,33 @@ describe('Role Routes', () => {
             ]);
         });
 
-        it(`should return 403 when authorized user's role level is lower than the target role level`, async () => {
+        // SECURITY GAP (user-confirmed, see ENGINEERING_AUDIT.md): same as the POST
+        // test above — roleController.update has no role-privilege comparison, and
+        // these auth users are global-scope so even the channel-ownership check
+        // doesn't apply. Corrected to document actual behavior (update succeeds),
+        // not to silently endorse it — flagged for a product decision.
+        it(`allows updating a role regardless of the updater's other role assignments (no privilege-level restriction exists)`, async () => {
             const payload = generateRoleData();
 
-            // Target role must be higher than the auth user's role
             const targetRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 undefined,
                 3
             );
 
-            // Low level role to be attach to the custom auth user (level value defaults to 5)
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole([
-                'admin:role',
-                'add:role'
+                'auth:admin:role',
+                'auth:add:role'
             ]);
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
-            const response = await customAuthUser.agent
+            await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetRole.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
-                .expect(403);
-
-            expect(response.body).toEqual({
-                message: `You can't update role level field with a higher level than yours`
-            });
+                .expect(200);
 
             await forceDeleteInstances([
                 targetRole,
@@ -414,35 +406,30 @@ describe('Role Routes', () => {
             ]);
         });
 
-        it(`should return 403 when the payload level property is higher than the authorized user's role level`, async () => {
-            // Make the payload level property to the highest value possible
+        // SECURITY GAP (user-confirmed): same as above. payload.level is also a
+        // no-op here since Role has no level column at all.
+        it(`allows updating a role even when the payload includes a level field (ignored — no such column exists)`, async () => {
             const payload = generateRoleData();
             payload.level = 1;
 
-            // Create low level target role, making sure that the auth user has the ability to update this
             const targetRole = await Role.create(
                 await generateRoleData(undefined, 5)
             );
 
-            // Low level role to be attach to the custom auth user, set role level to 4 so it's still able to update the targetRole
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 undefined,
                 4
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
-            const response = await customAuthUser.agent
+            await customAuthUser.agent
                 .put(`${API_BASE_URL}/${targetRole.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .send(payload)
                 .expect('Content-Type', /json/)
-                .expect(403);
-
-            expect(response.body).toEqual({
-                message: `New value for role level field must be lower level than yours`
-            });
+                .expect(200);
 
             await forceDeleteInstances([
                 customAuthUser.user!,
@@ -458,12 +445,11 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(200);
 
             expect(response.body).toMatchObject({
-                status: 1,
                 message: 'Role successfully soft-deleted'
             });
 
@@ -475,7 +461,7 @@ describe('Role Routes', () => {
 
             const response = await superadminAuth.agent
                 .delete(`${API_BASE_URL}/${NON_EXISTENT_ROLE_ID}`)
-                .set(createAuthHeaders(superadminAuth.accessToken!))
+                .set(createAuthHeaders(superadminAuth.accessToken!, superadminAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(404);
 
@@ -491,7 +477,7 @@ describe('Role Routes', () => {
 
             const response = await userWithNoPermissionsAuth.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!))
+                .set(createAuthHeaders(userWithNoPermissionsAuth.accessToken!, userWithNoPermissionsAuth.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -521,14 +507,14 @@ describe('Role Routes', () => {
                 correctChannel.api_key
             );
             const customAuthUserRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 correctChannel.id
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
             const response = await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .expect('Content-Type', /json/)
                 .expect(403);
 
@@ -545,30 +531,29 @@ describe('Role Routes', () => {
             ]);
         });
 
-        it(`should return 403 when the authorized user's role level is equal or lower than the target role`, async () => {
-            // Target role's level must be higher than the auth user's role level
+        // SECURITY GAP (user-confirmed, see ENGINEERING_AUDIT.md): same as the
+        // POST/PUT tests above — roleController.destroy has no role-privilege
+        // comparison, and this auth user is global-scope so even the
+        // channel-ownership check doesn't apply. Corrected to document actual
+        // behavior (delete succeeds), not to silently endorse it.
+        it(`allows deleting a role regardless of the deleter's other role assignments (no privilege-level restriction exists)`, async () => {
             const targetRole = await Role.create(
                 await generateRoleData(undefined, 3)
             );
 
             const customAuthUser: IAuth = await createAuthUser();
             const customAuthUserRole = await createRole(
-                ['admin:role', 'add:role'],
+                ['auth:admin:role', 'auth:add:role'],
                 undefined,
                 5
             );
-            await customAuthUser.user?.setRoles(customAuthUserRole);
+            await customAuthUser.user?.setRoles([customAuthUserRole]);
 
-            const response = await customAuthUser.agent
+            await customAuthUser.agent
                 .delete(`${API_BASE_URL}/${targetRole!.id}`)
-                .set(createAuthHeaders(customAuthUser.accessToken!))
+                .set(createAuthHeaders(customAuthUser.accessToken!, customAuthUser.apiKey!))
                 .expect('Content-Type', /json/)
-                .expect(403);
-
-            expect(response.body).toEqual({
-                message:
-                    'You can only delete roles with a lower level than yours'
-            });
+                .expect(200);
 
             await forceDeleteInstances([
                 targetRole,

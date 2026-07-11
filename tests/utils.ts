@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import request from 'supertest';
 import app from '../src/app';
-import { PermissionAccessLevelType } from '../src/constants/enums';
+import { PermissionAccessLevelType, UserLevelType } from '../src/constants/enums';
 import Permission from '../src/database/models/Permission';
 import Policy from '../src/database/models/Policy';
 import Role from '../src/database/models/Role';
@@ -74,25 +74,48 @@ export async function generateToken(
         });
 
     return {
-        accessToken: res.body.access_token,
+        // Bug fix: the login response shape is { user, permissions, tokens: {
+        // access: { value, expires_at }, refresh: {...} } } — this previously
+        // read the flat, no-longer-existing res.body.access_token, so every
+        // caller of this helper (nearly every test in the suite) got
+        // accessToken: undefined and silently authenticated as nobody.
+        accessToken: res.body.tokens?.access?.value,
         agent: AGENT
     };
 }
 
-// Helper function to create authenticated headers
-export const createAuthHeaders = (accessToken: string) => ({
+// Helper function to create authenticated headers. apiKey defaults to 'global'
+// since that's what createAuthUser's own default logs in with — pass the specific
+// channel api_key (IAuth.apiKey) for a user created via createAuthUser(apiKey).
+// Bug fix: this previously never set x-api-key at all, so checkApiKeyMiddleware
+// rejected every request using this helper with 403 "Invalid API key" regardless
+// of the caller's actual permissions.
+export const createAuthHeaders = (accessToken: string, apiKey = 'global') => ({
     Authorization: `Bearer ${accessToken}`,
+    'x-api-key': apiKey,
     'Content-Type': 'application/json'
 });
 
-export const createAuthUser = async (apiKey = 'global') => {
-    const user = await User.create(await generateUserData());
+// `level` defaults to the model's own default (member). Pass UserLevelType.superadmin
+// to create a user that bypasses RBAC checks entirely under a global-scope API key —
+// "superadmin" is a User.level value in this codebase, not an assignable Role, so
+// there is no Role to look up/assign for this (see git history for the older,
+// incorrect assumption this replaced).
+export const createAuthUser = async (
+    apiKey = 'global',
+    level?: UserLevelType
+) => {
+    const user = await User.create({
+        ...(await generateUserData()),
+        ...(level && { level })
+    });
     const response = await generateToken(user.email, DEFAULT_PASSWORD, apiKey);
 
     return {
         user: user,
         accessToken: response.accessToken,
-        agent: response.agent
+        agent: response.agent,
+        apiKey
     };
 };
 
