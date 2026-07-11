@@ -4,6 +4,14 @@ import { AppError } from '../middlewares/errorHandler';
 import paginate from '../utils/paginate';
 import { HttpStatus } from '../constants/httpStatus';
 
+// Unlike Role/Channel, Policy has no channel_id column and add/update/destroy below
+// perform no channel-ownership check — any caller with the permission (global or
+// channel-scoped) can mutate any Policy. This mirrors the schema (Policy is a
+// shared, channel-agnostic resource that Roles attach to per-channel via
+// RolePolicy) rather than being an oversight, but it does mean a channel-scoped
+// API key can affect Policies used by other channels' roles. See
+// ENGINEERING_AUDIT.md ("Policy scope-check absence") for the blast-radius note.
+
 const getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const page = Number.parseInt(req.query.page as string);

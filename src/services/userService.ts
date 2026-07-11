@@ -35,6 +35,8 @@ export async function canViewUser(
         return true;
     }
 
+    // Self-access is always allowed regardless of RBAC permissions — a user can
+    // always view their own profile.
     if (authorizedUser.id.toString() === targetUserId) {
         return true;
     }
