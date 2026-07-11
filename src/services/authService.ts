@@ -66,13 +66,12 @@ export function decodeRefreshToken(rawToken: string): IDecodedToken {
 
 export async function rotateTokens(
     userId: number,
-    oldJti: string | undefined,
-    channelId: number | undefined
+    oldJti: string | undefined
 ): Promise<TokenPair> {
     const jti = uuidv4();
 
     const accessToken = jwt.sign(
-        { id: userId, channel_id: channelId },
+        { id: userId },
         process.env.ACCESS_SECRET!,
         { expiresIn: ACCESS_TOKEN_TTL }
     );

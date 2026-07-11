@@ -53,7 +53,7 @@ const refreshToken = async (req: Request, res: Response, next: NextFunction): Pr
         if (!user) throw new AppError('User not found', HttpStatus.NOT_FOUND);
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            await authService.rotateTokens(user.id, decoded.jti, decoded.channel_id);
+            await authService.rotateTokens(user.id, decoded.jti);
 
         const { user: userPayload, permissions } = await authService.getAuthResponsePayload(
             user,
@@ -164,11 +164,16 @@ const hasAnyPermission = async (
         const token = req.header('Authorization')?.split(' ')[1];
         if (!token) throw new AppError('Token not found', HttpStatus.NOT_FOUND);
 
+        // Bug fix: channelId was never forwarded here, so a request with
+        // role_scope: "channel" always 400'd inside getUserPermissions
+        // ("channelId is required when roleScope is channel"), regardless of
+        // whether the caller actually had a resolvable channel via x-api-key.
         const hasPermissions = await (
             req.authorizedUser!
         ).hasAnyPermission(
             req.body.permission_ref_names,
             req.body.role_scope,
+            req.isGlobalScope ? undefined : req.channel?.id,
         );
 
         if (hasPermissions) {
