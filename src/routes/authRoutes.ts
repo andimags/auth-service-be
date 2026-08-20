@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import authController from '../controllers/authController';
+import authController from '../controllers/auth';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { checkApiKeyMiddleware } from '../middlewares/checkApiKeyMiddleware';
 import { refreshTokenValidator } from '../validators/auth/refreshTokenValidator';
@@ -152,17 +152,19 @@ authRoutes.post('/generate-token', checkApiKeyMiddleware, validationMiddleware(g
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: >
- *           Invalid/missing `x-api-key` header; or `REFRESH_SECRET` is not
- *           configured server-side (message "Refresh token not found" — a
- *           misleading message for what is actually a server config error); or a
- *           concurrent refresh already rotated this token (message "Invalid
- *           token").
+ *           Invalid/missing `x-api-key` header; a missing `refresh_token` in the
+ *           body (message "Refresh token not found"); or a concurrent refresh
+ *           already rotated this token (message "Invalid token").
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: The user referenced by the refresh token no longer exists.
+ *       500:
+ *         description: >
+ *           `REFRESH_SECRET` is not configured server-side (message "Server
+ *           configuration error").
  *         content:
  *           application/json:
  *             schema:
@@ -176,12 +178,12 @@ authRoutes.post('/refresh-token', checkApiKeyMiddleware, validationMiddleware(re
  *   post:
  *     summary: Revoke a refresh token (logout)
  *     description: >
- *       Deletes the refresh token row matching the token's `jti`. Unlike every
- *       other auth endpoint, this route requires **no authentication at all** —
- *       neither `bearerAuth` nor `apiKeyAuth` — only body validation runs before
- *       the controller.
+ *       Deletes the refresh token row matching the token's `jti`. Requires a valid
+ *       `x-api-key` header (like the other auth endpoints); the refresh token in
+ *       the body is the credential being revoked, so no `bearerAuth` is needed.
  *     tags: [Auth]
- *     security: []
+ *     security:
+ *       - apiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -222,16 +224,21 @@ authRoutes.post('/refresh-token', checkApiKeyMiddleware, validationMiddleware(re
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
+ *         description: Missing or invalid `x-api-key` header.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
  *         description: >
- *           `REFRESH_SECRET` is not configured server-side (message "REFRESH_SECRET
- *           on env not set" — note this is a different message than the equivalent
- *           check in refresh-token).
+ *           `REFRESH_SECRET` is not configured server-side (message "Server
+ *           configuration error").
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authRoutes.post('/destroy-token', validationMiddleware(destroyTokenValidator), authController.destroyToken);
+authRoutes.post('/destroy-token', checkApiKeyMiddleware, validationMiddleware(destroyTokenValidator), authController.destroyToken);
 
 /**
  * @openapi

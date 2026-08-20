@@ -1,239 +1,232 @@
-# auth-service-be
+# Backend
 
-Backend for **auth-service** — a multi-tenant (channel-scoped) RBAC authentication and
-authorization API. Manages Users, Roles, Policies, Permissions, and Channels, and
-issues/verifies JWTs for the [auth-service-fe](../auth-service-fe) admin console (or
-any other client).
+Authentication and RBAC API for the Auth Service. Built with Express, TypeScript, Sequelize, and PostgreSQL.
 
 ## Overview
 
-Express 5 + TypeScript + PostgreSQL (via Sequelize-TypeScript). Every request outside
-`/api/auth/*`, `/`, `/health`, and `/ping` must present a JWT access token
-(`Authorization: Bearer <token>`) and an `x-api-key` header identifying the tenant (a
-Channel's `api_key`, or the literal string `global` for unscoped access). Most resource
-routes additionally require the caller to hold specific RBAC permission ref_names.
-
-## Features
-
-- Email/password login issuing short-lived access tokens (2 min) + long-lived,
-  rotating refresh tokens (7 days, single-use, race-safe rotation)
-- Multi-tenant scoping via `x-api-key`: a request is either channel-scoped (sees only
-  that channel's data) or global (`x-api-key: global`, sees/manages everything)
-- RBAC: `User → Role → Policy → Permission`, many-to-many at each hop, walked at
-  request time to resolve a user's effective permissions for the current scope
-- Full CRUD + relationship-management (assign/replace/remove) endpoints for every
-  resource, all paginated/searchable/sortable where it's a list
-- Soft-delete (paranoid) on every resource, with `?force=true` for hard delete
-- System-flagged Policies/Permissions that can't be created, modified, or deleted via
-  the API (seeded only), and a single un-deletable `root_superadmin` user
-- Complete Swagger/OpenAPI docs at `/api-docs`
+The backend exposes a REST API for authentication (login, token refresh, logout, introspection) and for managing the RBAC model: users, roles, policies, permissions, and channels. Requests are authenticated with a JWT bearer token and gated by an API key that also determines the scope (global or a specific channel).
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Runtime | Node.js, TypeScript, Express 5 |
-| ORM / DB | Sequelize-TypeScript (decorator-based models) + PostgreSQL |
-| Auth | `jsonwebtoken` (JWT), `bcrypt` (password hashing) |
-| Validation | `express-validator` |
-| API docs | `swagger-jsdoc` + `swagger-ui-express` |
-| Testing | Jest + Supertest (see [Scripts](#scripts) — full suite, 115 tests, 7 suites) |
+- Node.js
+- Express 5
+- TypeScript
+- PostgreSQL
+- Sequelize + sequelize-typescript (ORM)
+- Sequelize CLI (migrations & seeders)
+- JSON Web Tokens (`jsonwebtoken`)
+- bcrypt (password hashing)
+- express-validator (request validation)
+- swagger-jsdoc + swagger-ui-express (API docs)
+- Jest + Supertest (testing)
+- ESLint, Prettier, Knip
 
 ## Folder Structure
 
 ```
-src/
-  app.ts                  Express app: middleware wiring, route mounting, Swagger mount
-  server.ts               Entry point: DB sync + listen
-  controllers/             One file per resource — request handling, orchestration
-  services/                Business logic reused across controllers/models
-  middlewares/              authMiddleware, checkApiKeyMiddleware, hasAnyPermission,
-                            validationMiddleware, errorHandler
-  routes/                   One router per resource, with @openapi JSDoc per endpoint
-  validators/               One folder per resource: add/find/update|replace/delete
-  database/
-    models/                 Sequelize-TypeScript model classes
-    migrations/              Empty — see Database Setup below
-    seeders/                 Seed data (superadmin, global permissions/policies, ...)
-    sequelize.ts             Sequelize instance
-  docs/openapi-base.ts       Shared OpenAPI info/servers/components (see API Docs)
-  constants/                 Enums, HTTP status codes, token TTLs, seed JSON
-  types/                     Shared types + Express Request augmentation
-  utils/                     paginate, getScopeType, hashPassword
-tests/                       Jest + Supertest integration tests, one file per resource
+auth-service-be/
+├── src/
+│   ├── config/           # Sequelize / database configuration
+│   ├── constants/        # Shared constants and enums
+│   ├── controllers/      # Request handlers
+│   ├── database/
+│   │   ├── migrations/   # Schema migrations
+│   │   ├── models/       # Sequelize models
+│   │   └── seeders/      # Seed data (e.g. superadmin)
+│   ├── docs/             # OpenAPI base definition
+│   ├── middlewares/      # Auth, API key, validation, error handling
+│   ├── routes/           # Route definitions (with OpenAPI annotations)
+│   ├── services/         # Business logic
+│   ├── types/            # Type declarations / augmentations
+│   ├── utils/            # Helpers
+│   ├── validators/       # express-validator schemas
+│   ├── app.ts            # Express app wiring
+│   └── server.ts         # Entry point
+├── tests/                # Jest test suites
+└── dist/                 # Compiled output
 ```
 
-## Architecture
+## System Architecture
 
-Request flow for a typical protected resource route:
+A layered request pipeline:
 
-```
-Request
-  → express.json() / cookieParser()
-  → authMiddleware        (verifies bearer JWT → req.authorizedUser)
-  → checkApiKeyMiddleware  (resolves x-api-key → req.channel / req.isGlobalScope)
-  → hasAnyPermission(...)  (route-level RBAC gate, per resource/verb)
-  → validationMiddleware   (express-validator schema for this route)
-  → controller             (orchestrates services/models, shapes the response)
-  → errorHandler           (uniform error response on thrown AppError / other Error)
-```
+**Route → Middleware → Controller → Service → Model (Sequelize) → PostgreSQL**
 
-`/api/auth/*` is mounted **before** `authMiddleware`/`checkApiKeyMiddleware` (you can't
-require a token to obtain one), though `generate-token` and `refresh-token` still
-require `checkApiKeyMiddleware` individually since the tenant must be known before
-credentials are checked.
+- **Routes** declare endpoints and attach validators and middleware.
+- **Middleware** verifies the bearer token, checks the API key / scope, runs validation, and handles errors centrally.
+- **Controllers** parse requests and shape responses.
+- **Services** hold business logic and database access.
+- **Models** map to PostgreSQL tables via Sequelize.
 
-## Installation
+The API is self-documenting through OpenAPI annotations, served at `/api-docs`.
 
-```bash
-npm install
-cp .env.example .env   # fill in real values, see Environment Variables below
-npm run dev             # nodemon + ts-node, http://localhost:4000 by default
+## Modules
+
+| Module | Responsibility |
+| --- | --- |
+| Auth | Login, token refresh, logout, `me`, token verification, permission checks |
+| Users | User CRUD and lifecycle |
+| Roles | Role CRUD; roles are scoped global or per channel |
+| Policies | Policy CRUD; groups of permissions |
+| Permissions | Permission CRUD; the atomic access units |
+| Channels | Channel CRUD; scopes roles to a specific application |
+| User-Role | Assigns roles to users |
+| Role-Policy | Attaches policies to roles |
+| Policy-Permission | Attaches permissions to policies |
+
+## Authentication & Authorization
+
+- **Login** (`POST /api/auth/generate-token`) verifies email/password and returns the user, a flattened permission list for the current scope, and an access/refresh token pair.
+- **Access tokens** are short-lived JWTs sent as `Authorization: Bearer <token>`.
+- **Refresh tokens** are longer-lived and single-use — rotated on every refresh (`POST /api/auth/refresh-token`).
+- **Logout** (`POST /api/auth/destroy-token`) revokes a refresh token.
+- **API key** (`x-api-key` header) is required on protected routes and sets the scope: `global` or a specific channel.
+- **Permission checks** are available via `GET /api/auth/has-any-permission`.
+
+> Token TTLs and other tunables are defined in code/config — see `src/` for exact values.
+
+## Database Design
+
+### Database Engine
+PostgreSQL.
+
+### ORM
+Sequelize with `sequelize-typescript` (decorator-based models). Migrations and seeders are managed through the Sequelize CLI.
+
+### Naming Conventions
+- **Tables:** `snake_case`, plural for entities (`users`, `roles`, `policies`, `permissions`, `channels`, `refresh_tokens`) and singular for join tables (`user_role`, `role_policy`, `policy_permission`).
+- **Columns:** `snake_case`.
+- **Models:** `PascalCase`, singular (`User`, `Role`, `Policy`).
+
+### Core Model
+
+- A **User** can hold many **Roles**; a **Role** can belong to many Users.
+- A **Role** can hold many **Policies**; a **Policy** can belong to many Roles.
+- A **Policy** can hold many **Permissions**; a **Permission** can belong to many Policies.
+- A **Channel** scopes many **Roles** (a role is global when it has no channel).
+- A **User** owns many **RefreshTokens**.
+
+### Entity Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    USER ||--o{ USER_ROLE : has
+    ROLE ||--o{ USER_ROLE : assigned_to
+    ROLE ||--o{ ROLE_POLICY : has
+    POLICY ||--o{ ROLE_POLICY : assigned_to
+    POLICY ||--o{ POLICY_PERMISSION : has
+    PERMISSION ||--o{ POLICY_PERMISSION : assigned_to
+    CHANNEL ||--o{ ROLE : scopes
+    USER ||--o{ REFRESH_TOKEN : owns
 ```
 
 ## Environment Variables
 
-Copy `.env.example` to `.env`:
+| Variable | Description |
+| --- | --- |
+| `PORT` | Port the server listens on (e.g. `4000`) |
+| `NODE_ENV` | Runtime environment (`development`, `production`, …) |
+| `API_KEY` | API key required by protected routes |
+| `ACCESS_SECRET` | JWT signing secret for access tokens (required, no default) |
+| `REFRESH_SECRET` | JWT signing secret for refresh tokens (required, no default) |
+| `DB_HOST` | PostgreSQL host |
+| `DB_NAME` | Database name |
+| `DB_USERNAME` | Database user |
+| `DB_PASSWORD` | Database password |
+| `SUPERADMIN_EMAIL` | Seeded superadmin email |
+| `SUPERADMIN_USERNAME` | Seeded superadmin username |
+| `SUPERADMIN_PASSWORD` | Seeded superadmin password |
 
-| Variable | Required | Notes |
-|---|---|---|
-| `PORT` | No (default 4000) | HTTP port |
-| `NODE_ENV` | Yes | `development` / `production` / etc. — read by `npm run migrate` |
-| `API_KEY` | No | Present in `.env.example` but not read anywhere in `src/` today |
-| `ACCESS_SECRET` | Yes | JWT signing secret for access tokens — no default; missing it 500s every authenticated request |
-| `REFRESH_SECRET` | Yes | JWT signing secret for refresh tokens |
-| `DB_HOST` / `DB_NAME` / `DB_USERNAME` / `DB_PASSWORD` | Yes | PostgreSQL connection |
-| `SUPERADMIN_EMAIL` / `SUPERADMIN_USERNAME` / `SUPERADMIN_PASSWORD` | Yes (for seeding) | Used by the superadmin seeder |
+Generate secrets with: `openssl rand -hex 32`. See `.env.example` for a template.
 
-## Database Setup
+## Getting Started
 
-1. Create a PostgreSQL database matching `DB_NAME`.
-2. **Schema**: `npm run dev`/`npm start` calls `sequelize.sync({ alter: true })` on boot
-   (`src/server.ts`) — this creates/alters tables to match the model definitions
-   automatically. `src/database/migrations/` is currently **empty** despite
-   `sequelize-cli`, `.sequelizerc`, and `npm run migrate`/`migrate:undo` scripts being
-   configured — there is no migration history to run. `sync({ alter: true })` is
-   convenient for development but is generally considered unsafe for production
-   schema management (no rollback path, can silently drop/alter columns); see
-   `ENGINEERING_AUDIT.md`.
-3. **Seed data**: `npm run seed` runs all seeders in `src/database/seeders/` —
-   superadmin user, global permissions (`src/constants/globalPermissions.json`), global
-   policies (`src/constants/globalPolicies.json`), dummy channels, dummy users, and
-   permission→policy attachments. `npm run seed:undo` reverts them.
+### Prerequisites
+- Node.js
+- PostgreSQL (a reachable database)
 
-## Authentication Flow
-
-1. `POST /api/auth/generate-token` — verifies email/password (bcrypt), issues an access
-   token (`{ id }`, 2 min TTL) and a refresh token (`{ id, jti }`, 7 day TTL, persisted
-   as a `RefreshToken` row keyed by `jti`).
-2. `POST /api/auth/refresh-token` — verifies the refresh token, then rotates it
-   transactionally: deletes the old `RefreshToken` row by `jti` and inserts a new one
-   in the same transaction, aborting with 403 if the old row was already gone (another
-   concurrent refresh won the race — prevents token "explosion").
-3. `POST /api/auth/destroy-token` — deletes the `RefreshToken` row for the given
-   token's `jti` (logout). Requires no authentication — only body validation.
-4. `GET /api/auth/me` — returns the caller's identity plus their roles (filtered to the
-   current channel scope) with nested permissions.
-5. `GET /api/auth/has-any-permission` — checks whether the caller holds any of a given
-   set of permission ref_names in a given scope; used by clients for UI-level gating.
-
-Access tokens carry only `{ id }` — channel context is never carried in the JWT itself;
-it's resolved per-request from `x-api-key` by `checkApiKeyMiddleware`.
-
-## Authorization / RBAC
-
-- **`hasAnyPermission(permissionRefNames, requireGlobalRole = true)`** — route-level
-  middleware factory. Superadmin/root-superadmin bypass all checks when
-  `x-api-key: global`. Otherwise delegates to `User.hasAnyPermission()`, which walks
-  `User → Role → Policy → Permission` (through `UserRole`/`RolePolicy`/
-  `PolicyPermission`) filtered to the current scope.
-- **Privilege ranking**: `UserLevelType` (`root_superadmin` > `superadmin` > `admin` >
-  `manager` > `moderator` > `member`) gates user/role management — you can only
-  create/update/delete a user, or assign/remove a role, at a strictly lower privilege
-  level than your own.
-- **Self-service exception**: `GET`/`PUT /api/users/:user_id` have no route-level
-  permission requirement — a user can always view/update their own profile
-  (self-updates silently drop `status`/`level` changes rather than rejecting them);
-  viewing/updating another user still requires `auth:view:user`/`auth:admin:user`.
-- **Policies are unscoped**: unlike Role/Channel, `Policy` has no `channel_id` — any
-  caller with the relevant permission (global or channel-scoped) can manage any
-  Policy. This is consistent with Policies being a shared resource Roles attach to
-  per-channel, not an oversight — but it does mean a channel-scoped key can affect
-  Policies used by other channels' Roles. See `ENGINEERING_AUDIT.md`.
-- **System resources**: Policies/Permissions with `is_system: true` are seeded-only —
-  the model layer rejects create/update/delete on them regardless of caller privilege.
-- **Role management has no privilege-tier protection**: unlike Users, `Role`
-  create/update/delete have no privilege-level comparison at all (and `Role` has no
-  `level` column) — any caller holding the relevant `auth:*:role` permission in a
-  channel can create/modify/delete any role in that channel. Flagged in
-  `ENGINEERING_AUDIT.md` as a possible gap pending a product decision.
-
-## API Documentation
-
-Full Swagger/OpenAPI docs — every endpoint's auth/authz requirements, parameters,
-request/response schemas, and examples — are served at:
-
-```
-GET /api-docs        Swagger UI
-GET /api-docs.json   Raw OpenAPI 3.0 spec
-```
-
-Start the dev server and open `http://localhost:4000/api-docs`.
-
-## Error Handling
-
-Every thrown `AppError(message, statusCode, details?)` (from `src/middlewares/
-errorHandler.ts`) is caught by the global `errorHandler` middleware and rendered as:
-
-```json
-{ "message": "...", "details": [ ] }
-```
-
-`details` is only present when the underlying error carried extra data (e.g.
-express-validator's `errors.array()` on a 400). Unrecognized `Error`s are rendered as a
-generic 500 in production (full message in development).
-
-## Scripts
-
-| Script | Purpose |
-|---|---|
-| `npm run dev` | Dev server (nodemon + ts-node) |
-| `npm run build` | Compile to `dist/` |
-| `npm start` | Run the compiled build |
-| `npm test` | Jest + Supertest — 7 suites, 115 tests, all passing. Runs serially (`maxWorkers: 1` in `jest.config.ts`) since suites share a single dev Postgres database. |
-| `npm run lint` / `lint:fix` | ESLint |
-| `npm run seed` / `seed:undo` | Run/revert seeders |
-| `npm run migrate` / `migrate:undo` | sequelize-cli migrations (currently no migration files exist — see Database Setup) |
-| `npm run format` | Prettier (writes) |
-| `npm run knip` | Unused-export/dependency detection |
-
-## Deployment
-
-No Dockerfile exists in this repo (plain Node deployment):
+### Installation
 
 ```bash
 npm install
-npm run build
-npm start
+cp .env.example .env   # then fill in the values
 ```
 
-Requires: all env vars above set, a reachable PostgreSQL instance, and — since there's
-no migration history — either `sequelize.sync({ alter: true })` running once against a
-fresh database, or the schema provisioned manually to match `src/database/models/`.
+### Database Setup
+
+```bash
+npm run migrate        # apply migrations
+npm run seed           # seed initial data (e.g. superadmin)
+```
+
+### Development
+
+```bash
+npm run dev            # start with hot reload (nodemon + ts-node)
+```
+
+### Production Build
+
+```bash
+npm run build          # compile TypeScript to dist/
+npm start              # run the compiled server
+```
+
+The API docs are available at `/api-docs` and the raw spec at `/api-docs.json`.
+
+## Available Scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server with hot reload |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run the compiled server |
+| `npm test` | Run the Jest test suite |
+| `npm run test:verbose` | Run tests with verbose, non-silent output |
+| `npm run lint` | Lint `.ts` files |
+| `npm run lint:fix` | Lint and auto-fix |
+| `npm run format` | Format `src` and `tests` with Prettier |
+| `npm run knip` | Find unused files, exports, and dependencies |
+| `npm run migrate` | Run Sequelize migrations for `$NODE_ENV` |
+| `npm run seed` | Run all seeders |
+| `npm run seed:undo` | Revert all seeders |
+
+## API Documentation
+
+The API is documented with **Swagger / OpenAPI**, generated from `@openapi` annotations on the route files (`swagger-jsdoc` + `swagger-ui-express`).
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /api-docs` | Interactive Swagger UI |
+| `GET /api-docs.json` | Raw OpenAPI spec (JSON) |
+
+Once the server is running, open [http://localhost:4000/api-docs](http://localhost:4000/api-docs) (adjust the port to match `PORT`). The docs are served without authentication, since this is an internal service. When adding routes, document them with `@openapi` annotations so they appear automatically.
+
+## Health Checks
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /ping` | Liveness — process is responsive (no DB call) |
+| `GET /health` | Readiness — verifies the database connection |
+
+## Coding Guidelines
+
+- **Controllers** handle HTTP concerns only; keep business logic in **services**.
+- **Validators** (express-validator) live in `src/validators/`, one folder per domain.
+- **Models** are `PascalCase` singular; database tables are `snake_case`.
+- Document new routes with `@openapi` annotations so they appear in Swagger.
+- Run `npm run lint` and `npm run format` before committing.
+
+## Deployment
+
+TODO: Document the deployment target and process. At a minimum: provision PostgreSQL, set environment variables, run `npm run build`, apply migrations (`npm run migrate`), and start with `npm start`.
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---|---|
-| Every authenticated request 500s with "Server configuration error" | `ACCESS_SECRET` not set |
-| Login/refresh 403 with a confusing message | `REFRESH_SECRET` not set (see `assertRefreshSecretConfigured`) |
-| Every request 401 "API Key not found" / 403 "Invalid API key" | Missing/incorrect `x-api-key` header — must be a real Channel's `api_key` or the literal string `global` |
-| `npm run migrate` does nothing | Expected — `src/database/migrations/` is empty; schema comes from `sequelize.sync({ alter: true })` on boot instead |
-| `GET /health` returns 503 | Database unreachable — checks `sequelize.authenticate()` (use `GET /ping` for a DB-independent liveness check) |
-| A resource update always fails as "already exists" even with no changes | Check the relevant validator's `isUniqueField` call passes the correct route `paramName` — see `ENGINEERING_AUDIT.md` for a specific instance found and fixed on Permission |
-| `npm test` suites time out intermittently | Suites run against a single shared dev database; `jest.config.ts` sets `maxWorkers: 1` to serialize them — if you've overridden that, restore it or provision a dedicated test database |
-
----
-
-See [`ENGINEERING_AUDIT.md`](./ENGINEERING_AUDIT.md) for the full business-logic
-review, security/architecture findings, and scores.
+| Issue | Likely cause / fix |
+| --- | --- |
+| `503` from `/health` | Database unreachable — check `DB_*` variables and that PostgreSQL is running |
+| `403` on requests | Missing or invalid `x-api-key` header |
+| `401` on requests | Missing, invalid, or expired bearer token |
+| Server won't start | `ACCESS_SECRET` / `REFRESH_SECRET` not set |
+| Migrations fail | Wrong `NODE_ENV` or database credentials; confirm the DB exists |
