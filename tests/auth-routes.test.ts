@@ -60,6 +60,8 @@ describe('Auth Routes', () => {
         });
 
         it('should return 401 with invalid credentials (user not existing)', async () => {
+            // The BE returns the same generic message whether the email is unknown
+            // or the password is wrong, so an attacker can't enumerate accounts.
             await request(app)
                 .post(`${API_BASE_URL}/generate-token`)
                 .set({
@@ -72,7 +74,7 @@ describe('Auth Routes', () => {
                 .expect('Content-Type', /json/)
                 .expect(401)
                 .expect({
-                    message: 'User not found'
+                    message: 'Invalid email or password'
                 });
         });
 

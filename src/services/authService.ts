@@ -1,7 +1,12 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL, REFRESH_TOKEN_TTL_MS } from '../constants/auth';
+import {
+    ACCESS_TOKEN_TTL,
+    ACCESS_TOKEN_TTL_MS,
+    REFRESH_TOKEN_TTL,
+    REFRESH_TOKEN_TTL_MS
+} from '../constants/auth';
 import RefreshToken from '../database/models/RefreshToken';
 import User from '../database/models/User';
 import sequelize from '../database/sequelize';
@@ -15,15 +20,28 @@ interface TokenPair {
     refreshToken: string;
 }
 
+// A pre-computed bcrypt hash of a throwaway value. When the email doesn't exist
+// we still run one bcrypt.compare against this so the response time for
+// "unknown email" matches "wrong password", closing a timing side-channel.
+const DUMMY_PASSWORD_HASH = '$2b$10$CwTycUXWue0Thq9StjUM0uJ8Dvize3nP1JLbT7xk1U5g8xL8bF3vG';
+
+// Single generic message for every credential failure so an attacker can't tell
+// "email not registered" apart from "wrong password" (user enumeration).
+const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password';
+
 export async function verifyCredentials(email: string, password: string): Promise<User> {
     const user = await User.findOne({
         attributes: { include: ['password'] },
         where: { email }
     });
-    if (!user) throw new AppError('User not found', HttpStatus.UNAUTHORIZED);
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
-    if (!passwordMatches) throw new AppError('Invalid email or password', HttpStatus.UNAUTHORIZED);
+    // Always run a bcrypt compare — against the real hash if the user exists,
+    // otherwise against a dummy — so both branches take comparable time.
+    const passwordMatches = await bcrypt.compare(password, user?.password ?? DUMMY_PASSWORD_HASH);
+
+    if (!user || !passwordMatches) {
+        throw new AppError(INVALID_CREDENTIALS_MESSAGE, HttpStatus.UNAUTHORIZED);
+    }
 
     return user;
 }
@@ -52,8 +70,13 @@ export async function issueTokens(userId: number): Promise<TokenPair> {
     return { accessToken, refreshToken };
 }
 
-export function assertRefreshSecretConfigured(message: string): void {
-    if (!process.env.REFRESH_SECRET) throw new AppError(message, HttpStatus.FORBIDDEN);
+export function assertRefreshSecretConfigured(): void {
+    // A missing REFRESH_SECRET is a server misconfiguration, not a client error,
+    // so surface it as 500 with a single consistent message (both refresh-token
+    // and destroy-token used to throw 403 with different, misleading messages).
+    if (!process.env.REFRESH_SECRET) {
+        throw new AppError('Server configuration error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
 
 export function decodeRefreshToken(rawToken: string): IDecodedToken {
@@ -127,4 +150,32 @@ export async function getAuthResponsePayload(
     );
 
     return { user: userWithoutPassword, permissions };
+}
+
+/**
+ * Shapes the response body shared by generate-token and refresh-token so the two
+ * controllers don't each hand-build the identical `{ user, permissions, tokens }`
+ * structure. `expires_at` values are absolute Unix epoch milliseconds.
+ */
+export function buildTokenResponse(
+    userPayload: AuthResponsePayload['user'],
+    permissions: string[],
+    tokens: TokenPair
+) {
+    const now = Date.now();
+
+    return {
+        user: userPayload,
+        permissions,
+        tokens: {
+            access: {
+                value: tokens.accessToken,
+                expires_at: now + ACCESS_TOKEN_TTL_MS
+            },
+            refresh: {
+                value: tokens.refreshToken,
+                expires_at: now + REFRESH_TOKEN_TTL_MS
+            }
+        }
+    };
 }
